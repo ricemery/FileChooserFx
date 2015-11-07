@@ -45,11 +45,12 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Stack;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,7 +63,8 @@ public final class FileChooserImpl implements FileChooser {
          FXCollections.observableArrayList();
    private final ObservableMap<String, PreviewWindow> previewHandlers = FXCollections.observableHashMap();
    private final Icons icons = new Icons();
-   private final Stack<File> directoryStack = new Stack<>();
+   private final Deque<File> directoryStack = new LinkedList<>();
+   private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
 
    private StringProperty title;
    private ObjectProperty<File> initialDirectory;
@@ -75,7 +77,6 @@ public final class FileChooserImpl implements FileChooser {
    private IconsFilesView iconsFilesView;
    private ListFilesView listFilesView;
    private SplitPane splitPane;
-   private ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
    private FileChooserCallback fileChooserCallback;
    private HelpCallback helpCallback;
    private Stage stage;
@@ -226,44 +227,18 @@ public final class FileChooserImpl implements FileChooser {
 
       stage = new Stage();
 
-      final EventHandler<KeyEvent> keyHandler = new KeyEventHandler();
-
-      iconsFilesView = new IconsFilesView(stage, previewHandlers);
-      iconsFilesView.setCallback(new FilesViewCallbackImpl());
-      iconsFilesView.setOnKeyPressed(keyHandler);
-
-      listFilesView = new ListFilesView(stage, previewHandlers);
-      listFilesView.setCallback(new FilesViewCallbackImpl());
-      listFilesView.setOnKeyPressed(keyHandler);
-
-      currentView = listFilesView;
-      placesView = createPlacesView();
-
-      splitPane = new SplitPane();
-      splitPane.getItems().addAll(placesView, currentView.getNode());
-      splitPane.setDividerPosition(0, .15);
-
-      final ToolBar toolBar = createToolbar();
-      final VBox topVbox = new VBox();
-      topVbox.setId("topVbox");
-      if (saveMode) {
-         topVbox.getChildren().add(createFileNameBar());
-      }
-      topVbox.getChildren().add(toolBar);
-
-      final ButtonBar buttonBar = createButtonBar();
-      final Pane extensionsPane = createExtensionsPane();
-      final VBox vBox = new VBox();
-      vBox.getChildren().addAll(extensionsPane, buttonBar);
+      final VBox topVbox = createTopVBox();
+      splitPane = createSplitPane();
+      final VBox bottomVbox = createBottomVBox();
 
       final BorderPane borderPane = new BorderPane();
       borderPane.setTop(topVbox);
       borderPane.setCenter(splitPane);
-      borderPane.setBottom(vBox);
+      borderPane.setBottom(bottomVbox);
 
       final Scene scene = new Scene(borderPane, SCENE_WIDTH, SCENE_HEIGHT);
       scene.getStylesheets().add(new FileBrowserCss().getUrl());
-      scene.setOnKeyPressed(keyHandler);
+      scene.setOnKeyPressed(new KeyEventHandler());
 
       stage.setTitle(getTitle());
       stage.setScene(scene);
@@ -275,6 +250,54 @@ public final class FileChooserImpl implements FileChooser {
             ? new File(".")
             : initialDirectory.getValue();
       updateFiles(currentDirectory);
+   }
+
+   private SplitPane createSplitPane() {
+      iconsFilesView = createIconsFilesView();
+      listFilesView = createListFilesView();
+      currentView = listFilesView;
+
+      placesView = createPlacesView();
+
+      final SplitPane pane = new SplitPane();
+      pane.setId("splitPane");
+      pane.getItems().addAll(placesView, currentView.getNode());
+      pane.setDividerPosition(0, .15);
+      return pane;
+   }
+
+   private IconsFilesView createIconsFilesView() {
+      final IconsFilesView view = new IconsFilesView(stage, previewHandlers);
+      view.setCallback(new FilesViewCallbackImpl());
+      view.setOnKeyPressed(new KeyEventHandler());
+      return view;
+   }
+
+   private ListFilesView createListFilesView() {
+      final ListFilesView view = new ListFilesView(stage, previewHandlers);
+      view.setCallback(new FilesViewCallbackImpl());
+      view.setOnKeyPressed(new KeyEventHandler());
+      return view;
+   }
+
+   private VBox createTopVBox() {
+      final ToolBar toolBar = createToolbar();
+      final VBox vBox = new VBox();
+      vBox.setId("topVbox");
+      if (saveMode) {
+         vBox.getChildren().add(createFileNameBar());
+      }
+      vBox.getChildren().add(toolBar);
+
+      return vBox;
+   }
+
+   private VBox createBottomVBox() {
+      final ButtonBar buttonBar = createButtonBar();
+      final Pane extensionsPane = createExtensionsPane();
+      final VBox vBox = new VBox();
+      vBox.getChildren().addAll(extensionsPane, buttonBar);
+      return vBox;
    }
 
    private Node createFileNameBar() {
@@ -373,23 +396,24 @@ public final class FileChooserImpl implements FileChooser {
          places.add(new Pair<>(icons.getIcon(Icons.USER_HOME_64), new File(homeDirStr)));
       }
 
-      final TableView<Pair<Image, File>> placesView = new TableView<>();
+      final TableView<Pair<Image, File>> view = new TableView<>();
+      view.setId("placesView");
 
       final TableColumn<Pair<Image, File>, Pair<Image, File>> placesColumn
             = new TableColumn<>(resourceBundle.getString("placeslist.text"));
       placesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
       placesColumn.setCellFactory(new PlacesColumnCellFactory());
-      placesColumn.prefWidthProperty().bind(placesView.widthProperty());
+      placesColumn.prefWidthProperty().bind(view.widthProperty());
 
-      placesView.getColumns().addAll(placesColumn);
-      placesView.getItems().addAll(places);
-      placesView.setOnMouseClicked(event -> changeDirectory(placesView.getSelectionModel().getSelectedItem().getValue()));
-      placesView.setOnKeyPressed(new KeyEventHandler());
+      view.getColumns().addAll(placesColumn);
+      view.getItems().addAll(places);
+      view.setOnMouseClicked(event -> changeDirectory(view.getSelectionModel().getSelectedItem().getValue()));
+      view.setOnKeyPressed(new KeyEventHandler());
 
-      return placesView;
+      return view;
    }
 
-   private class PlacesColumnCellFactory
+   private static class PlacesColumnCellFactory
          implements Callback<TableColumn<Pair<Image, File>, Pair<Image, File>>, TableCell<Pair<Image, File>, Pair<Image, File>>> {
       @Override
       public TableCell<Pair<Image, File>, Pair<Image, File>> call(TableColumn<Pair<Image, File>, Pair<Image, File>> param) {
@@ -554,14 +578,25 @@ public final class FileChooserImpl implements FileChooser {
          return Stream.empty();
       }
 
-      final FileFilter filter = getSelectedExtensionFilter() != null
-            ? new WildcardFileFilter(selectedExtensionFilter.get().getExtensions())
-            : null;
+      final FileFilter filter = getFileFilter();
       final File[] files = filter == null ? directory.listFiles() : directory.listFiles(filter);
-      final boolean filterHidden = !showHiddenFiles();
       return files == null
             ? Stream.empty()
-            : Arrays.stream(files).filter(f -> !(filterHidden && f.isHidden()) && (!hideFiles || f.isDirectory()));
+            : Arrays.stream(files).filter(new GetFilesPredicate());
+   }
+
+   private WildcardFileFilter getFileFilter() {
+      return getSelectedExtensionFilter() != null
+            ? new WildcardFileFilter(selectedExtensionFilter.get().getExtensions())
+            : null;
+   }
+
+   private class GetFilesPredicate implements Predicate<File> {
+      @Override
+      public boolean test(final File file) {
+         final boolean filterHidden = !showHiddenFiles();
+         return !(filterHidden && file.isHidden()) && (!hideFiles || file.isDirectory());
+      }
    }
 
    private class FilesViewCallbackImpl implements FilesViewCallback {

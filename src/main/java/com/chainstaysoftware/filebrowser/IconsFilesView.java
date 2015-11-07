@@ -20,12 +20,13 @@ import org.controlsfx.control.GridView;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class IconsFilesView implements FilesView {
-   private final static int NOT_SELECTED = -1;
+   private static final int NOT_SELECTED = -1;
 
    // Width and Height of Icon and Filename Cell.
    private static final int CELL_HEIGHT = 90;
@@ -35,8 +36,8 @@ class IconsFilesView implements FilesView {
    private final GridView<Pair<Image, File>> gridView = new GridView<>();
    private final Map<String, PreviewWindow> previewHandlers;
    private final Icons icons = new Icons();
+   private final IntegerProperty selectedCell = new SimpleIntegerProperty(NOT_SELECTED);
 
-   private IntegerProperty selectedCell = new SimpleIntegerProperty(NOT_SELECTED);
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
 
@@ -95,7 +96,7 @@ class IconsFilesView implements FilesView {
          }
 
          final String fileExtension = FilenameUtils.getExtension(file.getName());
-         final PreviewWindow previewWindow = previewHandlers.get(fileExtension.toLowerCase());
+         final PreviewWindow previewWindow = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
          if (previewWindow == null) {
             return null;
          }
@@ -120,8 +121,6 @@ class IconsFilesView implements FilesView {
             if (!file.isDirectory()) {
                return;
             }
-
-            System.out.println("Double click on - " + file.toString());
 
             callback.requestChangeDirectory(file);
          } else {
