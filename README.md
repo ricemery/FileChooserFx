@@ -16,3 +16,6 @@ and DirectoryChooser completely in JavaFx code so that the implementations can b
 * Apache Commmons Lang and IO
 * ControlsFx - http://fxexperience.com/controlsfx/
 * Icons from Icons8 - https://icons8.com
+
+## Usage
+See src/test/java/com/chainstaysoftware/filebrowser/FileChooserDemo.java for sample usage. 
