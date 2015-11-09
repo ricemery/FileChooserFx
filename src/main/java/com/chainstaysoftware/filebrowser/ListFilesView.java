@@ -26,6 +26,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -113,7 +114,7 @@ public class ListFilesView implements FilesView {
                   }
 
                   final String fileExtension = FilenameUtils.getExtension(file.getName());
-                  final PreviewWindow previewWindow = previewHandlers.get(fileExtension.toLowerCase());
+                  final PreviewWindow previewWindow = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
                   if (previewWindow == null) {
                      return;
                   }
