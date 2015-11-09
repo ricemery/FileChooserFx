@@ -587,7 +587,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private WildcardFileFilter getFileFilter() {
       return getSelectedExtensionFilter() != null
-            ? new WildcardFileFilter(selectedExtensionFilter.get().getExtensions())
+            ? new DirOrWildcardFilter(selectedExtensionFilter.get().getExtensions())
             : null;
    }
 

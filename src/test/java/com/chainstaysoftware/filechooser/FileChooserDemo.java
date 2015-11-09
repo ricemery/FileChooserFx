@@ -1,8 +1,8 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.preview.HeadPreviewWindow;
 import com.chainstaysoftware.filechooser.preview.ImagePreviewWindow;
 import com.chainstaysoftware.filechooser.preview.PreviewWindow;
-import com.chainstaysoftware.filechooser.preview.HeadPreviewWindow;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -30,6 +30,7 @@ public class FileChooserDemo extends Application {
          final FileChooserFx fileChooser = new FileChooserFxImpl();
          fileChooser.setTitle("File Chooser");
          fileChooser.setShowHiddenFiles(false);
+         //fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files (txt)", "*.txt"));
          fileChooser.getPreviewHandlers().putAll(previewHandlers);
          fileChooser.setHelpCallback(() -> System.out.println("Help invoked"));
 
