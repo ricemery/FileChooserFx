@@ -6,7 +6,7 @@ import javafx.stage.Window;
 
 import java.io.File;
 
-public interface DirectoryChooser {
+public interface DirectoryChooserFx {
    void setInitialDirectory(File value);
 
    File getInitialDirectory();

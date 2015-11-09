@@ -2,6 +2,7 @@ package com.chainstaysoftware.filechooser;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Pair;
@@ -59,6 +60,7 @@ class IconGridCell extends GridCell<Pair<Image, File>> {
 
          setGraphic(imageView);
          setText(text);
+         setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
          setUserData(pair.getValue());
 
          if (contextMenuFactory != null) {

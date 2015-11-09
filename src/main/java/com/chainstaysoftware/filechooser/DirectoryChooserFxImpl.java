@@ -6,7 +6,7 @@ import javafx.stage.Window;
 
 import java.io.File;
 
-public class DirectoryChooserImpl implements DirectoryChooser {
+public class DirectoryChooserFxImpl implements DirectoryChooserFx {
    private final FileChooserFxImpl fileChooser = new FileChooserFxImpl();
 
    @Override
