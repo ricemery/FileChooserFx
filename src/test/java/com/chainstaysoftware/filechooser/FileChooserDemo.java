@@ -10,6 +10,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.nio.charset.Charset;
@@ -30,6 +31,7 @@ public class FileChooserDemo extends Application {
          final FileChooserFx fileChooser = new FileChooserFxImpl();
          fileChooser.setTitle("File Chooser");
          fileChooser.setShowHiddenFiles(false);
+         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text files (txt)", "*.txt"));
          //fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files (txt)", "*.txt"));
          fileChooser.getPreviewHandlers().putAll(previewHandlers);
          fileChooser.setHelpCallback(() -> System.out.println("Help invoked"));

@@ -586,9 +586,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    private WildcardFileFilter getFileFilter() {
-      return getSelectedExtensionFilter() != null
-            ? new DirOrWildcardFilter(selectedExtensionFilter.get().getExtensions())
-            : null;
+      final List<String> extensionFilter
+            = getSelectedExtensionFilter() == null
+               ? extensionFilters.isEmpty() ? null : extensionFilters.get(0).getExtensions()
+               : selectedExtensionFilter.get().getExtensions();
+      return extensionFilter == null ? null : new DirOrWildcardFilter(extensionFilter);
    }
 
    private class GetFilesPredicate implements Predicate<File> {
