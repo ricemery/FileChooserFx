@@ -5,5 +5,5 @@ import java.util.Optional;
 
 @FunctionalInterface
 public interface FileChooserCallback {
-   void fileChoosen(Optional<File> fileOptional);
+   void fileChosen(Optional<File> fileOptional);
 }

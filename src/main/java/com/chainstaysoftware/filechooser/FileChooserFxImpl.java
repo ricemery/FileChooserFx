@@ -243,7 +243,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       stage.setTitle(getTitle());
       stage.setScene(scene);
       stage.initOwner(ownerWindow);
-      stage.setOnCloseRequest(event -> fileChooserCallback.fileChoosen(Optional.empty()));
+      stage.setOnCloseRequest(event -> fileChooserCallback.fileChosen(Optional.empty()));
       stage.show();
 
       currentDirectory = getInitialDirectory() == null
@@ -469,7 +469,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             return;
          }
 
-         fileChooserCallback.fileChoosen(Optional.of(currentSelection.getValue()));
+         fileChooserCallback.fileChosen(Optional.of(currentSelection.getValue()));
          stage.close();
       });
       currentSelection.addListener((observable, oldValue, newValue) ->
@@ -623,7 +623,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       public void handle(KeyEvent event) {
          if (event.getCode() == KeyCode.ESCAPE) {
             stage.close();
-            fileChooserCallback.fileChoosen(Optional.empty());
+            fileChooserCallback.fileChosen(Optional.empty());
             event.consume();
          }
       }
