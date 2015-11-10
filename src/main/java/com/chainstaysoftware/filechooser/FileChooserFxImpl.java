@@ -28,6 +28,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
@@ -89,6 +90,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private Node placesView;
    private boolean saveMode;
    private boolean hideFiles;
+   private ToggleButton viewIconsButton;
+   private ToggleButton viewListButton;
 
    @Override
    public ObservableList<javafx.stage.FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -332,13 +335,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ToolBar createToolbar() {
       backButton = createBackButton();
       final VBox breadCrumbHBox = createBreadCrumbBar();
+      viewListButton = createViewListButton();
+      viewIconsButton = createViewIconsButton();
 
       final ToolBar toolBar = new ToolBar();
       toolBar.setId("Toolbar");
       toolBar.getStyleClass().add("toolbar");
       toolBar.getItems().setAll(
-            createViewIconsButton(),
-            createViewListButton(),
+            viewListButton,
+            viewIconsButton,
             new Separator(),
             backButton,
             breadCrumbHBox);
@@ -408,26 +413,42 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
    }
 
-   private Button createViewListButton() {
-      final Button viewListButton = new Button();
+
+   private ToggleButton createViewListButton() {
+      final ToggleButton viewListButton = new ToggleButton();
       viewListButton.setId("viewListButton");
-      viewListButton.getStyleClass().add("toolbarbutton");
+      viewListButton.getStyleClass().add("toolbartogglebutton");
       viewListButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_VIEW_24)));
       viewListButton.setTooltip(new Tooltip(resourceBundle.getString("listview.tooltip")));
       viewListButton.setFocusTraversable(false);
-      viewListButton.setOnAction(event -> setCurrentView(listFilesView));
+      viewListButton.setSelected(true);
+      viewListButton.selectedProperty().addListener((observable, oldValue, selected) -> {
+         if (!selected) {
+            return;
+         }
+
+         setCurrentView(listFilesView);
+         viewIconsButton.setSelected(false);
+      });
 
       return viewListButton;
    }
 
-   private Button createViewIconsButton() {
-      final Button viewIconsButton = new Button();
+   private ToggleButton createViewIconsButton() {
+      final ToggleButton viewIconsButton = new ToggleButton();
       viewIconsButton.setId("viewIconsButton");
-      viewIconsButton.getStyleClass().add("toolbarbutton");
+      viewIconsButton.getStyleClass().add("toolbartogglebutton");
       viewIconsButton.setGraphic(new ImageView(icons.getIcon(Icons.ICON_VIEW_24)));
       viewIconsButton.setTooltip(new Tooltip(resourceBundle.getString("iconview.tooltip")));
       viewIconsButton.setFocusTraversable(false);
-      viewIconsButton.setOnAction(event -> setCurrentView(iconsFilesView));
+      viewIconsButton.selectedProperty().addListener((observable, oldValue, selected) -> {
+         if (!selected) {
+            return;
+         }
+
+         setCurrentView(iconsFilesView);
+         viewListButton.setSelected(false);
+      });
 
       return viewIconsButton;
    }
