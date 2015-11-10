@@ -15,11 +15,15 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@link PreviewWindow} implementation for displaying image file types.
  */
 public class ImagePreviewWindow implements PreviewWindow {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.ImagePreviewWindow");
+
    /**
     * Show preview of passed in {@link File}. Note that the entire file will
     * be read into memory. So, there is a potential for OutOfMemoryException
@@ -54,6 +58,7 @@ public class ImagePreviewWindow implements PreviewWindow {
          stage.setTitle(getTitle(file));
          stage.show();
       } catch (FileNotFoundException e) {
+         logger.log(Level.WARNING, "File not found - " + file);
       }
    }
 

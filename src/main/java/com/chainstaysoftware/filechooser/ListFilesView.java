@@ -66,7 +66,7 @@ public class ListFilesView implements FilesView {
             }
          }
       });
-      filesTreeView.setOnKeyPressed(event -> {if (keyEventHandler != null) keyEventHandler.handle(event);});
+      filesTreeView.setOnKeyPressed(event -> {if (keyEventHandler != null) {keyEventHandler.handle(event);}});
    }
 
    private TreeTableColumn<File, String> createNameColumn(Stage parent) {

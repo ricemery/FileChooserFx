@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -20,6 +22,8 @@ import java.util.stream.Stream;
  * head of text file types.
  */
 public class HeadPreviewWindow implements PreviewWindow {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.HeadPreviewWindow");
+
    private final Charset encoding;
    private final int maxLines;
 
@@ -43,6 +47,7 @@ public class HeadPreviewWindow implements PreviewWindow {
       try (Stream<String> stream = Files.lines(file.toPath(), encoding)) {
          text = stream.limit(maxLines).reduce((t, u) -> t + "\r\n" + u).orElse("");
       } catch (IOException e) {
+         logger.log(Level.WARNING, "Error reading file - " + file, e);
          // Error reading file.
          return;
       }

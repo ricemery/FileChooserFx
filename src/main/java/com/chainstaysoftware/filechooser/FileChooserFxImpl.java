@@ -57,10 +57,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class FileChooserFxImpl implements FileChooserFx {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.FileChooserFxImpl");
+
    private static final int SCENE_WIDTH = 800;
    private static final int SCENE_HEIGHT = 600;
 
@@ -409,20 +413,21 @@ public final class FileChooserFxImpl implements FileChooserFx {
       try {
          return p1.getCanonicalPath().compareTo(p2.getCanonicalPath()) == 0;
       } catch (IOException e) {
+         logger.log(Level.SEVERE, "Error comparing paths", e);
          return false;
       }
    }
 
 
    private ToggleButton createViewListButton() {
-      final ToggleButton viewListButton = new ToggleButton();
-      viewListButton.setId("viewListButton");
-      viewListButton.getStyleClass().add("toolbartogglebutton");
-      viewListButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_VIEW_24)));
-      viewListButton.setTooltip(new Tooltip(resourceBundle.getString("listview.tooltip")));
-      viewListButton.setFocusTraversable(false);
-      viewListButton.setSelected(true);
-      viewListButton.selectedProperty().addListener((observable, oldValue, selected) -> {
+      final ToggleButton viewButton = new ToggleButton();
+      viewButton.setId("viewListButton");
+      viewButton.getStyleClass().add("toolbartogglebutton");
+      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_VIEW_24)));
+      viewButton.setTooltip(new Tooltip(resourceBundle.getString("listview.tooltip")));
+      viewButton.setFocusTraversable(false);
+      viewButton.setSelected(true);
+      viewButton.selectedProperty().addListener((observable, oldValue, selected) -> {
          if (!selected) {
             return;
          }
@@ -431,17 +436,17 @@ public final class FileChooserFxImpl implements FileChooserFx {
          viewIconsButton.setSelected(false);
       });
 
-      return viewListButton;
+      return viewButton;
    }
 
    private ToggleButton createViewIconsButton() {
-      final ToggleButton viewIconsButton = new ToggleButton();
-      viewIconsButton.setId("viewIconsButton");
-      viewIconsButton.getStyleClass().add("toolbartogglebutton");
-      viewIconsButton.setGraphic(new ImageView(icons.getIcon(Icons.ICON_VIEW_24)));
-      viewIconsButton.setTooltip(new Tooltip(resourceBundle.getString("iconview.tooltip")));
-      viewIconsButton.setFocusTraversable(false);
-      viewIconsButton.selectedProperty().addListener((observable, oldValue, selected) -> {
+      final ToggleButton viewButton = new ToggleButton();
+      viewButton.setId("viewIconsButton");
+      viewButton.getStyleClass().add("toolbartogglebutton");
+      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.ICON_VIEW_24)));
+      viewButton.setTooltip(new Tooltip(resourceBundle.getString("iconview.tooltip")));
+      viewButton.setFocusTraversable(false);
+      viewButton.selectedProperty().addListener((observable, oldValue, selected) -> {
          if (!selected) {
             return;
          }
@@ -450,7 +455,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
          viewListButton.setSelected(false);
       });
 
-      return viewIconsButton;
+      return viewButton;
    }
 
    private Node createPlacesView() {
@@ -678,6 +683,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
          breadCrumbBar.setSelectedCrumb(selectedItem);
       } catch (IOException e) {
+         logger.log(Level.SEVERE, "Error building BreadCrumbBar", e);
       }
    }
 
