@@ -47,6 +47,7 @@ public class FileChooserDemo extends Application {
          fileChooser.setShowHiddenFiles(false);
          fileChooser.getPreviewHandlers().putAll(previewHandlers);
          fileChooser.setHelpCallback(() -> System.out.println("Help invoked"));
+         //fileChooser.setInitialFileName("foo.txt");
 
          fileChooser.showSaveDialog(primaryStage,
                fileOptional -> textFlow.getChildren()

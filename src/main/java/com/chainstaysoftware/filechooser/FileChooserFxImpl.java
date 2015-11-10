@@ -9,6 +9,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -96,6 +98,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private boolean hideFiles;
    private ToggleButton viewIconsButton;
    private ToggleButton viewListButton;
+   private TextField fileNameField;
 
    @Override
    public ObservableList<javafx.stage.FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -317,21 +320,21 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final Label label = new Label(resourceBundle.getString("namelabel.text"));
       label.setId("nameLabel");
 
-      final TextField nameField = new TextField();
-      nameField.setId("nameField");
-      nameField.setText(getInitialFileName());
-      nameField.setPrefWidth(300);
+      fileNameField = new TextField();
+      fileNameField.setId("nameField");
+      fileNameField.setText(getInitialFileName());
+      fileNameField.setPrefWidth(300);
 
       currentSelection.addListener((observable, oldValue, newValue) -> {
          if (newValue != null && newValue.isFile()) {
-            nameField.setText(newValue.getName());
+            fileNameField.setText(newValue.getName());
          }
       });
 
       final ToolBar filenameBar = new ToolBar();
       filenameBar.setId("filenameBar");
       filenameBar.getStyleClass().add("filenamebar");
-      filenameBar.getItems().addAll(label, nameField);
+      filenameBar.getItems().addAll(label, fileNameField);
 
       return filenameBar;
    }
@@ -346,11 +349,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
       toolBar.setId("Toolbar");
       toolBar.getStyleClass().add("toolbar");
       toolBar.getItems().setAll(
-            viewListButton,
-            viewIconsButton,
-            new Separator(),
-            backButton,
-            breadCrumbHBox);
+         viewListButton,
+         viewIconsButton,
+         new Separator(),
+         backButton,
+         breadCrumbHBox);
 
       return toolBar;
    }
@@ -538,7 +541,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final Button doneButton = new Button(text);
       ButtonBar.setButtonData(doneButton, ButtonBar.ButtonData.OK_DONE);
       doneButton.setId("doneButton");
-      doneButton.setDisable(true);
+      doneButton.setDisable(!saveMode || getInitialFileName() == null);
       doneButton.setOnAction(event -> {
          if (currentSelection == null) {
             return;
@@ -547,6 +550,13 @@ public final class FileChooserFxImpl implements FileChooserFx {
          fileChooserCallback.fileChosen(Optional.of(currentSelection.getValue()));
          stage.close();
       });
+
+      if (saveMode) {
+         fileNameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            doneButton.setDisable(newValue == null || newValue.trim().equals(""));
+         });
+      }
+
       currentSelection.addListener((observable, oldValue, newValue) ->
             doneButton.setDisable(newValue == null || (!hideFiles && newValue.isDirectory()))
       );
