@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.preview.PreviewWindow;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -9,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
@@ -46,8 +48,8 @@ public class ListFilesView implements FilesView {
       this.previewHandlers = previewHandlers;
 
       final TreeTableColumn<File, String> nameColumn = createNameColumn(parent);
-      final TreeTableColumn<File, String> dateModifiedColumn = createDateModifiedColumn();
-      final TreeTableColumn<File, String> sizeColumn = createSizeColumn();
+      final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn = createDateModifiedColumn();
+      final TreeTableColumn<File, Long> sizeColumn = createSizeColumn();
 
       filesTreeView = new TreeTableView<>();
       filesTreeView.setShowRoot(false);
@@ -76,24 +78,51 @@ public class ListFilesView implements FilesView {
       return nameColumn;
    }
 
-   private TreeTableColumn<File, String> createDateModifiedColumn() {
-      final TreeTableColumn<File, String> dateModifiedColumn = new TreeTableColumn<>("Date Modified");
+   private TreeTableColumn<File, ZonedDateTime> createDateModifiedColumn() {
+      final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn = new TreeTableColumn<>("Date Modified");
+
       dateModifiedColumn.setCellValueFactory(param -> {
          final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(param.getValue().getValue().lastModified()),
                ZoneId.systemDefault());
-         return new ReadOnlyStringWrapper(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                  .format(zonedDateTime));
+         return new ReadOnlyObjectWrapper<>(zonedDateTime);
       });
+
+      dateModifiedColumn.setCellFactory(param ->  new TreeTableCell<File, ZonedDateTime>() {
+               @Override
+               protected void updateItem(ZonedDateTime item, boolean empty) {
+                  super.updateItem(item, empty);
+
+                  if (empty) {
+                     setText("");
+                  } else {
+                     setText(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                           .format(item));
+                  }
+               }
+            });
+
       dateModifiedColumn.setPrefWidth(175);
       return dateModifiedColumn;
    }
 
-   private TreeTableColumn<File, String> createSizeColumn() {
-      final TreeTableColumn<File, String> sizeColumn = new TreeTableColumn<>("Size");
-      sizeColumn.setCellValueFactory(param -> {
-         final String fileSize = FileUtils.byteCountToDisplaySize(param.getValue().getValue().length());
-         return new ReadOnlyStringWrapper(fileSize);
+   private TreeTableColumn<File, Long> createSizeColumn() {
+      final TreeTableColumn<File, Long> sizeColumn = new TreeTableColumn<>("Size");
+
+      sizeColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getValue().length()));
+
+      sizeColumn.setCellFactory(param -> new TreeTableCell<File, Long>() {
+         @Override
+         protected void updateItem(Long item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty) {
+               setText("");
+            } else {
+               setText(FileUtils.byteCountToDisplaySize(item));
+            }
+         }
       });
+
       sizeColumn.setPrefWidth(100);
       return sizeColumn;
    }
