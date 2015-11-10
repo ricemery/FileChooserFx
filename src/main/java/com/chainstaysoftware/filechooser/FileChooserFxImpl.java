@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.preview.PreviewWindow;
+import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -13,6 +14,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -28,6 +30,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -41,9 +44,11 @@ import javafx.util.Callback;
 import javafx.util.Pair;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.controlsfx.control.BreadCrumbBar;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -73,6 +78,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private BooleanProperty showHiddenFiles;
    private File currentDirectory;
    private Button backButton;
+   private BreadCrumbBar<File> breadCrumbBar;
    private FilesView currentView;
    private IconsFilesView iconsFilesView;
    private ListFilesView listFilesView;
@@ -325,14 +331,17 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private ToolBar createToolbar() {
       backButton = createBackButton();
+      final VBox breadCrumbHBox = createBreadCrumbBar();
 
       final ToolBar toolBar = new ToolBar();
       toolBar.setId("Toolbar");
       toolBar.getStyleClass().add("toolbar");
-      toolBar.getItems().setAll(backButton,
-            new Separator(),
+      toolBar.getItems().setAll(
             createViewIconsButton(),
-            createViewListButton());
+            createViewListButton(),
+            new Separator(),
+            backButton,
+            breadCrumbHBox);
 
       return toolBar;
    }
@@ -357,6 +366,46 @@ public final class FileChooserFxImpl implements FileChooserFx {
       });
 
       return backButton;
+   }
+
+   private VBox createBreadCrumbBar() {
+      breadCrumbBar = new BreadCrumbBar<>();
+      breadCrumbBar.setId("dirsBreadCrumbBar");
+      // setting focusTraversable to false is not preventing the breadCrumbBar
+      // from getting focus. For now, I do not want any items in the toolbar
+      // to get focus. This may need to change for accessibility/useability.
+      breadCrumbBar.setCrumbFactory(param -> {
+         final Button button = new BreadCrumbBarSkin.BreadCrumbButton(param.getValue() != null ? param.getValue().getName() : "");
+         button.setFocusTraversable(false);
+         button.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            currentView.getNode().requestFocus();
+         });
+         return button;
+      });
+      breadCrumbBar.setOnCrumbAction(event -> {
+         final File selected = event.getSelectedCrumb().getValue();
+         if (pathsEqual(selected, currentDirectory)) {
+            // Ignore clicks on the current dir.
+            return;
+         }
+
+         changeDirectory(selected, false);
+      });
+
+      final VBox vBox = new VBox();
+      vBox.setAlignment(Pos.CENTER_LEFT);
+      vBox.setFocusTraversable(false);
+      vBox.getChildren().add(breadCrumbBar);
+
+      return vBox;
+   }
+
+   private boolean pathsEqual(final File p1, final File p2) {
+      try {
+         return p1.getCanonicalPath().compareTo(p2.getCanonicalPath()) == 0;
+      } catch (IOException e) {
+         return false;
+      }
    }
 
    private Button createViewListButton() {
@@ -559,18 +608,56 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    private void updateFiles(final File directory) {
-      currentView.setFiles(getFiles(directory));
+      updateFiles(directory, true);
    }
 
-   private void changeDirectory(final File file) {
+   private void updateFiles(final File directory,
+                            final boolean updateBreadCrumbBar) {
+      currentView.setFiles(getFiles(directory));
+
+      if (updateBreadCrumbBar) {
+         updateDirBreadCrumbBar(currentDirectory);
+      }
+   }
+
+   private void changeDirectory(final File directory) {
+      changeDirectory(directory, true);
+   }
+
+   private void changeDirectory(final File directory,
+                                final boolean updateBreadCrumbBar) {
       if (currentDirectory != null) {
          directoryStack.push(currentDirectory);
          backButton.setDisable(false);
       }
-      currentDirectory = file;
+      currentDirectory = directory;
       currentSelection.setValue(null);
 
-      updateFiles(currentDirectory);
+      updateFiles(currentDirectory, updateBreadCrumbBar);
+   }
+
+   private void updateDirBreadCrumbBar(final File directory) {
+      try {
+         File currentDir = directory.getCanonicalFile();
+         TreeItem<File> lastItem = null;
+         TreeItem<File> selectedItem = null;
+         while (currentDir != null) {
+            final TreeItem<File> item = new TreeItem<>();
+            item.setValue(currentDir);
+            item.getChildren().add(lastItem);
+
+            lastItem = item;
+
+            if (selectedItem == null) {
+               selectedItem = lastItem;
+            }
+
+            currentDir = currentDir.getParentFile();
+         }
+
+         breadCrumbBar.setSelectedCrumb(selectedItem);
+      } catch (IOException e) {
+      }
    }
 
    private Stream<File> getFiles(final File directory) {
