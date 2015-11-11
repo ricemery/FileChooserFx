@@ -1,6 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.preview.PreviewWindow;
+import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
@@ -19,7 +19,7 @@ public interface FileChooserFx {
 
    javafx.stage.FileChooser.ExtensionFilter getSelectedExtensionFilter();
 
-   ObservableMap<String, PreviewWindow> getPreviewHandlers();
+   ObservableMap<String, PreviewPane> getPreviewHandlers();
 
    void setInitialDirectory(File value);
 

@@ -1,6 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.preview.PreviewWindow;
+import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
@@ -33,9 +33,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ListFilesView implements FilesView {
-   private final Stage parent;
-   private final Map<String, PreviewWindow> previewHandlers;
+class ListFilesView extends AbstractFilesView {
+   private final Map<String, PreviewPane> previewHandlers;
    private final TreeTableView<File> filesTreeView;
    private final Icons icons = new Icons();
 
@@ -43,8 +42,9 @@ public class ListFilesView implements FilesView {
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public ListFilesView(final Stage parent,
-                        final Map<String, PreviewWindow> previewHandlers) {
-      this.parent = parent;
+                        final Map<String, PreviewPane> previewHandlers) {
+      super(parent);
+
       this.previewHandlers = previewHandlers;
 
       final TreeTableColumn<File, String> nameColumn = createNameColumn(parent);
@@ -143,13 +143,13 @@ public class ListFilesView implements FilesView {
                   }
 
                   final String fileExtension = FilenameUtils.getExtension(file.getName());
-                  final PreviewWindow previewWindow = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
-                  if (previewWindow == null) {
+                  final PreviewPane previewPane = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
+                  if (previewPane == null) {
                      return;
                   }
 
                   final MenuItem imagePreviewItem = new MenuItem("Preview");
-                  imagePreviewItem.setOnAction(v -> previewWindow.showPreview(parent, file));
+                  imagePreviewItem.setOnAction(v ->showPreview(previewPane, file));
 
                   setContextMenu(new ContextMenu(imagePreviewItem));
                }

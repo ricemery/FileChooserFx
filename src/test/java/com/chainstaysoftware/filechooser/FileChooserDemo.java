@@ -1,8 +1,8 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.preview.HeadPreviewWindow;
-import com.chainstaysoftware.filechooser.preview.ImagePreviewWindow;
-import com.chainstaysoftware.filechooser.preview.PreviewWindow;
+import com.chainstaysoftware.filechooser.preview.HeadPreviewPane;
+import com.chainstaysoftware.filechooser.preview.ImagePreviewPane;
+import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -18,10 +18,10 @@ import java.util.HashMap;
 public class FileChooserDemo extends Application {
    @Override
    public void start(Stage primaryStage) throws Exception {
-      final HashMap<String, PreviewWindow> previewHandlers = new HashMap<>();
-      previewHandlers.put("png", new ImagePreviewWindow());
-      previewHandlers.put("jpg", new ImagePreviewWindow());
-      previewHandlers.put("txt", new HeadPreviewWindow(Charset.forName("UTF-8"), 100));
+      final HashMap<String, PreviewPane> previewHandlers = new HashMap<>();
+      previewHandlers.put("png", new ImagePreviewPane());
+      previewHandlers.put("jpg", new ImagePreviewPane());
+      previewHandlers.put("txt", new HeadPreviewPane(Charset.forName("UTF-8"), 100));
 
       final TextFlow textFlow = new TextFlow();
 

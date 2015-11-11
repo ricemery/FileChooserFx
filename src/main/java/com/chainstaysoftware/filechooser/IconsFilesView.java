@@ -1,6 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.preview.PreviewWindow;
+import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.GridViewSkin;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -25,16 +25,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class IconsFilesView implements FilesView {
+class IconsFilesView extends AbstractFilesView {
    private static final int NOT_SELECTED = -1;
 
    // Width and Height of Icon and Filename Cell.
    private static final int CELL_HEIGHT = 90;
    private static final int CELL_WIDTH = 90;
 
-   private final Stage parent;
    private final GridView<Pair<Image, File>> gridView = new GridView<>();
-   private final Map<String, PreviewWindow> previewHandlers;
+   private final Map<String, PreviewPane> previewHandlers;
    private final Icons icons = new Icons();
    private final IntegerProperty selectedCell = new SimpleIntegerProperty(NOT_SELECTED);
 
@@ -42,8 +41,9 @@ class IconsFilesView implements FilesView {
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public IconsFilesView(final Stage parent,
-                         final Map<String, PreviewWindow> previewHandlers) {
-      this.parent = parent;
+                         final Map<String, PreviewPane> previewHandlers) {
+      super(parent);
+
       this.previewHandlers = previewHandlers;
 
       gridView.setCellFactory(gridView1 -> {
@@ -96,13 +96,13 @@ class IconsFilesView implements FilesView {
          }
 
          final String fileExtension = FilenameUtils.getExtension(file.getName());
-         final PreviewWindow previewWindow = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
-         if (previewWindow == null) {
+         final PreviewPane previewPane = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
+         if (previewPane == null) {
             return null;
          }
 
          final MenuItem imagePreviewItem = new MenuItem("Preview");
-         imagePreviewItem.setOnAction(v -> previewWindow.showPreview(parent, file));
+         imagePreviewItem.setOnAction(v -> showPreview(previewPane, file));
 
          return new ContextMenu(imagePreviewItem);
       }

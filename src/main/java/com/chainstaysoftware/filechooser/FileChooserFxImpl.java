@@ -1,6 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.preview.PreviewWindow;
+import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -9,8 +9,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -73,7 +71,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final ObservableList<javafx.stage.FileChooser.ExtensionFilter> extensionFilters =
          FXCollections.observableArrayList();
-   private final ObservableMap<String, PreviewWindow> previewHandlers = FXCollections.observableHashMap();
+   private final ObservableMap<String, PreviewPane> previewHandlers = FXCollections.observableHashMap();
    private final Icons icons = new Icons();
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
@@ -128,7 +126,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    @Override
-   public ObservableMap<String, PreviewWindow> getPreviewHandlers() {
+   public ObservableMap<String, PreviewPane> getPreviewHandlers() {
       return previewHandlers;
    }
 
