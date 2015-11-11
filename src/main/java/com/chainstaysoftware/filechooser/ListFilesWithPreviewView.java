@@ -122,6 +122,8 @@ class ListFilesWithPreviewView extends AbstractFilesView {
                           DirectoryListItem newValue) {
          previewHbox.getChildren().clear();
 
+         callback.setCurrentSelection(newValue == null ? null : newValue.getFile());
+
          if (newValue == null) {
             return;
          }
