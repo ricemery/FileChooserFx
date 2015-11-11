@@ -8,13 +8,11 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import javafx.util.Pair;
 import org.apache.commons.io.FilenameUtils;
 import org.controlsfx.control.GridView;
 
@@ -32,7 +30,7 @@ class IconsFilesView extends AbstractFilesView {
    private static final int CELL_HEIGHT = 90;
    private static final int CELL_WIDTH = 90;
 
-   private final GridView<Pair<Image, File>> gridView = new GridView<>();
+   private final GridView<DirectoryListItem> gridView = new GridView<>();
    private final Map<String, PreviewPane> previewHandlers;
    private final Icons icons = new Icons();
    private final IntegerProperty selectedCell = new SimpleIntegerProperty(NOT_SELECTED);
@@ -79,18 +77,18 @@ class IconsFilesView extends AbstractFilesView {
       this.keyEventHandler = eventHandler;
    }
 
-   private List<Pair<Image, File>> getIcons(final Stream<File> fileStream) {
-      return fileStream.map(this::getIconPair).collect(Collectors.toList());
+   private List<DirectoryListItem> getIcons(final Stream<File> fileStream) {
+      return fileStream.map(this::getDirListItem).collect(Collectors.toList());
    }
 
-   private Pair<Image, File> getIconPair(final File file) {
-      return new Pair<>(icons.getIconForFile(file), file);
+   private DirectoryListItem getDirListItem(final File file) {
+      return new DirectoryListItem(file, icons.getIconForFile(file));
    }
 
    private class IconGridCellContextMenuFactImpl implements IconGridCellContextMenuFactory {
       @Override
-      public ContextMenu create(final Pair<Image, File> pair) {
-         final File file = pair.getValue();
+      public ContextMenu create(final DirectoryListItem item) {
+         final File file = item.getFile();
          if (file.isDirectory()) {
             return null;
          }
@@ -126,7 +124,7 @@ class IconsFilesView extends AbstractFilesView {
          } else {
             selectedCell.setValue(target.getIndex());
 
-            final File file = gridView.getItems().get(selectedCell.get()).getValue();
+            final File file = gridView.getItems().get(selectedCell.get()).getFile();
             callback.setCurrentSelection(file);
          }
       }
@@ -165,8 +163,8 @@ class IconsFilesView extends AbstractFilesView {
                return;
             }
 
-            final Pair<Image, File> pair = gridView.getItems().get(selectedCell.get());
-            final File file = pair.getValue();
+            final DirectoryListItem item = gridView.getItems().get(selectedCell.get());
+            final File file = item.getFile();
             if (!file.isDirectory()) {
                return;
             }
@@ -179,7 +177,7 @@ class IconsFilesView extends AbstractFilesView {
             return;
          }
 
-         final File file = gridView.getItems().get(selectedCell.get()).getValue();
+         final File file = gridView.getItems().get(selectedCell.get()).getFile();
          callback.setCurrentSelection(file);
       }
    }

@@ -23,7 +23,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -41,8 +40,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.util.Callback;
-import javafx.util.Pair;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.BreadCrumbBar;
@@ -87,6 +84,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private FilesView currentView;
    private IconsFilesView iconsFilesView;
    private ListFilesView listFilesView;
+   private ListFilesWithPreviewView listFilesWithPreviewView;
    private SplitPane splitPane;
    private FileChooserCallback fileChooserCallback;
    private HelpCallback helpCallback;
@@ -96,6 +94,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private boolean hideFiles;
    private ToggleButton viewIconsButton;
    private ToggleButton viewListButton;
+   private ToggleButton viewListWithPreviewButton;
    private TextField fileNameField;
 
    @Override
@@ -269,6 +268,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private SplitPane createSplitPane() {
       iconsFilesView = createIconsFilesView();
       listFilesView = createListFilesView();
+      listFilesWithPreviewView = createListFilesWithPreviewView();
       currentView = listFilesView;
 
       placesView = createPlacesView();
@@ -289,6 +289,13 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private ListFilesView createListFilesView() {
       final ListFilesView view = new ListFilesView(stage, previewHandlers);
+      view.setCallback(new FilesViewCallbackImpl());
+      view.setOnKeyPressed(new KeyEventHandler());
+      return view;
+   }
+
+   private ListFilesWithPreviewView createListFilesWithPreviewView() {
+      final ListFilesWithPreviewView view = new ListFilesWithPreviewView(stage, previewHandlers);
       view.setCallback(new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
@@ -341,17 +348,23 @@ public final class FileChooserFxImpl implements FileChooserFx {
       backButton = createBackButton();
       final VBox breadCrumbHBox = createBreadCrumbBar();
       viewListButton = createViewListButton();
+      if (!hideFiles) {
+         viewListWithPreviewButton = createViewListWithPreviewButton();
+      }
       viewIconsButton = createViewIconsButton();
 
       final ToolBar toolBar = new ToolBar();
       toolBar.setId("Toolbar");
       toolBar.getStyleClass().add("toolbar");
-      toolBar.getItems().setAll(
-         viewListButton,
-         viewIconsButton,
-         new Separator(),
-         backButton,
-         breadCrumbHBox);
+      final ObservableList<Node> items = toolBar.getItems();
+      items.add(viewListButton);
+      if(!hideFiles) {
+         items.add(viewListWithPreviewButton);
+      }
+      items.add(viewIconsButton);
+      items.add(new Separator());
+      items.add(backButton);
+      items.add(breadCrumbHBox);
 
       return toolBar;
    }
@@ -435,6 +448,28 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
          setCurrentView(listFilesView);
          viewIconsButton.setSelected(false);
+         viewListWithPreviewButton.setSelected(false);
+      });
+
+      return viewButton;
+   }
+
+   private ToggleButton createViewListWithPreviewButton() {
+      final ToggleButton viewButton = new ToggleButton();
+      viewButton.setId("viewListWithPreviewButton");
+      viewButton.getStyleClass().add("toolbartogglebutton");
+      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_WITH_PREVIEW_VIEW_24)));
+      viewButton.setTooltip(new Tooltip(resourceBundle.getString("listwithpreviewview.tooltip")));
+      viewButton.setFocusTraversable(false);
+      viewButton.setSelected(false);
+      viewButton.selectedProperty().addListener((observable, oldValue, selected) -> {
+         if (!selected) {
+            return;
+         }
+
+         setCurrentView(listFilesWithPreviewView);
+         viewListButton.setSelected(false);
+         viewIconsButton.setSelected(false);
       });
 
       return viewButton;
@@ -454,6 +489,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
          setCurrentView(iconsFilesView);
          viewListButton.setSelected(false);
+         viewListWithPreviewButton.setSelected(false);
       });
 
       return viewButton;
@@ -461,58 +497,32 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private Node createPlacesView() {
       // TODO: Do a better job determining/showing the available mount points.
-      final LinkedList<Pair<Image, File>> places = new LinkedList<>();
+      final LinkedList<DirectoryListItem> places = new LinkedList<>();
 
       final Image driveIcon = icons.getIcon(Icons.HARDDISK_64);
       final List<File> roots = Arrays.asList(File.listRoots());
-      roots.forEach(r -> places.add(new Pair<>(driveIcon, r)));
+      roots.forEach(r -> places.add(new DirectoryListItem(r, driveIcon)));
 
       final String homeDirStr = System.getProperty("user.home");
       if (homeDirStr != null) {
-         places.add(new Pair<>(icons.getIcon(Icons.USER_HOME_64), new File(homeDirStr)));
+         places.add(new DirectoryListItem(new File(homeDirStr), icons.getIcon(Icons.USER_HOME_64)));
       }
 
-      final TableView<Pair<Image, File>> view = new TableView<>();
+      final TableView<DirectoryListItem> view = new TableView<>();
       view.setId("placesView");
 
-      final TableColumn<Pair<Image, File>, Pair<Image, File>> placesColumn
+      final TableColumn<DirectoryListItem, DirectoryListItem> placesColumn
             = new TableColumn<>(resourceBundle.getString("placeslist.text"));
       placesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-      placesColumn.setCellFactory(new PlacesColumnCellFactory());
+      placesColumn.setCellFactory(new DirListNameColumnCellFactory(false));
       placesColumn.prefWidthProperty().bind(view.widthProperty());
 
       view.getColumns().addAll(placesColumn);
       view.getItems().addAll(places);
-      view.setOnMouseClicked(event -> changeDirectory(view.getSelectionModel().getSelectedItem().getValue()));
+      view.setOnMouseClicked(event -> changeDirectory(view.getSelectionModel().getSelectedItem().getFile()));
       view.setOnKeyPressed(new KeyEventHandler());
 
       return view;
-   }
-
-   private static class PlacesColumnCellFactory
-         implements Callback<TableColumn<Pair<Image, File>, Pair<Image, File>>, TableCell<Pair<Image, File>, Pair<Image, File>>> {
-      @Override
-      public TableCell<Pair<Image, File>, Pair<Image, File>> call(TableColumn<Pair<Image, File>, Pair<Image, File>> param) {
-         return new TableCell<Pair<Image, File>, Pair<Image, File>>() {
-            @Override
-            protected void updateItem(Pair<Image, File> item, boolean empty) {
-               super.updateItem(item, empty);
-
-               if (empty || item == null) {
-                  setText(null);
-                  setGraphic(null);
-               } else {
-                  setText(item.getValue().toString());
-
-                  final ImageView graphic = new ImageView(item.getKey());
-                  graphic.setFitHeight(Icons.SMALL_ICON_HEIGHT);
-                  graphic.setFitWidth(Icons.SMALL_ICON_WIDTH);
-                  graphic.setPreserveRatio(true);
-                  setGraphic(graphic);
-               }
-            }
-         };
-      }
    }
 
    private ButtonBar createButtonBar() {

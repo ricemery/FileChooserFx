@@ -12,6 +12,7 @@ public class Icons {
    public static final String BACK_ARROW_24 = "/icons8/24x24/Back-24.png";
    public static final String ICON_VIEW_24 = "/icons8/24x24/Small Icons-24.png";
    public static final String LIST_VIEW_24 = "/icons8/24x24/List-24.png";
+   public static final String LIST_WITH_PREVIEW_VIEW_24 = "/icons8/24x24/Columns-24.png";
 
    public static final String FOLDER_64 = "/icons8/64x64/Folder-64.png";
    public static final String GENERIC_FILE_64 = "/icons8/64x64/File-64.png";

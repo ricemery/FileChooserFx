@@ -29,6 +29,7 @@ public class ImagePreviewPane implements PreviewPane {
       hBox.setId("imagePreviewHbox");
       hBox.getChildren().add(imageView);
       hBox.setAlignment(Pos.CENTER);
+      hBox.setMinSize(0, 0);
 
       imageView.fitWidthProperty().bind(hBox.widthProperty());
       imageView.fitHeightProperty().bind(hBox.heightProperty());

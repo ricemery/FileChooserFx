@@ -5,12 +5,9 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.util.Pair;
 import org.controlsfx.control.GridCell;
 
-import java.io.File;
-
-class IconGridCell extends GridCell<Pair<Image, File>> {
+class IconGridCell extends GridCell<DirectoryListItem> {
    private final ImageView imageView;
    private final boolean preserveImageProperties;
    private final IconGridCellContextMenuFactory contextMenuFactory;
@@ -40,17 +37,17 @@ class IconGridCell extends GridCell<Pair<Image, File>> {
    }
 
    @Override
-   protected void updateItem(final Pair<Image, File> pair,
+   protected void updateItem(final DirectoryListItem item,
                              final boolean empty) {
-      super.updateItem(pair, empty);
+      super.updateItem(item, empty);
 
       setContextMenu(null);
 
       if (empty) {
          setGraphic(null);
       } else {
-         final Image image = pair.getKey();
-         final String text = pair.getValue().getName();
+         final Image image = item.getIcon();
+         final String text = item.getFile().getName();
 
          if (preserveImageProperties) {
             imageView.setPreserveRatio(true);
@@ -61,10 +58,10 @@ class IconGridCell extends GridCell<Pair<Image, File>> {
          setGraphic(imageView);
          setText(text);
          setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
-         setUserData(pair.getValue());
+         setUserData(item.getFile());
 
          if (contextMenuFactory != null) {
-            setContextMenu(contextMenuFactory.create(pair));
+            setContextMenu(contextMenuFactory.create(item));
          }
       }
    }

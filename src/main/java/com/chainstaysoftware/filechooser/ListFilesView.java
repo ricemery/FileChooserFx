@@ -30,11 +30,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class ListFilesView extends AbstractFilesView {
    private final Map<String, PreviewPane> previewHandlers;
+   private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TreeTableView<File> filesTreeView;
    private final Icons icons = new Icons();
 
@@ -72,14 +74,16 @@ class ListFilesView extends AbstractFilesView {
    }
 
    private TreeTableColumn<File, String> createNameColumn(Stage parent) {
-      final TreeTableColumn<File, String> nameColumn = new TreeTableColumn<>("Name");
+      final TreeTableColumn<File, String> nameColumn
+            = new TreeTableColumn<>(resourceBundle.getString("listfilesview.name"));
       nameColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getName()));
       nameColumn.prefWidthProperty().bind(parent.widthProperty().divide(2));
       return nameColumn;
    }
 
    private TreeTableColumn<File, ZonedDateTime> createDateModifiedColumn() {
-      final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn = new TreeTableColumn<>("Date Modified");
+      final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn
+            = new TreeTableColumn<>(resourceBundle.getString("listfilesview.datemodified"));
 
       dateModifiedColumn.setCellValueFactory(param -> {
          final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(param.getValue().getValue().lastModified()),
@@ -106,7 +110,8 @@ class ListFilesView extends AbstractFilesView {
    }
 
    private TreeTableColumn<File, Long> createSizeColumn() {
-      final TreeTableColumn<File, Long> sizeColumn = new TreeTableColumn<>("Size");
+      final TreeTableColumn<File, Long> sizeColumn
+            = new TreeTableColumn<>(resourceBundle.getString("listfilesview.size"));
 
       sizeColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getValue().length()));
 
