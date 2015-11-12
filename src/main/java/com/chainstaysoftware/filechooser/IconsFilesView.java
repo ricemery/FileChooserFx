@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.GridViewSkin;
 import javafx.beans.property.IntegerProperty;

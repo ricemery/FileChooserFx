@@ -1,6 +1,6 @@
 package com.chainstaysoftware.filechooser.preview;
 
-import com.chainstaysoftware.filechooser.Icons;
+import com.chainstaysoftware.filechooser.icons.Icons;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -11,6 +11,7 @@ import javafx.scene.layout.VBox;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
@@ -90,10 +91,10 @@ public class PropertiesPreviewPane implements PreviewPane {
    }
 
    private ImageView createImageView() {
-      final ImageView imageView = new ImageView();
-      imageView.setId("propertiesPreviewImageView");
-      imageView.setPreserveRatio(true);
-      return imageView;
+      final ImageView view = new ImageView();
+      view.setId("propertiesPreviewImageView");
+      view.setPreserveRatio(true);
+      return view;
    }
 
    /**
@@ -114,7 +115,7 @@ public class PropertiesPreviewPane implements PreviewPane {
          modifiedValLabel.setText(formatTime(attr.lastModifiedTime()));
          lastOpenedLabel.setText(formatTime(attr.lastAccessTime()));
          sizeLabel.setText(FileUtils.byteCountToDisplaySize(attr.size()));
-      } catch (Exception e) {
+      } catch (IOException e) {
          logger.log(Level.WARNING, "Could not retrieve file attributes for - " + file, e);
 
          imageView.setImage(null);
@@ -130,7 +131,7 @@ public class PropertiesPreviewPane implements PreviewPane {
       final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(fileTime.toInstant(),
             ZoneId.systemDefault());
 
-      return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+      return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG)
             .format(zonedDateTime);
    }
 

@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
@@ -566,7 +567,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       if (saveMode) {
          fileNameField.textProperty().addListener((observable, oldValue, newValue) -> {
-            doneButton.setDisable(newValue == null || newValue.trim().equals(""));
+            doneButton.setDisable(newValue == null || "".equals(newValue.trim()));
          });
       }
 
@@ -666,7 +667,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    /**
     * Cell Factory for file extensions ComboBox.
     */
-   private class ExtensionsCellFactory implements Callback<ListView<FileChooser.ExtensionFilter>, ListCell<FileChooser.ExtensionFilter>> {
+   private static class ExtensionsCellFactory implements Callback<ListView<FileChooser.ExtensionFilter>, ListCell<FileChooser.ExtensionFilter>> {
       @Override
       public ListCell<FileChooser.ExtensionFilter> call(ListView<FileChooser.ExtensionFilter> param) {
          return new ListCell<FileChooser.ExtensionFilter>(){
@@ -688,7 +689,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
     * ButtonCell for file extensions ComboBox - this sets the text for the selected
     * item.
     */
-   private class ExtensionsButtonCell extends ListCell<FileChooser.ExtensionFilter> {
+   private static class ExtensionsButtonCell extends ListCell<FileChooser.ExtensionFilter> {
       @Override
       protected void updateItem(FileChooser.ExtensionFilter item, boolean empty) {
          super.updateItem(item, empty);
@@ -791,14 +792,14 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
 
       final FileFilter filter = getFileFilter();
-      final File[] files = filter == null ? directory.listFiles() : directory.listFiles(filter);
+      final File[] files = directory.listFiles(filter);
       return files == null
             ? Stream.empty()
             : Arrays.stream(files).filter(new GetFilesPredicate());
    }
 
    private WildcardFileFilter getFileFilter() {
-      final List<String> extensionFilter  = extensionsComboBox.getValue().getExtensions();
+      final List<String> extensionFilter = extensionsComboBox.getValue().getExtensions();
       return new DirOrWildcardFilter(extensionFilter);
    }
 

@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;

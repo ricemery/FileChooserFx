@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
@@ -11,7 +12,7 @@ import javafx.util.Callback;
 class DirListNameColumnCellFactory
       implements Callback<TableColumn<DirectoryListItem, DirectoryListItem>, TableCell<DirectoryListItem, DirectoryListItem>> {
 
-   private boolean nameOnly;
+   private final boolean nameOnly;
 
    /**
     * Constructor

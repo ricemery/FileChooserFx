@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import com.chainstaysoftware.filechooser.preview.PropertiesPreviewPane;
 import javafx.beans.property.ReadOnlyObjectWrapper;
