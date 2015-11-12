@@ -10,6 +10,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.nio.charset.Charset;
@@ -30,14 +31,17 @@ public class FileChooserDemo extends Application {
          final FileChooserFx fileChooser = new FileChooserFxImpl();
          fileChooser.setTitle("File Chooser");
          fileChooser.setShowHiddenFiles(false);
-         //fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text files (txt)", "*.txt"));
-         //fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Text files (txt)", "*.txt"));
+         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text files (txt)", "*.txt"),
+               new FileChooser.ExtensionFilter("XML files", "*.xml"),
+               new FileChooser.ExtensionFilter("All files", "*.*"));
+         fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("XML files (xml)", "*.xml"));
          fileChooser.getPreviewHandlers().putAll(previewHandlers);
          fileChooser.setHelpCallback(() -> System.out.println("Help invoked"));
 
          fileChooser.showOpenDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
-                     .add(new Text("File to open - " + fileOptional.toString() + "\r\n")));
+                     .add(new Text("File to open - " + fileOptional.toString() + "\r\n"
+                                    + "Selected Extension Filter - " + fileChooser.getSelectedExtensionFilter().getDescription() + "\r\n")));
       });
 
       final Button fileSaveButton = new Button("Save File");

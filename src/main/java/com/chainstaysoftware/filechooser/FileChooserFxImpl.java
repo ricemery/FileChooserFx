@@ -21,6 +21,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
@@ -38,8 +40,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.util.Callback;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.BreadCrumbBar;
@@ -47,6 +51,7 @@ import org.controlsfx.control.BreadCrumbBar;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -56,7 +61,6 @@ import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class FileChooserFxImpl implements FileChooserFx {
@@ -96,6 +100,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ToggleButton viewListButton;
    private ToggleButton viewListWithPreviewButton;
    private TextField fileNameField;
+   private ComboBox<FileChooser.ExtensionFilter> extensionsComboBox;
 
    @Override
    public ObservableList<javafx.stage.FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -597,21 +602,33 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return Optional.of(helpButton);
    }
 
+   /**
+    * Create the Pane that contains the Extensions ComboBox and optionally
+    * the New Folder button.
+    */
    private Pane createExtensionsPane() {
       final BorderPane borderPane = new BorderPane();
       borderPane.setId("extensionsBorderPane");
       borderPane.getStyleClass().add("extensionspane");
 
       if (!hideFiles) {
-         // TODO: This is goofy
-         final ComboBox<String> extensions = new ComboBox<>();
-         extensions.getItems().addAll(extensionFilters.isEmpty()
-               ? "*.*"
-               : extensionFilters.stream()
-               .map(javafx.stage.FileChooser.ExtensionFilter::getDescription)
-               .collect(Collectors.joining(", ")));
-         extensions.setValue(extensions.getItems().get(0));
-         borderPane.setRight(extensions);
+         final List<FileChooser.ExtensionFilter> allFiles = new ArrayList<>(1);
+         allFiles.add(new FileChooser.ExtensionFilter(resourceBundle.getString("filterdropdown.allfiles"), "*.*"));
+
+         extensionsComboBox = new ComboBox<>();
+         extensionsComboBox.getItems().addAll(extensionFilters.isEmpty()
+               ? allFiles
+               : extensionFilters);
+         extensionsComboBox.setCellFactory(new ExtensionsCellFactory());
+         extensionsComboBox.setButtonCell(new ExtensionsButtonCell());
+         extensionsComboBox.setOnAction(v -> {
+            setSelectedExtensionFilter(extensionsComboBox.getValue());
+            updateFiles(currentDirectory, false);
+         });
+
+         updateSelectedExtensionFilter(extensionsComboBox);
+
+         borderPane.setRight(extensionsComboBox);
       }
 
       if (saveMode || hideFiles) {
@@ -624,6 +641,69 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return borderPane;
    }
 
+   /**
+    * Sets the selected item within the Extensions ComboBox
+    */
+   private void updateSelectedExtensionFilter(final ComboBox<FileChooser.ExtensionFilter> extensions) {
+      if (selectedExtensionFilter == null || selectedExtensionFilter.getValue() == null) {
+         setSelectedExtensionFilter(extensions.getItems().get(0));
+      }
+
+      final List<String> selectedExtensions = selectedExtensionFilter.getValue().getExtensions();
+      final Optional<FileChooser.ExtensionFilter> extensionFilter
+            = extensionFilters.stream()
+               .filter(filter -> filter.getExtensions().containsAll(selectedExtensions))
+               .findFirst();
+      if (extensionFilter.isPresent()) {
+         setSelectedExtensionFilter(extensionFilter.get());
+         extensions.setValue(extensionFilter.get());
+      } else {
+         setSelectedExtensionFilter(extensions.getItems().get(0));
+         extensions.setValue(extensions.getItems().get(0));
+      }
+   }
+
+   /**
+    * Cell Factory for file extensions ComboBox.
+    */
+   private class ExtensionsCellFactory implements Callback<ListView<FileChooser.ExtensionFilter>, ListCell<FileChooser.ExtensionFilter>> {
+      @Override
+      public ListCell<FileChooser.ExtensionFilter> call(ListView<FileChooser.ExtensionFilter> param) {
+         return new ListCell<FileChooser.ExtensionFilter>(){
+            @Override
+            protected void updateItem(FileChooser.ExtensionFilter item, boolean empty) {
+               super.updateItem(item, empty);
+
+               if (item == null) {
+                  setText(null);
+               } else {
+                  setText(item.getDescription());
+               }
+            }
+         };
+      }
+   }
+
+   /**
+    * ButtonCell for file extensions ComboBox - this sets the text for the selected
+    * item.
+    */
+   private class ExtensionsButtonCell extends ListCell<FileChooser.ExtensionFilter> {
+      @Override
+      protected void updateItem(FileChooser.ExtensionFilter item, boolean empty) {
+         super.updateItem(item, empty);
+
+         if (item == null) {
+            setText(null);
+         } else {
+            setText(item.getDescription());
+         }
+      }
+   }
+
+   /**
+    * Action for displaying dialog for creating a new folder.
+    */
    private class NewFolderAction implements EventHandler<ActionEvent> {
       @Override
       public void handle(ActionEvent event) {
@@ -718,11 +798,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    private WildcardFileFilter getFileFilter() {
-      final List<String> extensionFilter
-            = getSelectedExtensionFilter() == null
-               ? extensionFilters.isEmpty() ? null : extensionFilters.get(0).getExtensions()
-               : selectedExtensionFilter.get().getExtensions();
-      return extensionFilter == null ? null : new DirOrWildcardFilter(extensionFilter);
+      final List<String> extensionFilter  = extensionsComboBox.getValue().getExtensions();
+      return new DirOrWildcardFilter(extensionFilter);
    }
 
    private class GetFilesPredicate implements Predicate<File> {
