@@ -2,7 +2,6 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
-import com.chainstaysoftware.filechooser.preview.PropertiesPreviewPane;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -17,10 +16,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
-import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -31,12 +28,11 @@ import java.util.stream.Stream;
  */
 class ListFilesWithPreviewView extends AbstractFilesView {
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
-   private final Map<String, PreviewPane> previewHandlers;
    private final TableView<DirectoryListItem> tableView = new TableView<>();
    private final SplitPane splitPane;
    private final HBox previewHbox;
    private final Icons icons = new Icons();
-   private final PropertiesPreviewPane propertiesPreviewPane = new PropertiesPreviewPane();
+   private final PropertiesPreviewPane propertiesPreviewPane;
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
@@ -46,7 +42,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
                                    final Map<String, PreviewPane> previewHandlers) {
       super(parent);
 
-      this.previewHandlers = previewHandlers;
+      propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers);
 
       previewHbox = new HBox();
       previewHbox.setId("previewHbox");
@@ -129,26 +125,13 @@ class ListFilesWithPreviewView extends AbstractFilesView {
             return;
          }
 
-         final File file = newValue.getFile();
-         if (file.isDirectory()) {
-            preview(propertiesPreviewPane, file);
-            return;
-         }
-
-         final String extension = FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ENGLISH);
-         final PreviewPane previewPane = previewHandlers.get(extension);
-         if (previewPane != null) {
-            preview(previewPane, file);
-         } else {
-            preview(propertiesPreviewPane, file);
-         }
+         preview(newValue.getFile());
       }
 
-      private void preview(final PreviewPane previewPane,
-                           final File file) {
-         previewPane.setFile(file);
-         previewHbox.getChildren().setAll(previewPane.getPane());
-         HBox.setHgrow(previewPane.getPane(), Priority.ALWAYS);
+      private void preview(final File file) {
+         propertiesPreviewPane.setFile(file);
+         previewHbox.getChildren().setAll(propertiesPreviewPane.getPane());
+         HBox.setHgrow(propertiesPreviewPane.getPane(), Priority.ALWAYS);
       }
    }
 }

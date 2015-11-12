@@ -55,4 +55,10 @@
     -fx-font-weight: bolder;
 }
 
+.propertiespreview-namevaluelabel {
+    -fx-font-weight: bolder;
+    -fx-font-size: 1.166667em; /* 14pt - 2 more than the default font */
+}
+
+
 

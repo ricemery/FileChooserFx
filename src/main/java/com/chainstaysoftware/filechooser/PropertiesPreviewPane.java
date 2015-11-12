@@ -1,14 +1,19 @@
-package com.chainstaysoftware.filechooser.preview;
+package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,11 +24,16 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class PropertiesPreviewPane implements PreviewPane {
+/**
+ * Pane used to preview a file contents and show the properties of a file (name, size, etc).
+ */
+public class PropertiesPreviewPane {
    private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.PropertiesPreviewPane");
 
    private static final int CREATED_LABEL_COL = 0;
@@ -48,26 +58,44 @@ public class PropertiesPreviewPane implements PreviewPane {
 
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final Icons icons = new Icons();
+   private final Map<String, PreviewPane> previewHandlers;
 
    private final VBox vBox;
-   private final Label nameLabel = createValueLabel();
+   private final Label nameLabel = createNameValueLabel();
    private final Label createdValLabel = createValueLabel();
    private final Label modifiedValLabel = createValueLabel();
    private final Label lastOpenedLabel = createValueLabel();
    private final Label sizeLabel = createValueLabel();
+   private final HBox previewPaneContainerPane = createPreviewContainerPane();
    private final ImageView imageView = createImageView();
 
-   public PropertiesPreviewPane()
+   public PropertiesPreviewPane(final Map<String, PreviewPane> previewHandlers)
    {
+      this.previewHandlers = previewHandlers;
+
       final GridPane gridPane = createGridPane();
 
       vBox = new VBox();
       vBox.setId("propertiesPreviewVbox");
       vBox.getStyleClass().add("propertiespreview-vbox");
       vBox.setAlignment(Pos.CENTER);
-      vBox.getChildren().addAll(imageView, nameLabel, gridPane);
+      vBox.getChildren().addAll(previewPaneContainerPane, nameLabel, gridPane);
+      VBox.setVgrow(previewPaneContainerPane, Priority.ALWAYS);
    }
 
+   /**
+    * Create control to contain the preview for a file.
+    */
+   private HBox createPreviewContainerPane() {
+      final HBox hBox = new HBox();
+      hBox.setMinSize(0,0);
+      hBox.setAlignment(Pos.CENTER);
+      return hBox;
+   }
+
+   /**
+    * Create the Grid to contain the properties for the previewed file.
+    */
    private GridPane createGridPane() {
       final GridPane gridPane = new GridPane();
       gridPane.setId("propertiesPreviewGrid");
@@ -90,6 +118,10 @@ public class PropertiesPreviewPane implements PreviewPane {
       return gridPane;
    }
 
+   /**
+    * Create ImageView to contain the Icon for the previewed file if no other
+    * preview is available.
+    */
    private ImageView createImageView() {
       final ImageView view = new ImageView();
       view.setId("propertiesPreviewImageView");
@@ -102,10 +134,9 @@ public class PropertiesPreviewPane implements PreviewPane {
     *
     * @param file
     */
-   @Override
    public void setFile(final File file) {
       try {
-         imageView.setImage(icons.getIconForFile(file));
+         setContainerNode(file);
 
          nameLabel.setText(file.getName());
 
@@ -127,6 +158,23 @@ public class PropertiesPreviewPane implements PreviewPane {
       }
    }
 
+   /**
+    * Update the preview node with the preview of the passed in file.
+    */
+   private void setContainerNode(final File file) {
+      final String extension = FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ENGLISH);
+      final PreviewPane previewPane = previewHandlers.get(extension);
+      if (previewPane == null) {
+         previewPaneContainerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+         imageView.setImage(icons.getIconForFile(file));
+         previewPaneContainerPane.getChildren().setAll(imageView);
+      } else {
+         previewPaneContainerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_COMPUTED_SIZE);
+         previewPane.setFile(file);
+         previewPaneContainerPane.getChildren().setAll(previewPane.getPane());
+      }
+   }
+
    private String formatTime(final FileTime fileTime) {
       final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(fileTime.toInstant(),
             ZoneId.systemDefault());
@@ -135,7 +183,6 @@ public class PropertiesPreviewPane implements PreviewPane {
             .format(zonedDateTime);
    }
 
-   @Override
    public Pane getPane() {
       return vBox;
    }
@@ -149,6 +196,13 @@ public class PropertiesPreviewPane implements PreviewPane {
    private Label createValueLabel() {
       final Label label = new Label();
       label.getStyleClass().add("propertiespreview-valuelabel");
+      return label;
+   }
+
+   private Label createNameValueLabel() {
+      final Label label = new Label();
+      label.getStyleClass().add("propertiespreview-namevaluelabel");
+      label.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
       return label;
    }
 }

@@ -32,6 +32,8 @@ public class HeadPreviewPane implements PreviewPane {
 
       textArea.setId("headPreviewTextArea");
       textArea.setEditable(false);
+      textArea.setMinSize(0, 0);
+      textArea.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
       borderPane = new BorderPane();
       borderPane.setId("headPreviewPane");
