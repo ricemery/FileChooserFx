@@ -11,8 +11,13 @@ import javafx.stage.StageStyle;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 abstract class AbstractFilesView implements FilesView {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.AbstractFilesView");
+
    private final Stage parent;
 
    AbstractFilesView(final Stage parent) {
@@ -21,13 +26,20 @@ abstract class AbstractFilesView implements FilesView {
 
    /**
     * Create {@link Stage} to display {@link PreviewPane} and show the {@link Stage}
-    * @param previewPane {@link Node} to display the file within.
+    * @param previewPaneClass {@link Node} to display the file within.
     * @param file {@link File} to preview.
     */
-   void showPreview(final PreviewPane previewPane,
+   void showPreview(final Class<? extends PreviewPane> previewPaneClass,
                     final File file) {
+      final Optional<PreviewPane> previewPaneOpt = PreviewPaneFactory.create(previewPaneClass);
+      if (!previewPaneOpt.isPresent()) {
+         logger.log(Level.SEVERE, "No PreviewPane created.");
+         return;
+      }
+
       final Stage stage = new Stage();
 
+      final PreviewPane previewPane = previewPaneOpt.get();
       final Pane pane = previewPane.getPane();
       pane.prefWidthProperty().bind(stage.widthProperty());
       pane.prefHeightProperty().bind(stage.heightProperty());

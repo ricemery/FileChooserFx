@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class ListFilesView extends AbstractFilesView {
-   private final Map<String, PreviewPane> previewHandlers;
+   private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TreeTableView<File> filesTreeView;
    private final Icons icons = new Icons();
@@ -45,7 +45,7 @@ class ListFilesView extends AbstractFilesView {
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public ListFilesView(final Stage parent,
-                        final Map<String, PreviewPane> previewHandlers) {
+                        final Map<String, Class<? extends PreviewPane>> previewHandlers) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
@@ -149,13 +149,13 @@ class ListFilesView extends AbstractFilesView {
                   }
 
                   final String fileExtension = FilenameUtils.getExtension(file.getName());
-                  final PreviewPane previewPane = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
-                  if (previewPane == null) {
+                  final Class<? extends PreviewPane> previewPaneClass = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
+                  if (previewPaneClass == null) {
                      return;
                   }
 
                   final MenuItem imagePreviewItem = new MenuItem("Preview");
-                  imagePreviewItem.setOnAction(v ->showPreview(previewPane, file));
+                  imagePreviewItem.setOnAction(v ->showPreview(previewPaneClass, file));
 
                   setContextMenu(new ContextMenu(imagePreviewItem));
                }

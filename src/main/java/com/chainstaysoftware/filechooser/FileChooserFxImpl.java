@@ -73,7 +73,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final ObservableList<javafx.stage.FileChooser.ExtensionFilter> extensionFilters =
          FXCollections.observableArrayList();
-   private final ObservableMap<String, PreviewPane> previewHandlers = FXCollections.observableHashMap();
+   private final ObservableMap<String, Class<? extends PreviewPane>> previewHandlers = FXCollections.observableHashMap();
    private final Icons icons = new Icons();
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
@@ -131,7 +131,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    @Override
-   public ObservableMap<String, PreviewPane> getPreviewHandlers() {
+   public ObservableMap<String, Class<? extends PreviewPane>> getPreviewHandlers() {
       return previewHandlers;
    }
 

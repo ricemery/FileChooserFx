@@ -19,10 +19,10 @@ import java.util.HashMap;
 public class FileChooserDemo extends Application {
    @Override
    public void start(Stage primaryStage) throws Exception {
-      final HashMap<String, PreviewPane> previewHandlers = new HashMap<>();
-      previewHandlers.put("png", new ImagePreviewPane());
-      previewHandlers.put("jpg", new ImagePreviewPane());
-      previewHandlers.put("txt", new HeadPreviewPane(Charset.forName("UTF-8"), 100));
+      final HashMap<String, Class<? extends PreviewPane>> previewHandlers = new HashMap<>();
+      previewHandlers.put("png", ImagePreviewPane.class);
+      previewHandlers.put("jpg", ImagePreviewPane.class);
+      previewHandlers.put("txt", HeadPreviewPane.class);
 
       final TextFlow textFlow = new TextFlow();
 
