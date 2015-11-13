@@ -556,14 +556,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       ButtonBar.setButtonData(doneButton, ButtonBar.ButtonData.OK_DONE);
       doneButton.setId("doneButton");
       doneButton.setDisable(!saveMode || getInitialFileName() == null);
-      doneButton.setOnAction(event -> {
-         if (currentSelection == null) {
-            return;
-         }
-
-         fileChooserCallback.fileChosen(Optional.of(currentSelection.getValue()));
-         stage.close();
-      });
+      doneButton.setOnAction(saveMode ? new SaveDoneEventHandler() : new BrowseDoneEventHandler());
 
       if (saveMode) {
          fileNameField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -575,6 +568,37 @@ public final class FileChooserFxImpl implements FileChooserFx {
             doneButton.setDisable(newValue == null || (!hideFiles && newValue.isDirectory()))
       );
       return doneButton;
+   }
+
+   /**
+    * EventHandler to invoke when Done Button is pressed and in browse mode.
+    */
+   private class BrowseDoneEventHandler implements EventHandler<ActionEvent> {
+      @Override
+      public void handle(ActionEvent event) {
+         if (currentSelection.getValue() == null) {
+            return;
+         }
+
+         fileChooserCallback.fileChosen(Optional.of(currentSelection.getValue()));
+         stage.close();
+      }
+   }
+
+   /**
+    * EventHandler to invoke when Done Button is pressed and in file save mode.
+    */
+   private class SaveDoneEventHandler implements EventHandler<ActionEvent> {
+      @Override
+      public void handle(ActionEvent event) {
+         final String filename = fileNameField.getText();
+         if (filename == null || "".equals(filename.trim())) {
+            return;
+         }
+
+         fileChooserCallback.fileChosen(Optional.of(new File(currentDirectory, filename)));
+         stage.close();
+      }
    }
 
    private String getDoneButtonText() {
