@@ -456,7 +456,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
          setCurrentView(listFilesView);
          viewIconsButton.setSelected(false);
-         viewListWithPreviewButton.setSelected(false);
+         if (viewListWithPreviewButton != null) {
+            viewListWithPreviewButton.setSelected(false);
+         }
       });
 
       return viewButton;
@@ -497,7 +499,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
          setCurrentView(iconsFilesView);
          viewListButton.setSelected(false);
-         viewListWithPreviewButton.setSelected(false);
+         if (viewListWithPreviewButton != null) {
+            viewListWithPreviewButton.setSelected(false);
+         }
       });
 
       return viewButton;
@@ -518,6 +522,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       final TableView<DirectoryListItem> view = new TableView<>();
       view.setId("placesView");
+      view.setPlaceholder(new Label(""));
 
       final TableColumn<DirectoryListItem, DirectoryListItem> placesColumn
             = new TableColumn<>(resourceBundle.getString("placeslist.text"));

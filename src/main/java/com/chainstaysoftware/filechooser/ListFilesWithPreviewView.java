@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -70,6 +71,8 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       });
       tableView.setOnKeyPressed(new KeyPressedHandler());
       tableView.getSelectionModel().selectedItemProperty().addListener(new SelectedItemChanged());
+      tableView.setPlaceholder(new Label(""));
+
 
       splitPane = new SplitPane();
       splitPane.setId("previewSplitPane");

@@ -9,6 +9,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
@@ -56,6 +57,7 @@ class ListFilesView extends AbstractFilesView {
 
       filesTreeView = new TreeTableView<>();
       filesTreeView.setShowRoot(false);
+      filesTreeView.setPlaceholder(new Label(""));
       filesTreeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectItemListener());
       filesTreeView.getColumns().setAll(nameColumn, dateModifiedColumn, sizeColumn);
       filesTreeView.setRowFactory(new RowFactory());
