@@ -68,6 +68,8 @@ class ListFilesView extends AbstractFilesView {
             final File file = filesTreeView.getSelectionModel().getSelectedItem().getValue();
             if (file.isDirectory()) {
                callback.requestChangeDirectory(file);
+            } else {
+               callback.fireDoneButton();
             }
          }
       });

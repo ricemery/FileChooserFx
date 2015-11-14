@@ -102,6 +102,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ToggleButton viewListWithPreviewButton;
    private TextField fileNameField;
    private ComboBox<FileChooser.ExtensionFilter> extensionsComboBox;
+   private Button doneButton;
 
    @Override
    public ObservableList<javafx.stage.FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -534,7 +535,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ButtonBar createButtonBar() {
       final List<Button> buttons = new LinkedList<>();
 
-      buttons.add(createDoneButton());
+      doneButton = createDoneButton();
+      buttons.add(doneButton);
       buttons.add(createCancelButton());
 
       final Optional<Button> helpButton = createHelpButton();
@@ -849,6 +851,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
       @Override
       public void setCurrentSelection(final File file) {
          currentSelection.setValue(file);
+      }
+
+      @Override
+      public void fireDoneButton() {
+         doneButton.fire();
       }
    }
 

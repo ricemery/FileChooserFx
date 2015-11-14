@@ -58,11 +58,15 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.getColumns().addAll(nameColumn);
       tableView.setOnMouseClicked(event -> {
          final File file = tableView.getSelectionModel().getSelectedItem().getFile();
-         if (event.getClickCount() < 2 || !file.isDirectory()) {
+         if (event.getClickCount() < 2) {
             return;
          }
 
-         callback.requestChangeDirectory(file);
+         if (file.isDirectory()) {
+            callback.requestChangeDirectory(file);
+         } else {
+            callback.fireDoneButton();
+         }
       });
       tableView.setOnKeyPressed(new KeyPressedHandler());
       tableView.getSelectionModel().selectedItemProperty().addListener(new SelectedItemChanged());

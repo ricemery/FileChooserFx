@@ -117,11 +117,11 @@ class IconsFilesView extends AbstractFilesView {
          final IconGridCell target = (IconGridCell)event.getTarget();
          if (isDoubleClick(event)) {
             final File file = (File)target.getUserData();
-            if (!file.isDirectory()) {
-               return;
+            if (file.isDirectory()) {
+               callback.requestChangeDirectory(file);
+            } else {
+               callback.fireDoneButton();
             }
-
-            callback.requestChangeDirectory(file);
          } else {
             selectedCell.setValue(target.getIndex());
 
