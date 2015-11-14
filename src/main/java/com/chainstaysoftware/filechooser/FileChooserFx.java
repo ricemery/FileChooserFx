@@ -19,7 +19,7 @@ public interface FileChooserFx {
 
    javafx.stage.FileChooser.ExtensionFilter getSelectedExtensionFilter();
 
-   ObservableMap<String, PreviewPane> getPreviewHandlers();
+   ObservableMap<String, Class<? extends PreviewPane>> getPreviewHandlers();
 
    void setInitialDirectory(File value);
 

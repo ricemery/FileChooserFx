@@ -39,7 +39,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
 
    public ListFilesWithPreviewView(final Stage parent,
-                                   final Map<String, PreviewPane> previewHandlers) {
+                                   final Map<String, Class<? extends PreviewPane>> previewHandlers) {
       super(parent);
 
       propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers);

@@ -32,7 +32,7 @@ class IconsFilesView extends AbstractFilesView {
    private static final int CELL_WIDTH = 90;
 
    private final GridView<DirectoryListItem> gridView = new GridView<>();
-   private final Map<String, PreviewPane> previewHandlers;
+   private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final Icons icons = new Icons();
    private final IntegerProperty selectedCell = new SimpleIntegerProperty(NOT_SELECTED);
 
@@ -40,7 +40,7 @@ class IconsFilesView extends AbstractFilesView {
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public IconsFilesView(final Stage parent,
-                         final Map<String, PreviewPane> previewHandlers) {
+                         final Map<String, Class<? extends PreviewPane>> previewHandlers) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
@@ -95,13 +95,13 @@ class IconsFilesView extends AbstractFilesView {
          }
 
          final String fileExtension = FilenameUtils.getExtension(file.getName());
-         final PreviewPane previewPane = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
-         if (previewPane == null) {
+         final Class<? extends PreviewPane> previewPaneClass = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
+         if (previewPaneClass == null) {
             return null;
          }
 
          final MenuItem imagePreviewItem = new MenuItem("Preview");
-         imagePreviewItem.setOnAction(v -> showPreview(previewPane, file));
+         imagePreviewItem.setOnAction(v -> showPreview(previewPaneClass, file));
 
          return new ContextMenu(imagePreviewItem);
       }

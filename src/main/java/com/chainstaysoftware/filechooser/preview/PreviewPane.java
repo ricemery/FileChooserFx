@@ -4,6 +4,8 @@ package com.chainstaysoftware.filechooser.preview;
 import javafx.scene.layout.Pane;
 
 import java.io.File;
+import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * Show preview of passed in {@link File}. Note that it is possible that the

@@ -19,15 +19,13 @@ import java.util.stream.Stream;
 public class HeadPreviewPane implements PreviewPane {
    private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.HeadPreviewWindow");
 
-   private final Charset encoding;
-   private final int maxLines;
+   private static final Charset encoding = Charset.defaultCharset();
+   private static final int maxLines = 1000;
+
    private final BorderPane borderPane;
    private final TextArea textArea;
 
-   public HeadPreviewPane(final Charset encoding,
-                          final int maxLines) {
-      this.encoding = encoding;
-      this.maxLines = maxLines;
+   public HeadPreviewPane() {
       this.textArea = new TextArea();
 
       textArea.setId("headPreviewTextArea");

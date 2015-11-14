@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,7 +59,7 @@ public class PropertiesPreviewPane {
 
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final Icons icons = new Icons();
-   private final Map<String, PreviewPane> previewHandlers;
+   private final Map<String, Class<? extends PreviewPane>> previewHandlers;
 
    private final VBox vBox;
    private final Label nameLabel = createNameValueLabel();
@@ -69,7 +70,7 @@ public class PropertiesPreviewPane {
    private final HBox previewPaneContainerPane = createPreviewContainerPane();
    private final ImageView imageView = createImageView();
 
-   public PropertiesPreviewPane(final Map<String, PreviewPane> previewHandlers)
+   public PropertiesPreviewPane(final Map<String, Class<? extends PreviewPane>> previewHandlers)
    {
       this.previewHandlers = previewHandlers;
 
@@ -163,12 +164,19 @@ public class PropertiesPreviewPane {
     */
    private void setContainerNode(final File file) {
       final String extension = FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ENGLISH);
-      final PreviewPane previewPane = previewHandlers.get(extension);
-      if (previewPane == null) {
+      final Class<? extends PreviewPane> previewPaneClass = previewHandlers.get(extension);
+      if (previewPaneClass == null) {
          previewPaneContainerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
          imageView.setImage(icons.getIconForFile(file));
          previewPaneContainerPane.getChildren().setAll(imageView);
       } else {
+         final Optional<PreviewPane> previewPaneOpt = PreviewPaneFactory.create(previewPaneClass);
+         if (!previewPaneOpt.isPresent()) {
+            logger.log(Level.SEVERE, "No PreviewPane created.");
+            return;
+         }
+
+         final PreviewPane previewPane = previewPaneOpt.get();
          previewPaneContainerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_COMPUTED_SIZE);
          previewPane.setFile(file);
          previewPaneContainerPane.getChildren().setAll(previewPane.getPane());
