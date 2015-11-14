@@ -54,6 +54,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -825,7 +826,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    private WildcardFileFilter getFileFilter() {
-      final List<String> extensionFilter = extensionsComboBox.getValue().getExtensions();
+      final List<String> extensionFilter = extensionsComboBox == null || extensionsComboBox.getValue() == null
+            ? Collections.emptyList()
+            : extensionsComboBox.getValue().getExtensions();
       return new DirOrWildcardFilter(extensionFilter);
    }
 
