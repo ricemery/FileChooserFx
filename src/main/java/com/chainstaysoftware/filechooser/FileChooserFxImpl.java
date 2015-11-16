@@ -927,6 +927,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
 
       @Override
+      public File getCurrentSelection() {
+         return currentSelection.get();
+      }
+
+      @Override
       public void fireDoneButton() {
          doneButton.fire();
       }

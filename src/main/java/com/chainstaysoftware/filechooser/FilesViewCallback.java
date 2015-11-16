@@ -13,5 +13,7 @@ interface FilesViewCallback {
 
    void setCurrentSelection(File file);
 
+   File getCurrentSelection();
+
    void fireDoneButton();
 }

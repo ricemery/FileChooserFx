@@ -195,6 +195,20 @@ class ListFilesView extends AbstractFilesView {
             .collect(Collectors.toList()));
 
       filesTreeView.setRoot(rootItem);
+      selectCurrent();
+   }
+
+   /**
+    * If there is a currently selected file, then update the TreeView with
+    * the selection.
+    */
+   private void selectCurrent() {
+      final File currentSelectedFile = callback.getCurrentSelection();
+      filesTreeView.getRoot().getChildren()
+            .stream()
+            .filter(item -> compareFilePaths(item.getValue(), currentSelectedFile))
+            .findFirst()
+            .ifPresent(item -> filesTreeView.getSelectionModel().select(item));
    }
 
    public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
@@ -206,7 +220,11 @@ class ListFilesView extends AbstractFilesView {
       public void changed(final ObservableValue<? extends TreeItem<File>> observable,
                           final TreeItem<File> oldValue,
                           final TreeItem<File> newValue) {
-         callback.setCurrentSelection(newValue == null ? null : newValue.getValue());
+         if (newValue == null) {
+            return;
+         }
+
+         callback.setCurrentSelection(newValue.getValue());
       }
    }
 }

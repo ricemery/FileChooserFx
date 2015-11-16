@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 class IconsFilesView extends AbstractFilesView {
@@ -34,7 +35,7 @@ class IconsFilesView extends AbstractFilesView {
    private final GridView<DirectoryListItem> gridView = new GridView<>();
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final Icons icons;
-   private final IntegerProperty selectedCell = new SimpleIntegerProperty(NOT_SELECTED);
+   private final IntegerProperty selectedCellIndex = new SimpleIntegerProperty(NOT_SELECTED);
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
@@ -49,7 +50,10 @@ class IconsFilesView extends AbstractFilesView {
 
       gridView.setCellFactory(gridView1 -> {
          final IconGridCell cell = new IconGridCell(true, new IconGridCellContextMenuFactImpl());
-         selectedCell.addListener((observable, oldValue, newValue) ->
+         cell.indexProperty().addListener((observable, oldValue, newValue) -> {
+            cell.updateSelected(selectedCellIndex.intValue() == newValue.intValue());
+         });
+         selectedCellIndex.addListener((observable, oldValue, newValue) ->
                cell.updateSelected(newValue.intValue() == cell.getIndex()));
          return cell;
       });
@@ -71,9 +75,24 @@ class IconsFilesView extends AbstractFilesView {
 
    @Override
    public void setFiles(final Stream<File> fileStream) {
-      selectedCell.setValue(NOT_SELECTED);
+      selectedCellIndex.setValue(NOT_SELECTED);
 
       gridView.getItems().setAll(getIcons(fileStream));
+
+      selectCurrent();
+   }
+
+   /**
+    * If there is a currently selected file, then update the GridView with
+    * the selection.
+    */
+   private void selectCurrent() {
+      final File currentSelection = callback.getCurrentSelection();
+      final List<DirectoryListItem> items = gridView.getItems();
+      IntStream.range(0, items.size())
+            .filter(i -> compareFilePaths(items.get(i).getFile(), currentSelection))
+            .findFirst()
+            .ifPresent(selectedCellIndex::setValue);
    }
 
    public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
@@ -125,9 +144,9 @@ class IconsFilesView extends AbstractFilesView {
                callback.fireDoneButton();
             }
          } else {
-            selectedCell.setValue(target.getIndex());
+            selectedCellIndex.setValue(target.getIndex());
 
-            final File file = gridView.getItems().get(selectedCell.get()).getFile();
+            final File file = gridView.getItems().get(selectedCellIndex.get()).getFile();
             callback.setCurrentSelection(file);
          }
       }
@@ -150,23 +169,23 @@ class IconsFilesView extends AbstractFilesView {
 
          final KeyCode keyCode = event.getCode();
          if (keyCode == KeyCode.LEFT) {
-            selectedCell.setValue(Math.max(0, selectedCell.get() - 1));
+            selectedCellIndex.setValue(Math.max(0, selectedCellIndex.get() - 1));
             event.consume();
          } else if (keyCode == KeyCode.RIGHT) {
-            selectedCell.setValue(Math.min(selectedCell.get() + 1, gridView.getItems().size() - 1));
+            selectedCellIndex.setValue(Math.min(selectedCellIndex.get() + 1, gridView.getItems().size() - 1));
             event.consume();
          } else if (keyCode == KeyCode.UP) {
-            selectedCell.setValue(Math.max(0, selectedCell.get() - ((GridViewSkin)gridView.getSkin()).computeMaxCellsInRow()));
+            selectedCellIndex.setValue(Math.max(0, selectedCellIndex.get() - ((GridViewSkin)gridView.getSkin()).computeMaxCellsInRow()));
             event.consume();
          }  else if (keyCode == KeyCode.DOWN) {
-            selectedCell.setValue(Math.min(gridView.getItems().size() - 1, selectedCell.get() + ((GridViewSkin)gridView.getSkin()).computeMaxCellsInRow()));
+            selectedCellIndex.setValue(Math.min(gridView.getItems().size() - 1, selectedCellIndex.get() + ((GridViewSkin)gridView.getSkin()).computeMaxCellsInRow()));
             event.consume();
          } else if (keyCode == KeyCode.ENTER) {
-            if (selectedCell.get() == NOT_SELECTED) {
+            if (selectedCellIndex.get() == NOT_SELECTED) {
                return;
             }
 
-            final DirectoryListItem item = gridView.getItems().get(selectedCell.get());
+            final DirectoryListItem item = gridView.getItems().get(selectedCellIndex.get());
             final File file = item.getFile();
             if (!file.isDirectory()) {
                return;
@@ -176,11 +195,11 @@ class IconsFilesView extends AbstractFilesView {
             event.consume();
          }
 
-         if (selectedCell.get() == NOT_SELECTED) {
+         if (selectedCellIndex.get() == NOT_SELECTED) {
             return;
          }
 
-         final File file = gridView.getItems().get(selectedCell.get()).getFile();
+         final File file = gridView.getItems().get(selectedCellIndex.get()).getFile();
          callback.setCurrentSelection(file);
       }
    }

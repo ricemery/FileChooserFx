@@ -11,6 +11,7 @@ import javafx.stage.StageStyle;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,5 +76,18 @@ abstract class AbstractFilesView implements FilesView {
    private String getTitle(final File file) {
       final int maxLength = 75;
       return StringUtils.abbreviateMiddle(file.getPath(), "...", maxLength);
+   }
+
+   protected boolean compareFilePaths(final File f1, final File f2) {
+      if (f1 == null || f2 == null) {
+         return false;
+      }
+
+      try {
+         return f1.getCanonicalFile().equals(f2.getCanonicalFile());
+      } catch (IOException e) {
+         logger.log(Level.SEVERE, "Error canonicalizing file", e);
+         return f1.equals(f2);
+      }
    }
 }

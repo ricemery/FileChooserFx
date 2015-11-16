@@ -97,6 +97,21 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.getItems().setAll(fileStream
             .map(f -> new DirectoryListItem(f, icons.getIconForFile(f)))
             .collect(Collectors.toList()));
+
+      selectCurrent();
+   }
+
+   /**
+    * If there is a currently selected file, then update the TableView with
+    * the selection.
+    */
+   private void selectCurrent() {
+      final File currentSelectedFile = callback.getCurrentSelection();
+      tableView.getItems()
+            .stream()
+            .filter(item -> compareFilePaths(item.getFile(), currentSelectedFile))
+            .findFirst()
+            .ifPresent(item -> tableView.getSelectionModel().select(item));
    }
 
    public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
@@ -128,11 +143,11 @@ class ListFilesWithPreviewView extends AbstractFilesView {
                           DirectoryListItem newValue) {
          previewHbox.getChildren().clear();
 
-         callback.setCurrentSelection(newValue == null ? null : newValue.getFile());
-
          if (newValue == null) {
             return;
          }
+
+         callback.setCurrentSelection(newValue.getFile());
 
          preview(newValue.getFile());
       }
