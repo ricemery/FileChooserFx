@@ -83,6 +83,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ObjectProperty<File> initialDirectory;
    private ObjectProperty<String> initialFileName;
    private ObjectProperty<javafx.stage.FileChooser.ExtensionFilter> selectedExtensionFilter;
+   private ObjectProperty<ViewType> viewTypeProperty;
    private BooleanProperty showHiddenFiles;
    private File currentDirectory;
    private Button backButton;
@@ -215,6 +216,26 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    @Override
+   public void setViewType(final ViewType viewType) {
+      viewTypeProperty().setValue(viewType);
+   }
+
+   @Override
+   public ViewType getViewType() {
+      return viewTypeProperty.getValue();
+   }
+
+   @Override
+   public ObjectProperty<ViewType> viewTypeProperty() {
+      if (viewTypeProperty == null) {
+         viewTypeProperty = new SimpleObjectProperty<>();
+         viewTypeProperty.setValue(ViewType.List);
+      }
+
+      return viewTypeProperty;
+   }
+
+   @Override
    public void setHelpCallback(final HelpCallback helpCallback) {
       this.helpCallback = helpCallback;
    }
@@ -270,20 +291,20 @@ public final class FileChooserFxImpl implements FileChooserFx {
       currentDirectory = getInitialDirectory() == null
             ? new File(".")
             : initialDirectory.getValue();
-      updateFiles(currentDirectory);
+
+      setCurrentView(viewTypeProperty().getValue());
+//      updateFiles(currentDirectory);
    }
 
    private SplitPane createSplitPane() {
       iconsFilesView = createIconsFilesView();
       listFilesView = createListFilesView();
       listFilesWithPreviewView = createListFilesWithPreviewView();
-      currentView = listFilesView;
 
       placesView = createPlacesView();
 
       final SplitPane pane = new SplitPane();
       pane.setId("splitPane");
-      pane.getItems().addAll(placesView, currentView.getNode());
       pane.setDividerPosition(0, .15);
       return pane;
    }
@@ -454,11 +475,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             return;
          }
 
-         setCurrentView(listFilesView);
-         viewIconsButton.setSelected(false);
-         if (viewListWithPreviewButton != null) {
-            viewListWithPreviewButton.setSelected(false);
-         }
+         setCurrentView(ViewType.List);
       });
 
       return viewButton;
@@ -477,9 +494,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             return;
          }
 
-         setCurrentView(listFilesWithPreviewView);
-         viewListButton.setSelected(false);
-         viewIconsButton.setSelected(false);
+         setCurrentView(ViewType.ListWithPreview);
       });
 
       return viewButton;
@@ -497,11 +512,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             return;
          }
 
-         setCurrentView(iconsFilesView);
-         viewListButton.setSelected(false);
-         if (viewListWithPreviewButton != null) {
-            viewListWithPreviewButton.setSelected(false);
-         }
+         setCurrentView(ViewType.Icon);
       });
 
       return viewButton;
@@ -753,6 +764,50 @@ public final class FileChooserFxImpl implements FileChooserFx {
             // Refresh
             updateFiles(currentDirectory);
          });
+      }
+   }
+
+   private void setCurrentView(final ViewType view) {
+      if (ViewType.List.equals(view)
+            || ViewType.ListWithPreview.equals(view) && hideFiles) {
+
+         setListView();
+         return;
+      }
+
+      if (ViewType.ListWithPreview.equals(view)) {
+         setListWithPreview();
+         return;
+      }
+
+      setIconsView();
+   }
+
+   private void setListView() {
+      viewTypeProperty.set(ViewType.List);
+
+      setCurrentView(listFilesView);
+      viewIconsButton.setSelected(false);
+      if (viewListWithPreviewButton != null) {
+         viewListWithPreviewButton.setSelected(false);
+      }
+   }
+
+   private void setListWithPreview() {
+      viewTypeProperty.set(ViewType.ListWithPreview);
+
+      setCurrentView(listFilesWithPreviewView);
+      viewListButton.setSelected(false);
+      viewIconsButton.setSelected(false);
+   }
+
+   private void setIconsView() {
+      viewTypeProperty.set(ViewType.Icon);
+
+      setCurrentView(iconsFilesView);
+      viewListButton.setSelected(false);
+      if (viewListWithPreviewButton != null) {
+         viewListWithPreviewButton.setSelected(false);
       }
    }
 

@@ -19,6 +19,12 @@ public interface DirectoryChooserFx {
 
    StringProperty titleProperty();
 
+   void setViewType(ViewType viewType);
+
+   ViewType getViewType();
+
+   ObjectProperty<ViewType> viewTypeProperty();
+
    void setHelpCallback(HelpCallback helpCallback);
 
    void showDialog(Window ownerWindow, FileChooserCallback fileChooserCallback);

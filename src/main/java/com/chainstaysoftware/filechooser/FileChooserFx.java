@@ -39,6 +39,12 @@ public interface FileChooserFx {
 
    StringProperty titleProperty();
 
+   void setViewType(ViewType viewType);
+
+   ViewType getViewType();
+
+   ObjectProperty<ViewType> viewTypeProperty();
+
    void setShowHiddenFiles(boolean value);
 
    boolean showHiddenFiles();
