@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -40,16 +41,18 @@ class ListFilesView extends AbstractFilesView {
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TreeTableView<File> filesTreeView;
-   private final Icons icons = new Icons();
+   private final Icons icons;
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public ListFilesView(final Stage parent,
-                        final Map<String, Class<? extends PreviewPane>> previewHandlers) {
+                        final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                        final Icons icons) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
+      this.icons = icons;
 
       final TreeTableColumn<File, String> nameColumn = createNameColumn(parent);
       final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn = createDateModifiedColumn();
@@ -184,10 +187,10 @@ class ListFilesView extends AbstractFilesView {
       rootItem.getChildren().addAll(fileStream
             .map(f -> {
                final ImageView graphic = new ImageView(icons.getIconForFile(f));
-               graphic.setFitWidth(Icons.SMALL_ICON_WIDTH);
-               graphic.setFitHeight(Icons.SMALL_ICON_HEIGHT);
+               graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
+               graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
                graphic.setPreserveRatio(true);
-               return new DirectoryTreeItem(f, graphic, callback);
+               return new DirectoryTreeItem(f, graphic, callback, icons);
             })
             .collect(Collectors.toList()));
 

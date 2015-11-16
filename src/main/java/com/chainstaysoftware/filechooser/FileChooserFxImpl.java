@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
@@ -75,7 +76,6 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private final ObservableList<javafx.stage.FileChooser.ExtensionFilter> extensionFilters =
          FXCollections.observableArrayList();
    private final ObservableMap<String, Class<? extends PreviewPane>> previewHandlers = FXCollections.observableHashMap();
-   private final Icons icons = new Icons();
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
 
@@ -95,6 +95,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private SplitPane splitPane;
    private FileChooserCallback fileChooserCallback;
    private HelpCallback helpCallback;
+   private Icons icons = new IconsImpl();
    private Stage stage;
    private Node placesView;
    private boolean saveMode;
@@ -240,6 +241,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
       this.helpCallback = helpCallback;
    }
 
+   /**
+    * Set the implementation to use for Icon handling. This does not need
+    * to be called unless there is a desire to override the default Icon set.
+    */
+   @Override
+   public void setIcons(final Icons icons) {
+      this.icons = icons;
+   }
+
    @Override
    public void showOpenDialog(final Window ownerWindow,
                               final FileChooserCallback fileChooserCallback) {
@@ -310,21 +320,21 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    private IconsFilesView createIconsFilesView() {
-      final IconsFilesView view = new IconsFilesView(stage, previewHandlers);
+      final IconsFilesView view = new IconsFilesView(stage, previewHandlers, icons);
       view.setCallback(new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }
 
    private ListFilesView createListFilesView() {
-      final ListFilesView view = new ListFilesView(stage, previewHandlers);
+      final ListFilesView view = new ListFilesView(stage, previewHandlers, icons);
       view.setCallback(new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }
 
    private ListFilesWithPreviewView createListFilesWithPreviewView() {
-      final ListFilesWithPreviewView view = new ListFilesWithPreviewView(stage, previewHandlers);
+      final ListFilesWithPreviewView view = new ListFilesWithPreviewView(stage, previewHandlers, icons);
       view.setCallback(new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
@@ -402,7 +412,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       backButton = new Button();
       backButton.setId("backButton");
       backButton.getStyleClass().add("toolbarbutton");
-      backButton.setGraphic(new ImageView(icons.getIcon(Icons.BACK_ARROW_24)));
+      backButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.BACK_ARROW_24)));
       backButton.setTooltip(new Tooltip(resourceBundle.getString("backbutton.tooltip")));
       backButton.setDisable(true);
       backButton.setFocusTraversable(false);
@@ -466,7 +476,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final ToggleButton viewButton = new ToggleButton();
       viewButton.setId("viewListButton");
       viewButton.getStyleClass().add("toolbartogglebutton");
-      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_VIEW_24)));
+      viewButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.LIST_VIEW_24)));
       viewButton.setTooltip(new Tooltip(resourceBundle.getString("listview.tooltip")));
       viewButton.setFocusTraversable(false);
       viewButton.setSelected(true);
@@ -485,7 +495,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final ToggleButton viewButton = new ToggleButton();
       viewButton.setId("viewListWithPreviewButton");
       viewButton.getStyleClass().add("toolbartogglebutton");
-      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_WITH_PREVIEW_VIEW_24)));
+      viewButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.LIST_WITH_PREVIEW_VIEW_24)));
       viewButton.setTooltip(new Tooltip(resourceBundle.getString("listwithpreviewview.tooltip")));
       viewButton.setFocusTraversable(false);
       viewButton.setSelected(false);
@@ -504,7 +514,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final ToggleButton viewButton = new ToggleButton();
       viewButton.setId("viewIconsButton");
       viewButton.getStyleClass().add("toolbartogglebutton");
-      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.ICON_VIEW_24)));
+      viewButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.ICON_VIEW_24)));
       viewButton.setTooltip(new Tooltip(resourceBundle.getString("iconview.tooltip")));
       viewButton.setFocusTraversable(false);
       viewButton.selectedProperty().addListener((observable, oldValue, selected) -> {
@@ -522,13 +532,13 @@ public final class FileChooserFxImpl implements FileChooserFx {
       // TODO: Do a better job determining/showing the available mount points.
       final LinkedList<DirectoryListItem> places = new LinkedList<>();
 
-      final Image driveIcon = icons.getIcon(Icons.HARDDISK_64);
+      final Image driveIcon = icons.getIcon(IconsImpl.HARDDISK_64);
       final List<File> roots = Arrays.asList(File.listRoots());
       roots.forEach(r -> places.add(new DirectoryListItem(r, driveIcon)));
 
       final String homeDirStr = System.getProperty("user.home");
       if (homeDirStr != null) {
-         places.add(new DirectoryListItem(new File(homeDirStr), icons.getIcon(Icons.USER_HOME_64)));
+         places.add(new DirectoryListItem(new File(homeDirStr), icons.getIcon(IconsImpl.USER_HOME_64)));
       }
 
       final TableView<DirectoryListItem> view = new TableView<>();

@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -52,6 +53,12 @@ public interface FileChooserFx {
    BooleanProperty showHiddenFilesProperty();
 
    void setHelpCallback(HelpCallback helpCallback);
+
+   /**
+    * Set the implementation to use for Icon handling. This does not need
+    * to be called unless there is a desire to override the default Icon set.
+    */
+   void setIcons(Icons icons);
 
    void showOpenDialog(Window ownerWindow, FileChooserCallback fileChooserCallback);
 

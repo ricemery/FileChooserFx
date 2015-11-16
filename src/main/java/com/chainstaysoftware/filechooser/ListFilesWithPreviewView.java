@@ -32,7 +32,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    private final TableView<DirectoryListItem> tableView = new TableView<>();
    private final SplitPane splitPane;
    private final HBox previewHbox;
-   private final Icons icons = new Icons();
+   private final Icons icons;
    private final PropertiesPreviewPane propertiesPreviewPane;
 
    private FilesViewCallback callback;
@@ -40,10 +40,12 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
 
    public ListFilesWithPreviewView(final Stage parent,
-                                   final Map<String, Class<? extends PreviewPane>> previewHandlers) {
+                                   final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                                   final Icons icons) {
       super(parent);
 
-      propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers);
+      propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers, icons);
+      this.icons = icons;
 
       previewHbox = new HBox();
       previewHbox.setId("previewHbox");

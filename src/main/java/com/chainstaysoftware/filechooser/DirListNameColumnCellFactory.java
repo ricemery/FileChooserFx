@@ -1,6 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
@@ -37,8 +37,8 @@ class DirListNameColumnCellFactory
                setText(nameOnly ? item.getFile().getName() : item.getFile().toString());
 
                final ImageView graphic = new ImageView(item.getIcon());
-               graphic.setFitHeight(Icons.SMALL_ICON_HEIGHT);
-               graphic.setFitWidth(Icons.SMALL_ICON_WIDTH);
+               graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
+               graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
                graphic.setPreserveRatio(true);
                setGraphic(graphic);
             }

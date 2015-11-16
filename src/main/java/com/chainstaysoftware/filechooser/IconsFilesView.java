@@ -33,17 +33,19 @@ class IconsFilesView extends AbstractFilesView {
 
    private final GridView<DirectoryListItem> gridView = new GridView<>();
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
-   private final Icons icons = new Icons();
+   private final Icons icons;
    private final IntegerProperty selectedCell = new SimpleIntegerProperty(NOT_SELECTED);
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public IconsFilesView(final Stage parent,
-                         final Map<String, Class<? extends PreviewPane>> previewHandlers) {
+                         final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                         final Icons icons) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
+      this.icons = icons;
 
       gridView.setCellFactory(gridView1 -> {
          final IconGridCell cell = new IconGridCell(true, new IconGridCellContextMenuFactImpl());
