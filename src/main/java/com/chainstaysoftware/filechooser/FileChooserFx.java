@@ -6,18 +6,19 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 import java.io.File;
 
 public interface FileChooserFx {
-   ObservableList<javafx.stage.FileChooser.ExtensionFilter> getExtensionFilters();
+   ObservableList<FileChooser.ExtensionFilter> getExtensionFilters();
 
-   ObjectProperty<javafx.stage.FileChooser.ExtensionFilter> selectedExtensionFilterProperty();
+   ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilterProperty();
 
-   void setSelectedExtensionFilter(javafx.stage.FileChooser.ExtensionFilter filter);
+   void setSelectedExtensionFilter(FileChooser.ExtensionFilter filter);
 
-   javafx.stage.FileChooser.ExtensionFilter getSelectedExtensionFilter();
+   FileChooser.ExtensionFilter getSelectedExtensionFilter();
 
    ObservableMap<String, Class<? extends PreviewPane>> getPreviewHandlers();
 

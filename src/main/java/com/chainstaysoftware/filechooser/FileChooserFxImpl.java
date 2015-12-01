@@ -72,7 +72,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private static final int SCENE_HEIGHT = 600;
 
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
-   private final ObservableList<javafx.stage.FileChooser.ExtensionFilter> extensionFilters =
+   private final ObservableList<FileChooser.ExtensionFilter> extensionFilters =
          FXCollections.observableArrayList();
    private final ObservableMap<String, Class<? extends PreviewPane>> previewHandlers = FXCollections.observableHashMap();
    private final Icons icons = new Icons();
@@ -82,7 +82,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private StringProperty title;
    private ObjectProperty<File> initialDirectory;
    private ObjectProperty<String> initialFileName;
-   private ObjectProperty<javafx.stage.FileChooser.ExtensionFilter> selectedExtensionFilter;
+   private ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilter;
    private BooleanProperty showHiddenFiles;
    private File currentDirectory;
    private Button backButton;
@@ -105,12 +105,12 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ComboBox<FileChooser.ExtensionFilter> extensionsComboBox;
 
    @Override
-   public ObservableList<javafx.stage.FileChooser.ExtensionFilter> getExtensionFilters() {
+   public ObservableList<FileChooser.ExtensionFilter> getExtensionFilters() {
       return extensionFilters;
    }
 
    @Override
-   public ObjectProperty<javafx.stage.FileChooser.ExtensionFilter> selectedExtensionFilterProperty() {
+   public ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilterProperty() {
       if (selectedExtensionFilter == null) {
          selectedExtensionFilter =
                new SimpleObjectProperty<>(this,
@@ -120,12 +120,12 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    @Override
-   public void setSelectedExtensionFilter(javafx.stage.FileChooser.ExtensionFilter filter) {
+   public void setSelectedExtensionFilter(FileChooser.ExtensionFilter filter) {
       selectedExtensionFilterProperty().setValue(filter);
    }
 
    @Override
-   public javafx.stage.FileChooser.ExtensionFilter getSelectedExtensionFilter() {
+   public FileChooser.ExtensionFilter getSelectedExtensionFilter() {
       return (selectedExtensionFilter != null)
             ? selectedExtensionFilter.get()
             : null;
