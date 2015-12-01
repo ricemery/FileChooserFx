@@ -42,6 +42,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Callback;
@@ -262,6 +263,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       stage.setTitle(getTitle());
       stage.setScene(scene);
       stage.initOwner(ownerWindow);
+      stage.initModality(Modality.APPLICATION_MODAL);
       stage.setOnCloseRequest(event -> fileChooserCallback.fileChosen(Optional.empty()));
       stage.show();
 
