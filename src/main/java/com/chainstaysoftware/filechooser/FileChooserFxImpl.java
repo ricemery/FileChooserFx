@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
@@ -54,7 +55,14 @@ import org.controlsfx.control.BreadCrumbBar;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,7 +79,6 @@ public final class FileChooserFxImpl implements FileChooserFx {
          FXCollections.observableArrayList();
    private final ObservableMap<String, Class<? extends PreviewPane>> previewHandlers = FXCollections.observableHashMap();
    private final ObservableList<File> favoriteDirs = FXCollections.observableArrayList();
-   private final Icons icons = new Icons();
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
 
@@ -79,6 +86,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ObjectProperty<File> initialDirectory;
    private ObjectProperty<String> initialFileName;
    private ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilter;
+   private ObjectProperty<ViewType> viewTypeProperty;
    private BooleanProperty showHiddenFiles;
    private File currentDirectory;
    private Button backButton;
@@ -103,6 +111,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ComboBox<FileChooser.ExtensionFilter> extensionsComboBox;
    private Button addFavoriteButton;
    private Button removeFavoriteButton;
+   private Button doneButton;
+   private Icons icons = new IconsImpl();
 
    @Override
    public ObservableList<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -231,6 +241,25 @@ public final class FileChooserFxImpl implements FileChooserFx {
       this.removeFavorite = removeFavorite;
    }
 
+   public void setViewType(final ViewType viewType) {
+      viewTypeProperty().setValue(viewType);
+   }
+
+   @Override
+   public ViewType getViewType() {
+      return viewTypeProperty.getValue();
+   }
+
+   @Override
+   public ObjectProperty<ViewType> viewTypeProperty() {
+      if (viewTypeProperty == null) {
+         viewTypeProperty = new SimpleObjectProperty<>();
+         viewTypeProperty.setValue(ViewType.List);
+      }
+
+      return viewTypeProperty;
+   }
+
    /**
     * Sets the callback for the help button. This method MUST be called with a
     * non-null {@link HelpCallback} for the Help button to be included in
@@ -239,6 +268,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
    @Override
    public void setHelpCallback(final HelpCallback helpCallback) {
       this.helpCallback = helpCallback;
+   }
+
+   /**
+    * Set the implementation to use for Icon handling. This does not need
+    * to be called unless there is a desire to override the default Icon set.
+    */
+   @Override
+   public void setIcons(final Icons icons) {
+      this.icons = icons;
    }
 
    @Override
@@ -294,7 +332,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       currentDirectory = getInitialDirectory() == null
             ? new File(".")
             : initialDirectory.getValue();
-      updateFiles(currentDirectory);
+
+      setCurrentView(viewTypeProperty().getValue());
+//      updateFiles(currentDirectory);
    }
 
    /**
@@ -305,33 +345,31 @@ public final class FileChooserFxImpl implements FileChooserFx {
       iconsFilesView = createIconsFilesView();
       listFilesView = createListFilesView();
       listFilesWithPreviewView = createListFilesWithPreviewView();
-      currentView = listFilesView;
 
       placesView = createPlacesView();
 
       final SplitPane pane = new SplitPane();
       pane.setId("splitPane");
-      pane.getItems().addAll(placesView, currentView.getNode());
       pane.setDividerPosition(0, .15);
       return pane;
    }
 
    private IconsFilesView createIconsFilesView() {
-      final IconsFilesView view = new IconsFilesView(stage, previewHandlers);
+      final IconsFilesView view = new IconsFilesView(stage, previewHandlers, icons);
       view.setCallback(new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }
 
    private ListFilesView createListFilesView() {
-      final ListFilesView view = new ListFilesView(stage, previewHandlers);
+      final ListFilesView view = new ListFilesView(stage, previewHandlers, icons);
       view.setCallback(new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }
 
    private ListFilesWithPreviewView createListFilesWithPreviewView() {
-      final ListFilesWithPreviewView view = new ListFilesWithPreviewView(stage, previewHandlers);
+      final ListFilesWithPreviewView view = new ListFilesWithPreviewView(stage, previewHandlers, icons);
       view.setCallback(new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
@@ -415,7 +453,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       backButton = new Button();
       backButton.setId("backButton");
       backButton.getStyleClass().add("toolbarbutton");
-      backButton.setGraphic(new ImageView(icons.getIcon(Icons.BACK_ARROW_24)));
+      backButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.BACK_ARROW_24)));
       backButton.setTooltip(new Tooltip(resourceBundle.getString("backbutton.tooltip")));
       backButton.setDisable(true);
       backButton.setFocusTraversable(false);
@@ -486,7 +524,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final ToggleButton viewButton = new ToggleButton();
       viewButton.setId("viewListButton");
       viewButton.getStyleClass().add("toolbartogglebutton");
-      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_VIEW_24)));
+      viewButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.LIST_VIEW_24)));
       viewButton.setTooltip(new Tooltip(resourceBundle.getString("listview.tooltip")));
       viewButton.setFocusTraversable(false);
       viewButton.setSelected(true);
@@ -495,9 +533,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             return;
          }
 
-         setCurrentView(listFilesView);
-         viewIconsButton.setSelected(false);
-         viewListWithPreviewButton.setSelected(false);
+         setCurrentView(ViewType.List);
       });
 
       return viewButton;
@@ -507,7 +543,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final ToggleButton viewButton = new ToggleButton();
       viewButton.setId("viewListWithPreviewButton");
       viewButton.getStyleClass().add("toolbartogglebutton");
-      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.LIST_WITH_PREVIEW_VIEW_24)));
+      viewButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.LIST_WITH_PREVIEW_VIEW_24)));
       viewButton.setTooltip(new Tooltip(resourceBundle.getString("listwithpreviewview.tooltip")));
       viewButton.setFocusTraversable(false);
       viewButton.setSelected(false);
@@ -516,9 +552,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             return;
          }
 
-         setCurrentView(listFilesWithPreviewView);
-         viewListButton.setSelected(false);
-         viewIconsButton.setSelected(false);
+         setCurrentView(ViewType.ListWithPreview);
       });
 
       return viewButton;
@@ -528,7 +562,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final ToggleButton viewButton = new ToggleButton();
       viewButton.setId("viewIconsButton");
       viewButton.getStyleClass().add("toolbartogglebutton");
-      viewButton.setGraphic(new ImageView(icons.getIcon(Icons.ICON_VIEW_24)));
+      viewButton.setGraphic(new ImageView(icons.getIcon(IconsImpl.ICON_VIEW_24)));
       viewButton.setTooltip(new Tooltip(resourceBundle.getString("iconview.tooltip")));
       viewButton.setFocusTraversable(false);
       viewButton.selectedProperty().addListener((observable, oldValue, selected) -> {
@@ -536,9 +570,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             return;
          }
 
-         setCurrentView(iconsFilesView);
-         viewListButton.setSelected(false);
-         viewListWithPreviewButton.setSelected(false);
+         setCurrentView(ViewType.Icon);
       });
 
       return viewButton;
@@ -575,16 +607,16 @@ public final class FileChooserFxImpl implements FileChooserFx {
       // TODO: Do a better job determining/showing the available mount points.
       final LinkedList<DirectoryListItem> places = new LinkedList<>();
 
-      final Image driveIcon = icons.getIcon(Icons.HARDDISK_64);
+      final Image driveIcon = icons.getIcon(IconsImpl.HARDDISK_64);
       final List<File> roots = Arrays.asList(File.listRoots());
       roots.forEach(r -> places.add(new DirectoryListItem(r, driveIcon)));
 
       final String homeDirStr = System.getProperty("user.home");
       if (homeDirStr != null) {
-         places.add(new DirectoryListItem(new File(homeDirStr), icons.getIcon(Icons.USER_HOME_64)));
+         places.add(new DirectoryListItem(new File(homeDirStr), icons.getIcon(IconsImpl.USER_HOME_64)));
       }
 
-      favoriteDirs.forEach(file -> places.add(new DirectoryListItem(file, icons.getIcon(Icons.FOLDER_64))));
+      favoriteDirs.forEach(file -> places.add(new DirectoryListItem(file, icons.getIcon(IconsImpl.FOLDER_64))));
 
       if (addFavoriteButton != null) {
          addFavoriteButton.setDisable(true);
@@ -597,7 +629,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ButtonBar createButtonBar() {
       final List<Button> buttons = new LinkedList<>();
 
-      buttons.add(createDoneButton());
+      doneButton = createDoneButton();
+      buttons.add(doneButton);
       buttons.add(createCancelButton());
 
       final Optional<Button> helpButton = createHelpButton();
@@ -874,6 +907,50 @@ public final class FileChooserFxImpl implements FileChooserFx {
    /**
     * Update the SplitPane to include the passed in {@link FilesView}
     */
+   private void setCurrentView(final ViewType view) {
+      if (ViewType.List.equals(view)
+            || ViewType.ListWithPreview.equals(view) && hideFiles) {
+
+         setListView();
+         return;
+      }
+
+      if (ViewType.ListWithPreview.equals(view)) {
+         setListWithPreview();
+         return;
+      }
+
+      setIconsView();
+   }
+
+   private void setListView() {
+      viewTypeProperty.set(ViewType.List);
+
+      setCurrentView(listFilesView);
+      viewIconsButton.setSelected(false);
+      if (viewListWithPreviewButton != null) {
+         viewListWithPreviewButton.setSelected(false);
+      }
+   }
+
+   private void setListWithPreview() {
+      viewTypeProperty.set(ViewType.ListWithPreview);
+
+      setCurrentView(listFilesWithPreviewView);
+      viewListButton.setSelected(false);
+      viewIconsButton.setSelected(false);
+   }
+
+   private void setIconsView() {
+      viewTypeProperty.set(ViewType.Icon);
+
+      setCurrentView(iconsFilesView);
+      viewListButton.setSelected(false);
+      if (viewListWithPreviewButton != null) {
+         viewListWithPreviewButton.setSelected(false);
+      }
+   }
+
    private void setCurrentView(final FilesView filesView) {
       currentView = filesView;
 
@@ -975,9 +1052,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
     * the extensionsComboBox.
     */
    private WildcardFileFilter getFileFilter() {
-      final List<String> extensionFilter = extensionsComboBox == null
-         ? Collections.emptyList()
-         : extensionsComboBox.getValue().getExtensions();
+      final List<String> extensionFilter = extensionsComboBox == null || extensionsComboBox.getValue() == null
+            ? Collections.emptyList()
+            : extensionsComboBox.getValue().getExtensions();
       return new DirOrWildcardFilter(extensionFilter);
    }
 
@@ -1041,6 +1118,16 @@ public final class FileChooserFxImpl implements FileChooserFx {
          } catch (IOException e) {
             return false;
          }
+      }
+
+      @Override
+      public File getCurrentSelection() {
+         return currentSelection.get();
+      }
+
+      @Override
+      public void fireDoneButton() {
+         doneButton.fire();
       }
    }
 

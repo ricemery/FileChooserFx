@@ -42,7 +42,8 @@ public class FileChooserDemo extends Application {
          fileChooser.showOpenDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
                      .add(new Text("File to open - " + fileOptional.toString() + "\r\n"
-                                    + "Selected Extension Filter - " + fileChooser.getSelectedExtensionFilter().getDescription() + "\r\n")));
+                                    + "Selected Extension Filter - " + fileChooser.getSelectedExtensionFilter().getDescription() + "\r\n"
+                                    + "View Type - " + fileChooser.getViewType() + "\r\n")));
       });
 
       final Button fileSaveButton = new Button("Save File");
@@ -64,10 +65,12 @@ public class FileChooserDemo extends Application {
          final DirectoryChooserFx dirChooser = new DirectoryChooserFxImpl();
          dirChooser.setTitle("Directory Chooser");
          dirChooser.setHelpCallback(() -> System.out.println("Help invoked"));
+         dirChooser.setViewType(ViewType.ListWithPreview);
 
          dirChooser.showDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
-                     .add(new Text("Directory to open - " + fileOptional.toString() + "\r\n")));
+                     .add(new Text("Directory to open - " + fileOptional.toString() + "\r\n"
+                            + "View Type - " + dirChooser.getViewType() + "\r\n")));
       });
 
       final ToolBar toolBar = new ToolBar();

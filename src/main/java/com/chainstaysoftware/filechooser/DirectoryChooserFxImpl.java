@@ -67,6 +67,21 @@ public class DirectoryChooserFxImpl implements DirectoryChooserFx {
     * the displayed DirectoryChooserFx instance.
     */
    @Override
+   public void setViewType(final ViewType viewType) {
+      fileChooser.setViewType(viewType);
+   }
+
+   @Override
+   public ViewType getViewType() {
+      return fileChooser.getViewType();
+   }
+
+   @Override
+   public ObjectProperty<ViewType> viewTypeProperty() {
+      return fileChooser.viewTypeProperty();
+   }
+
+   @Override
    public void setHelpCallback(final HelpCallback helpCallback) {
       fileChooser.setHelpCallback(helpCallback);
    }

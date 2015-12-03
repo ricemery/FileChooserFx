@@ -58,7 +58,7 @@ public class PropertiesPreviewPane {
    private static final int SIZE_VAL_ROW = 3;
 
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
-   private final Icons icons = new Icons();
+   private final Icons icons;
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
 
    private final VBox vBox;
@@ -70,9 +70,11 @@ public class PropertiesPreviewPane {
    private final HBox previewPaneContainerPane = createPreviewContainerPane();
    private final ImageView imageView = createImageView();
 
-   public PropertiesPreviewPane(final Map<String, Class<? extends PreviewPane>> previewHandlers)
+   public PropertiesPreviewPane(final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                                final Icons icons)
    {
       this.previewHandlers = previewHandlers;
+      this.icons = icons;
 
       final GridPane gridPane = createGridPane();
 

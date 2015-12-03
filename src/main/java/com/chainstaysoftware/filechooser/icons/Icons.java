@@ -1,50 +1,43 @@
 package com.chainstaysoftware.filechooser.icons;
 
+import javafx.beans.property.MapProperty;
 import javafx.scene.image.Image;
 
 import java.io.File;
-import java.io.InputStream;
+import java.util.Map;
 
-public class Icons {
-   public static final int SMALL_ICON_WIDTH = 25;
-   public static final int SMALL_ICON_HEIGHT = 25;
-
-   public static final String BACK_ARROW_24 = "/icons8/24x24/Back-24.png";
-   public static final String ICON_VIEW_24 = "/icons8/24x24/Small Icons-24.png";
-   public static final String LIST_VIEW_24 = "/icons8/24x24/List-24.png";
-   public static final String LIST_WITH_PREVIEW_VIEW_24 = "/icons8/24x24/Columns-24.png";
-
-   public static final String FOLDER_64 = "/icons8/64x64/Folder-64.png";
-   public static final String GENERIC_FILE_64 = "/icons8/64x64/File-64.png";
-   public static final String HARDDISK_64 = "/icons8/64x64/HDD-64.png";
-   public static final String OPEN_FOLDER_64 = "/icons8/64x64/Open Folder-64.png";
-   public static final String USER_HOME_64 = "/icons8/64x64/User Folder-64.png";
-
+/**
+ * Icon loading.
+ */
+public interface Icons {
    /**
-    * Load an icon from the CURSOR_PATH location in the class path.
-    * @param resourceName Must be a filename of an icon located in the
-    *                     CURSOR_PATH location of the classpath.
+    * Load an icon from the resourceName location in the classpath.
+    * @param resourceName Must be a filename in the classpath.
     * @return {@link Image}
     * @throws IllegalArgumentException If the resource is not found.
     */
-   public Image getIcon(final String resourceName) {
-      if (resourceName == null) {
-         throw new IllegalArgumentException("resourceName must not be null");
-      }
+   Image getIcon(String resourceName);
 
-      final InputStream inputStream = getClass().getResourceAsStream(resourceName);
-      if (inputStream == null) {
-         throw new IllegalArgumentException(resourceName + " is not a valid resource");
-      }
+   /**
+    * Load an icon for the passed in file.
+    * @param file to load an icon for.
+    * @return {@link Image}
+    * @throws IllegalArgumentException If the resource is not found.
+    */
+   Image getIconForFile(File file);
 
-      return new Image(inputStream);
-   }
+   /**
+    * Mapping of file extensions to icon images.
+    */
+   MapProperty<String, Image> fileTypeIconsProperty();
 
-   public Image getIconForFile(final File file) {
-      // TODO: Optimize
-      return file.isDirectory()
-            ? getIcon(Icons.FOLDER_64)
-            : getIcon(Icons.GENERIC_FILE_64);
-   }
+   /**
+    * Sets the mapping of file extensions to icon images.
+    */
+   void setFileTypeIcons(Map<String, Image> map);
+
+   /**
+    * Mapping of file extensions to icon images.
+    */
+   Map<String, Image> getFileTypeIcons();
 }
-

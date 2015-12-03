@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -9,6 +10,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
@@ -39,16 +41,18 @@ class ListFilesView extends AbstractFilesView {
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TreeTableView<File> filesTreeView;
-   private final Icons icons = new Icons();
+   private final Icons icons;
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public ListFilesView(final Stage parent,
-                        final Map<String, Class<? extends PreviewPane>> previewHandlers) {
+                        final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                        final Icons icons) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
+      this.icons = icons;
 
       final TreeTableColumn<File, String> nameColumn = createNameColumn(parent);
       final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn = createDateModifiedColumn();
@@ -56,6 +60,7 @@ class ListFilesView extends AbstractFilesView {
 
       filesTreeView = new TreeTableView<>();
       filesTreeView.setShowRoot(false);
+      filesTreeView.setPlaceholder(new Label(""));
       filesTreeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectItemListener());
       filesTreeView.getColumns().setAll(nameColumn, dateModifiedColumn, sizeColumn);
       filesTreeView.setRowFactory(new RowFactory());
@@ -68,6 +73,8 @@ class ListFilesView extends AbstractFilesView {
             final File file = filesTreeView.getSelectionModel().getSelectedItem().getValue();
             if (file.isDirectory()) {
                callback.requestChangeDirectory(file);
+            } else {
+               callback.fireDoneButton();
             }
          }
       });
@@ -180,14 +187,28 @@ class ListFilesView extends AbstractFilesView {
       rootItem.getChildren().addAll(fileStream
             .map(f -> {
                final ImageView graphic = new ImageView(icons.getIconForFile(f));
-               graphic.setFitWidth(Icons.SMALL_ICON_WIDTH);
-               graphic.setFitHeight(Icons.SMALL_ICON_HEIGHT);
+               graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
+               graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
                graphic.setPreserveRatio(true);
-               return new DirectoryTreeItem(f, graphic, callback);
+               return new DirectoryTreeItem(f, graphic, callback, icons);
             })
             .collect(Collectors.toList()));
 
       filesTreeView.setRoot(rootItem);
+      selectCurrent();
+   }
+
+   /**
+    * If there is a currently selected file, then update the TreeView with
+    * the selection.
+    */
+   private void selectCurrent() {
+      final File currentSelectedFile = callback.getCurrentSelection();
+      filesTreeView.getRoot().getChildren()
+            .stream()
+            .filter(item -> compareFilePaths(item.getValue(), currentSelectedFile))
+            .findFirst()
+            .ifPresent(item -> filesTreeView.getSelectionModel().select(item));
    }
 
    public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
@@ -199,7 +220,11 @@ class ListFilesView extends AbstractFilesView {
       public void changed(final ObservableValue<? extends TreeItem<File>> observable,
                           final TreeItem<File> oldValue,
                           final TreeItem<File> newValue) {
-         callback.setCurrentSelection(newValue == null ? null : newValue.getValue());
+         if (newValue == null) {
+            return;
+         }
+
+         callback.setCurrentSelection(newValue.getValue());
       }
    }
 }

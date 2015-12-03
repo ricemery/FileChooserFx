@@ -23,4 +23,8 @@ public interface FilesViewCallback {
     * Update the currently selected file.
     */
    void setCurrentSelection(File file);
+
+   File getCurrentSelection();
+
+   void fireDoneButton();
 }

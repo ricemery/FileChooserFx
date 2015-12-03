@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -31,7 +32,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    private final TableView<DirectoryListItem> tableView = new TableView<>();
    private final SplitPane splitPane;
    private final HBox previewHbox;
-   private final Icons icons = new Icons();
+   private final Icons icons;
    private final PropertiesPreviewPane propertiesPreviewPane;
 
    private FilesViewCallback callback;
@@ -39,10 +40,12 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
 
    public ListFilesWithPreviewView(final Stage parent,
-                                   final Map<String, Class<? extends PreviewPane>> previewHandlers) {
+                                   final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                                   final Icons icons) {
       super(parent);
 
-      propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers);
+      propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers, icons);
+      this.icons = icons;
 
       previewHbox = new HBox();
       previewHbox.setId("previewHbox");
@@ -58,14 +61,20 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.getColumns().addAll(nameColumn);
       tableView.setOnMouseClicked(event -> {
          final File file = tableView.getSelectionModel().getSelectedItem().getFile();
-         if (event.getClickCount() < 2 || !file.isDirectory()) {
+         if (event.getClickCount() < 2) {
             return;
          }
 
-         callback.requestChangeDirectory(file);
+         if (file.isDirectory()) {
+            callback.requestChangeDirectory(file);
+         } else {
+            callback.fireDoneButton();
+         }
       });
       tableView.setOnKeyPressed(new KeyPressedHandler());
       tableView.getSelectionModel().selectedItemProperty().addListener(new SelectedItemChanged());
+      tableView.setPlaceholder(new Label(""));
+
 
       splitPane = new SplitPane();
       splitPane.setId("previewSplitPane");
@@ -88,6 +97,21 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.getItems().setAll(fileStream
             .map(f -> new DirectoryListItem(f, icons.getIconForFile(f)))
             .collect(Collectors.toList()));
+
+      selectCurrent();
+   }
+
+   /**
+    * If there is a currently selected file, then update the TableView with
+    * the selection.
+    */
+   private void selectCurrent() {
+      final File currentSelectedFile = callback.getCurrentSelection();
+      tableView.getItems()
+            .stream()
+            .filter(item -> compareFilePaths(item.getFile(), currentSelectedFile))
+            .findFirst()
+            .ifPresent(item -> tableView.getSelectionModel().select(item));
    }
 
    public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
@@ -119,11 +143,11 @@ class ListFilesWithPreviewView extends AbstractFilesView {
                           DirectoryListItem newValue) {
          previewHbox.getChildren().clear();
 
-         callback.setCurrentSelection(newValue == null ? null : newValue.getFile());
-
          if (newValue == null) {
             return;
          }
+
+         callback.setCurrentSelection(newValue.getFile());
 
          preview(newValue.getFile());
       }

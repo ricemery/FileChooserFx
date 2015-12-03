@@ -20,6 +20,12 @@ public interface DirectoryChooserFx {
 
    StringProperty titleProperty();
 
+   void setViewType(ViewType viewType);
+
+   ViewType getViewType();
+
+   ObjectProperty<ViewType> viewTypeProperty();
+
    /**
     * List of directories to show in the Favorites list. As favorites are add and removed
     * by the user the list is updated.
