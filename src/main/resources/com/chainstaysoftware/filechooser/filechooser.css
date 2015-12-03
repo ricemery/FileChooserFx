@@ -31,6 +31,10 @@
     -fx-padding: 5 10 2 10;
 }
 
+.extensionspane-buttonshbox {
+    -fx-spacing: 5;
+}
+
 .buttonbar {
     -fx-padding: 3 10 7 10;
 }

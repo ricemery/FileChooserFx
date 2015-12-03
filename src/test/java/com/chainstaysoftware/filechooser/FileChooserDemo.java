@@ -13,7 +13,6 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.nio.charset.Charset;
 import java.util.HashMap;
 
 public class FileChooserDemo extends Application {
@@ -32,11 +31,13 @@ public class FileChooserDemo extends Application {
          fileChooser.setTitle("File Chooser");
          fileChooser.setShowHiddenFiles(false);
          fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text files (txt)", "*.txt"),
-               new FileChooser.ExtensionFilter("XML files", "*.xml"),
-               new FileChooser.ExtensionFilter("All files", "*.*"));
+            new FileChooser.ExtensionFilter("XML files", "*.xml"),
+            new FileChooser.ExtensionFilter("All files", "*.*"));
          fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("XML files (xml)", "*.xml"));
          fileChooser.getPreviewHandlers().putAll(previewHandlers);
          fileChooser.setHelpCallback(() -> System.out.println("Help invoked"));
+         fileChooser.setFavoriteDirsCallbacks(directory -> System.out.println("Add favorite - " + directory),
+            directory -> System.out.println("Remove favorite - " + directory));
 
          fileChooser.showOpenDialog(primaryStage,
                fileOptional -> textFlow.getChildren()

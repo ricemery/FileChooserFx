@@ -39,6 +39,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -53,13 +54,7 @@ import org.controlsfx.control.BreadCrumbBar;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,6 +70,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private final ObservableList<FileChooser.ExtensionFilter> extensionFilters =
          FXCollections.observableArrayList();
    private final ObservableMap<String, Class<? extends PreviewPane>> previewHandlers = FXCollections.observableHashMap();
+   private final ObservableList<File> favoriteDirs = FXCollections.observableArrayList();
    private final Icons icons = new Icons();
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
@@ -94,8 +90,10 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private SplitPane splitPane;
    private FileChooserCallback fileChooserCallback;
    private HelpCallback helpCallback;
+   private FavoritesCallback addFavorite;
+   private FavoritesCallback removeFavorite;
    private Stage stage;
-   private Node placesView;
+   private TableView<DirectoryListItem> placesView;
    private boolean saveMode;
    private boolean hideFiles;
    private ToggleButton viewIconsButton;
@@ -103,6 +101,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ToggleButton viewListWithPreviewButton;
    private TextField fileNameField;
    private ComboBox<FileChooser.ExtensionFilter> extensionsComboBox;
+   private Button addFavoriteButton;
+   private Button removeFavoriteButton;
 
    @Override
    public ObservableList<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -214,6 +214,29 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    @Override
+   public ObservableList<File> getFavoriteDirs() {
+      return favoriteDirs;
+   }
+
+   /**
+    * Sets callbacks for when user wants to add and/or remove director favorites.
+    * This method MUST be called with non-null {@link FavoritesCallback} instances
+    * for the add/remove favorites buttons to be included in the displayed FileChooserFx
+    * instance.
+    */
+   @Override
+   public void setFavoriteDirsCallbacks(final FavoritesCallback addFavorite,
+                                        final FavoritesCallback removeFavorite) {
+      this.addFavorite = addFavorite;
+      this.removeFavorite = removeFavorite;
+   }
+
+   /**
+    * Sets the callback for the help button. This method MUST be called with a
+    * non-null {@link HelpCallback} for the Help button to be included in
+    * the displayed FileChooserFx instance.
+    */
+   @Override
    public void setHelpCallback(final HelpCallback helpCallback) {
       this.helpCallback = helpCallback;
    }
@@ -267,12 +290,17 @@ public final class FileChooserFxImpl implements FileChooserFx {
       stage.setOnCloseRequest(event -> fileChooserCallback.fileChosen(Optional.empty()));
       stage.show();
 
+      updatePlaces();
       currentDirectory = getInitialDirectory() == null
             ? new File(".")
             : initialDirectory.getValue();
       updateFiles(currentDirectory);
    }
 
+   /**
+    * Creates a SplitPane where the left child is the placesView
+    * and the right child is an implementation of {@link FilesView}
+    */
    private SplitPane createSplitPane() {
       iconsFilesView = createIconsFilesView();
       listFilesView = createListFilesView();
@@ -309,6 +337,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return view;
    }
 
+   /**
+    * Create a VBox to hold the top toolbar and optionally the save filename bar.
+    */
    private VBox createTopVBox() {
       final ToolBar toolBar = createToolbar();
       final VBox vBox = new VBox();
@@ -321,6 +352,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return vBox;
    }
 
+   /**
+    * Create a VBox to hold the bottom buttons and file extensions dropdown.
+    */
    private VBox createBottomVBox() {
       final ButtonBar buttonBar = createButtonBar();
       final Pane extensionsPane = createExtensionsPane();
@@ -399,6 +433,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return backButton;
    }
 
+   /**
+    * Create a VBox that hold the BredCrumbBar. The BreadCrumbBar will hold
+    * the currently displayed directory path and can be used for navigation
+    * to parent directories.
+    */
    private VBox createBreadCrumbBar() {
       breadCrumbBar = new BreadCrumbBar<>();
       breadCrumbBar.setId("dirsBreadCrumbBar");
@@ -431,6 +470,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return vBox;
    }
 
+   /**
+    * Determines if 2 File instances point to the same file/directory
+    */
    private boolean pathsEqual(final File p1, final File p2) {
       try {
          return p1.getCanonicalPath().compareTo(p2.getCanonicalPath()) == 0;
@@ -439,7 +481,6 @@ public final class FileChooserFxImpl implements FileChooserFx {
          return false;
       }
    }
-
 
    private ToggleButton createViewListButton() {
       final ToggleButton viewButton = new ToggleButton();
@@ -503,7 +544,34 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return viewButton;
    }
 
-   private Node createPlacesView() {
+   private TableView<DirectoryListItem> createPlacesView() {
+      final TableView<DirectoryListItem> view = new TableView<>();
+      view.setId("placesView");
+
+      final TableColumn<DirectoryListItem, DirectoryListItem> placesColumn
+            = new TableColumn<>(resourceBundle.getString("placeslist.text"));
+      placesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+      placesColumn.setCellFactory(new DirListNameColumnCellFactory(true));
+      placesColumn.prefWidthProperty().bind(view.widthProperty());
+
+      view.getColumns().addAll(placesColumn);
+      view.setOnMouseClicked(event -> {
+         final File currentDir = view.getSelectionModel().getSelectedItem().getFile();
+         changeDirectory(currentDir);
+
+         if (removeFavoriteButton != null) {
+            removeFavoriteButton.setDisable(!favoriteDirs.contains(currentDir));
+         }
+      });
+      view.setOnKeyPressed(new KeyEventHandler());
+
+      return view;
+   }
+
+   /**
+    * Update the Places View with drives, home dir and favorites.
+    */
+   private void updatePlaces() {
       // TODO: Do a better job determining/showing the available mount points.
       final LinkedList<DirectoryListItem> places = new LinkedList<>();
 
@@ -516,21 +584,14 @@ public final class FileChooserFxImpl implements FileChooserFx {
          places.add(new DirectoryListItem(new File(homeDirStr), icons.getIcon(Icons.USER_HOME_64)));
       }
 
-      final TableView<DirectoryListItem> view = new TableView<>();
-      view.setId("placesView");
+      favoriteDirs.forEach(file -> places.add(new DirectoryListItem(file, icons.getIcon(Icons.FOLDER_64))));
 
-      final TableColumn<DirectoryListItem, DirectoryListItem> placesColumn
-            = new TableColumn<>(resourceBundle.getString("placeslist.text"));
-      placesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-      placesColumn.setCellFactory(new DirListNameColumnCellFactory(false));
-      placesColumn.prefWidthProperty().bind(view.widthProperty());
+      if (addFavoriteButton != null) {
+         addFavoriteButton.setDisable(true);
+         removeFavoriteButton.setDisable(true);
+      }
 
-      view.getColumns().addAll(placesColumn);
-      view.getItems().addAll(places);
-      view.setOnMouseClicked(event -> changeDirectory(view.getSelectionModel().getSelectedItem().getFile()));
-      view.setOnKeyPressed(new KeyEventHandler());
-
-      return view;
+      placesView.getItems().setAll(places);
    }
 
    private ButtonBar createButtonBar() {
@@ -658,14 +719,74 @@ public final class FileChooserFxImpl implements FileChooserFx {
          borderPane.setRight(extensionsComboBox);
       }
 
-      if (saveMode || hideFiles) {
-         final Button newFolderButton = new Button(resourceBundle.getString("newfolderbutton.text"));
-         newFolderButton.setId("newFolderButton");
-         newFolderButton.setOnAction(new NewFolderAction());
-         borderPane.setLeft(newFolderButton);
-      }
+      borderPane.setLeft(createExtensionsLeftButtonsHbox());
 
       return borderPane;
+   }
+
+   /**
+    * Create a HBox that optionally includes Add/Remove Favorite buttons.
+    */
+   private HBox createExtensionsLeftButtonsHbox() {
+      final HBox buttonsHbox = new HBox();
+      buttonsHbox.setId("extensionsLeftButtonsHBox");
+      buttonsHbox.getStyleClass().add("extensionspane-buttonshbox");
+
+      if (shouldAddFavoritesButtons()) {
+         addFavoriteButton = createAddFavoriteButton();
+         removeFavoriteButton = createRemoveFavoriteButton();
+         buttonsHbox.getChildren().addAll(addFavoriteButton, removeFavoriteButton);
+      }
+
+      if (saveMode || hideFiles) {
+         // Include the New FolderButton
+         buttonsHbox.getChildren().add(createNewFolderButton());
+      }
+
+      return buttonsHbox;
+   }
+
+   private boolean shouldAddFavoritesButtons() {
+      return addFavorite != null && removeFavorite != null;
+   }
+
+   private Button createAddFavoriteButton() {
+      final Button addFavoriteButton = new Button(resourceBundle.getString("addfavoritebutton.txt"));
+      addFavoriteButton.setId("addFavoriteButton");
+      addFavoriteButton.setOnAction(event -> {
+         try {
+            favoriteDirs.add(currentSelection.get().getCanonicalFile());
+         } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error canonicalizing file", e);
+         }
+         updatePlaces();
+      });
+      addFavoriteButton.setDisable(true);
+      return addFavoriteButton;
+   }
+
+   private Button createRemoveFavoriteButton() {
+      final Button removeFavoriteButton = new Button(resourceBundle.getString("removefavoritebutton.txt"));
+      removeFavoriteButton.setId("removeFavoriteButton");
+      removeFavoriteButton.setOnAction(new NewFolderAction());
+      removeFavoriteButton.setOnAction(event -> {
+         final DirectoryListItem item = placesView.getSelectionModel().getSelectedItem();
+         if (item == null) {
+            return;
+         }
+
+         favoriteDirs.remove(item.getFile());
+         updatePlaces();
+      });
+      removeFavoriteButton.setDisable(true);
+      return removeFavoriteButton;
+   }
+
+   private Button createNewFolderButton() {
+      final Button newFolderButton = new Button(resourceBundle.getString("newfolderbutton.text"));
+      newFolderButton.setId("newFolderButton");
+      newFolderButton.setOnAction(new NewFolderAction());
+      return newFolderButton;
    }
 
    /**
@@ -750,6 +871,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
    }
 
+   /**
+    * Update the SplitPane to include the passed in {@link FilesView}
+    */
    private void setCurrentView(final FilesView filesView) {
       currentView = filesView;
 
@@ -758,10 +882,18 @@ public final class FileChooserFxImpl implements FileChooserFx {
       updateFiles(currentDirectory);
    }
 
+   /**
+    * Update the view to contain the files located within the passed in
+    * directory. The BreadCrumbBar will be updated to reflect the passed in dir.
+    */
    private void updateFiles(final File directory) {
       updateFiles(directory, true);
    }
 
+   /**
+    * Update the view to contain the files located within the passed in
+    * directory. Optionally update the BreadCrumbBar.
+    */
    private void updateFiles(final File directory,
                             final boolean updateBreadCrumbBar) {
       currentView.setFiles(getFiles(directory));
@@ -771,10 +903,16 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
    }
 
+   /**
+    * Update the view to reflect the files in the passed in directory.
+    */
    private void changeDirectory(final File directory) {
       changeDirectory(directory, true);
    }
 
+   /**
+    * Update the view to reflect the files in the passed in directory.
+    */
    private void changeDirectory(final File directory,
                                 final boolean updateBreadCrumbBar) {
       if (currentDirectory != null) {
@@ -787,6 +925,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       updateFiles(currentDirectory, updateBreadCrumbBar);
    }
 
+   /**
+    * Update the BreadCrumbBar based on the passed in directory.
+    */
    private void updateDirBreadCrumbBar(final File directory) {
       try {
          File currentDir = directory.getCanonicalFile();
@@ -812,6 +953,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
    }
 
+   /**
+    * Retrieve a Stream of File from the contents of the passed in directory.
+    * Depending on the mode of operation, some of the directory contents
+    * may be filtered out.
+    */
    private Stream<File> getFiles(final File directory) {
       if (!directory.isDirectory()) {
          return Stream.empty();
@@ -824,11 +970,20 @@ public final class FileChooserFxImpl implements FileChooserFx {
             : Arrays.stream(files).filter(new GetFilesPredicate());
    }
 
+   /**
+    * Build a FileFilter to filter based on the selected value in
+    * the extensionsComboBox.
+    */
    private WildcardFileFilter getFileFilter() {
-      final List<String> extensionFilter = extensionsComboBox.getValue().getExtensions();
+      final List<String> extensionFilter = extensionsComboBox == null
+         ? Collections.emptyList()
+         : extensionsComboBox.getValue().getExtensions();
       return new DirOrWildcardFilter(extensionFilter);
    }
 
+   /**
+    * Predicate to determine if a File should be included in the file list.
+    */
    private class GetFilesPredicate implements Predicate<File> {
       @Override
       public boolean test(final File file) {
@@ -837,20 +992,55 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
    }
 
+   /**
+    * Callbacks from the {@link FilesView} implementations back into the
+    * {@link FileChooserFx}.
+    */
    private class FilesViewCallbackImpl implements FilesViewCallback {
+      /**
+       * Request that the directory is changed, and update the
+       * view to include the directory contents.
+       */
       @Override
       public void requestChangeDirectory(final File directory) {
          changeDirectory(directory);
       }
 
+      /**
+       * Get a Stream of File for the the passed in directory.
+       */
       @Override
       public Stream<File> getFileStream(final File directory) {
          return getFiles(directory);
       }
 
+      /**
+       * Update the currently selected file.
+       */
       @Override
       public void setCurrentSelection(final File file) {
          currentSelection.setValue(file);
+
+         if (addFavoriteButton != null) {
+            addFavoriteButton.setDisable(!shouldEnableAddFavBtn(file));
+         }
+      }
+
+      /**
+       * Determine if the Add Favorite button should be enabled based
+       * on the currently selected File.
+       */
+      private boolean shouldEnableAddFavBtn(final File file) {
+         if (addFavoriteButton == null || file == null || !file.isDirectory()) {
+            return false;
+         }
+
+         try {
+            final File canonicalized = file.getCanonicalFile();
+            return !favoriteDirs.contains(canonicalized);
+         } catch (IOException e) {
+            return false;
+         }
       }
    }
 

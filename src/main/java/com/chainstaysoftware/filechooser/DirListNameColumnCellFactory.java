@@ -19,7 +19,7 @@ class DirListNameColumnCellFactory
     * @param nameOnly Indicates if the cell text should include the file.getPath() value
     *                 or file.getName()
     */
-   DirListNameColumnCellFactory(boolean nameOnly) {
+   DirListNameColumnCellFactory(final boolean nameOnly) {
       this.nameOnly = nameOnly;
    }
 
