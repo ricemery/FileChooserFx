@@ -707,7 +707,10 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final Button cancelButton = new Button(resourceBundle.getString("cancelbutton.text"));
       cancelButton.setId("cancelButton");
       ButtonBar.setButtonData(cancelButton, ButtonBar.ButtonData.CANCEL_CLOSE);
-      cancelButton.setOnAction(event -> stage.close());
+      cancelButton.setOnAction(event -> {
+         fileChooserCallback.fileChosen(Optional.empty());
+         stage.close();
+      });
       return cancelButton;
    }
 
