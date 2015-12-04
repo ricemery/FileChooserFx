@@ -5,6 +5,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
 import javafx.util.Callback;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * CellFactory for {@link DirectoryListItem#getFile()} value.
@@ -34,7 +35,11 @@ class DirListNameColumnCellFactory
                setText(null);
                setGraphic(null);
             } else {
-               setText(nameOnly ? item.getFile().getName() : item.getFile().toString());
+               if (nameOnly && !StringUtils.isEmpty(item.getFile().getName())) {
+                  setText(item.getFile().getName());
+               } else {
+                  setText(item.getFile().toString());
+               }
 
                final ImageView graphic = new ImageView(item.getIcon());
                graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
