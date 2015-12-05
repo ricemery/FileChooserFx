@@ -930,6 +930,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       viewTypeProperty.set(ViewType.List);
 
       setCurrentView(listFilesView);
+      viewListButton.setSelected(true);
       viewIconsButton.setSelected(false);
       if (viewListWithPreviewButton != null) {
          viewListWithPreviewButton.setSelected(false);
@@ -941,6 +942,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       setCurrentView(listFilesWithPreviewView);
       viewListButton.setSelected(false);
+      viewListWithPreviewButton.setSelected(true);
       viewIconsButton.setSelected(false);
    }
 
@@ -952,6 +954,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       if (viewListWithPreviewButton != null) {
          viewListWithPreviewButton.setSelected(false);
       }
+      viewIconsButton.setSelected(true);
    }
 
    private void setCurrentView(final FilesView filesView) {

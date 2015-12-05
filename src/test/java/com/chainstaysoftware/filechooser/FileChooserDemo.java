@@ -38,6 +38,7 @@ public class FileChooserDemo extends Application {
          fileChooser.setHelpCallback(() -> System.out.println("Help invoked"));
          fileChooser.setFavoriteDirsCallbacks(directory -> System.out.println("Add favorite - " + directory),
             directory -> System.out.println("Remove favorite - " + directory));
+         fileChooser.setViewType(ViewType.Icon);
 
          fileChooser.showOpenDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
