@@ -3,6 +3,7 @@ package com.chainstaysoftware.filechooser;
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
+import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
@@ -23,7 +24,6 @@ import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.time.Instant;
@@ -31,7 +31,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -155,8 +154,7 @@ class ListFilesView extends AbstractFilesView {
                      return;
                   }
 
-                  final String fileExtension = FilenameUtils.getExtension(file.getName());
-                  final Class<? extends PreviewPane> previewPaneClass = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
+                  final Class<? extends PreviewPane> previewPaneClass = PreviewPaneQuery.query(previewHandlers, file);
                   if (previewPaneClass == null) {
                      return;
                   }

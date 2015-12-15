@@ -19,9 +19,9 @@ public class FileChooserDemo extends Application {
    @Override
    public void start(Stage primaryStage) throws Exception {
       final HashMap<String, Class<? extends PreviewPane>> previewHandlers = new HashMap<>();
-      previewHandlers.put("png", ImagePreviewPane.class);
-      previewHandlers.put("jpg", ImagePreviewPane.class);
-      previewHandlers.put("txt", HeadPreviewPane.class);
+      previewHandlers.put("image/png", ImagePreviewPane.class);
+      previewHandlers.put("image/jpg", ImagePreviewPane.class);
+      previewHandlers.put("text/plain", HeadPreviewPane.class);
 
       final TextFlow textFlow = new TextFlow();
 

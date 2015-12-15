@@ -2,6 +2,7 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
+import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
@@ -13,7 +14,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +24,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -165,8 +164,7 @@ public class PropertiesPreviewPane {
     * Update the preview node with the preview of the passed in file.
     */
    private void setContainerNode(final File file) {
-      final String extension = FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ENGLISH);
-      final Class<? extends PreviewPane> previewPaneClass = previewHandlers.get(extension);
+      final Class<? extends PreviewPane> previewPaneClass = PreviewPaneQuery.query(previewHandlers, file);
       if (previewPaneClass == null) {
          previewPaneContainerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
          imageView.setImage(icons.getIconForFile(file));

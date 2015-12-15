@@ -2,6 +2,7 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
+import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
 import impl.org.controlsfx.skin.GridViewSkin;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -14,12 +15,10 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import org.apache.commons.io.FilenameUtils;
 import org.controlsfx.control.GridView;
 
 import java.io.File;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -115,8 +114,7 @@ class IconsFilesView extends AbstractFilesView {
             return null;
          }
 
-         final String fileExtension = FilenameUtils.getExtension(file.getName());
-         final Class<? extends PreviewPane> previewPaneClass = previewHandlers.get(fileExtension.toLowerCase(Locale.ENGLISH));
+         final Class<? extends PreviewPane> previewPaneClass = PreviewPaneQuery.query(previewHandlers, file);
          if (previewPaneClass == null) {
             return null;
          }
