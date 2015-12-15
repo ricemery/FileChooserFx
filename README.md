@@ -22,13 +22,16 @@ See src/test/java/com/chainstaysoftware/filebrowser/FileChooserDemo.java for sam
 
 ## File Preview
 The preview code to execute for a file is determined from the file's mimetype.
-The Java Files.probeContentType(Path path) method is called to determine
-the mimetype. The implementation of probeContentType is highly dependent
-on the underlying OS.
+FileChooserFx uses the Java Files.probeContentType(Path path) method to determine
+the mimetype.
 
-The Sun Java OS-X implementation will always return null to the probeContentType
-call if there is no ~/.mime.types file found. The ~/.mime.types file is
-not installed within OS-X by default. A mime.types file can be found at
+The Sun Java OS-X implementation of probeContentType is problematic. The
+implementation will always return null to the probeContentType
+call if there is no ~/.mime.types file found. And, the ~/.mime.types file is
+not installed within OS-X by default.
+
+To work around the problem a ~/mime.types file can be created. On source of the
+file content  can be found at
 http://svn.apache.org/viewvc/httpd/httpd/branches/2.2.x/docs/conf/mime.types?revision=1576707&view=co
 
 Alternately, a custom FileTypeDetector implementation could be installed.
