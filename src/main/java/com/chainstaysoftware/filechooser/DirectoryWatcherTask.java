@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.stage.Stage;
 
-import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.concurrent.TimeUnit;
@@ -44,14 +43,12 @@ class DirectoryWatcherTask extends Task {
             break;
          }
 
-         if (key == null) {
+         if (key == null || key.pollEvents().isEmpty()) {
             continue;
          }
 
-         for (WatchEvent<?> ignored : key.pollEvents()) {
-            logger.log(Level.FINE, "Directory contents changed. Updating view.");
-            Platform.runLater(callback::updateFiles);
-         }
+         logger.log(Level.FINE, "Directory contents changed. Updating view.");
+         Platform.runLater(callback::updateFiles);
 
          boolean valid = key.reset();
          if (!valid) {

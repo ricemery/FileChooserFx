@@ -1143,6 +1143,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             final File canonicalized = file.getCanonicalFile();
             return !favoriteDirs.contains(canonicalized);
          } catch (IOException e) {
+            logger.log(Level.WARNING, "error canonicalizing file", e);
             return false;
          }
       }

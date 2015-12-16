@@ -3,6 +3,7 @@ package com.chainstaysoftware.filechooser.icons;
 import com.sun.javafx.collections.ObservableMapWrapper;
 import javafx.beans.property.MapProperty;
 import javafx.beans.property.SimpleMapProperty;
+import javafx.collections.FXCollections;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FilenameUtils;
 
@@ -51,7 +52,7 @@ public class IconsImpl implements Icons {
    public static final String XML_64 = "/icons8/64x64/XML-64.png";
    public static final String ZIP_64 = "/icons8/64x64/ZIP-64.png";
 
-   private MapProperty<String, Image> fileTypeIconsProperty = new SimpleMapProperty<>();
+   private final MapProperty<String, Image> fileTypeIconsProperty = new SimpleMapProperty<>();
 
    public IconsImpl() {
       final Map<String, Image> fileTypeIcons = new HashMap<>();
@@ -82,7 +83,7 @@ public class IconsImpl implements Icons {
       fileTypeIcons.put("xml", getIcon(XML_64));
       fileTypeIcons.put("zip", getIcon(ZIP_64));
 
-      fileTypeIconsProperty.setValue(new ObservableMapWrapper<>(fileTypeIcons));
+      fileTypeIconsProperty.setValue(FXCollections.observableMap(fileTypeIcons));
    }
 
    /**
@@ -132,7 +133,7 @@ public class IconsImpl implements Icons {
     */
    @Override
    public MapProperty<String, Image> fileTypeIconsProperty() {
-      return fileTypeIconsProperty();
+      return fileTypeIconsProperty;
    }
 
    /**
