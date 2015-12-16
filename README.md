@@ -8,7 +8,6 @@ and DirectoryChooser completely in JavaFx code so that the implementations can b
 ## Limitations
 * The FileChooser does not support multifile select.
 * There are file previews implemented for jpg, png and text files. Other file previews can be plugged in.
-* Refresh of file system changes is not yet implemented.
 * Unix mountpoints do not show in "Places" list.
 * Localization hooks are provided, but only English text is provided.
 

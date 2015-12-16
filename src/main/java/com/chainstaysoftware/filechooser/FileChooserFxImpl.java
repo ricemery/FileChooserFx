@@ -55,6 +55,10 @@ import org.controlsfx.control.BreadCrumbBar;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -113,6 +117,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private Button removeFavoriteButton;
    private Button doneButton;
    private Icons icons = new IconsImpl();
+   private WatchService watcher;
+   private WatchKey watchKey;
+
 
    @Override
    public ObservableList<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -325,7 +332,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
       stage.setScene(scene);
       stage.initOwner(ownerWindow);
       stage.initModality(Modality.APPLICATION_MODAL);
-      stage.setOnCloseRequest(event -> fileChooserCallback.fileChosen(Optional.empty()));
+      stage.setUserData(Boolean.FALSE);
+      stage.setOnCloseRequest(event -> {
+         stage.setUserData(Boolean.TRUE);
+         fileChooserCallback.fileChosen(Optional.empty());
+      });
       stage.show();
 
       updatePlaces();
@@ -334,7 +345,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             : initialDirectory.getValue();
 
       setCurrentView(viewTypeProperty().getValue());
-//      updateFiles(currentDirectory);
+      updateWatchDirectory();
    }
 
    /**
@@ -481,7 +492,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       breadCrumbBar.setId("dirsBreadCrumbBar");
       // setting focusTraversable to false is not preventing the breadCrumbBar
       // from getting focus. For now, I do not want any items in the toolbar
-      // to get focus. This may need to change for accessibility/useability.
+      // to get focus. This may need to change for accessibility/usability.
       breadCrumbBar.setCrumbFactory(param -> {
          final Button button = new BreadCrumbBarSkin.BreadCrumbButton(param.getValue() != null ? param.getValue().getName() : "");
          button.setFocusTraversable(false);
@@ -966,6 +977,14 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    /**
+    * Update the view to contain the files located within the current directory.
+    * The BreadCrumbBar is not updated.
+    */
+   private void updateFiles() {
+      updateFiles(currentDirectory, false);
+   }
+
+   /**
     * Update the view to contain the files located within the passed in
     * directory. The BreadCrumbBar will be updated to reflect the passed in dir.
     */
@@ -1006,6 +1025,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
       currentSelection.setValue(null);
 
       updateFiles(currentDirectory, updateBreadCrumbBar);
+
+      updateWatchDirectory();
    }
 
    /**
@@ -1135,8 +1156,44 @@ public final class FileChooserFxImpl implements FileChooserFx {
       public void fireDoneButton() {
          doneButton.fire();
       }
+
+      /**
+       * Update all the files in the view.
+       */
+      @Override
+      public void updateFiles() {
+         FileChooserFxImpl.this.updateFiles();
+      }
    }
 
+   /**
+    * Setup WatchService to watch for file system changes.
+    */
+   private void updateWatchDirectory() {
+      try {
+         if (watcher == null) {
+            watcher = FileSystems.getDefault().newWatchService();
+
+            final Thread watcherThread = new Thread(new DirectoryWatcherTask(stage,
+                  watcher, new FilesViewCallbackImpl()));
+            watcherThread.setDaemon(true);
+            watcherThread.start();
+         }
+
+         if (watchKey != null) {
+            watchKey.cancel();
+         }
+
+         watchKey = currentDirectory.toPath().register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
+               StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+      } catch (IOException e) {
+         logger.log(Level.WARNING, "Error setting up WatchService", e);
+      }
+   }
+
+   /**
+    * EventHandler to watch keyboard for ESC key presses.
+    */
    private class KeyEventHandler implements EventHandler<KeyEvent> {
       @Override
       public void handle(KeyEvent event) {

@@ -27,4 +27,9 @@ public interface FilesViewCallback {
    File getCurrentSelection();
 
    void fireDoneButton();
+
+   /**
+    * Update all the files in the view.
+    */
+   void updateFiles();
 }
