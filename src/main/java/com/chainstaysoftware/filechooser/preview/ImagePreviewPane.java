@@ -38,8 +38,6 @@ public class ImagePreviewPane implements PreviewPane {
 
    /**
     * Sets the file to display within the Pane.
-    *
-    * @param file
     */
    @Override
    public void setFile(final File file) {

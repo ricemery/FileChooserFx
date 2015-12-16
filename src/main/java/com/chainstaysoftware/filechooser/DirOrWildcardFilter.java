@@ -85,19 +85,6 @@ public class DirOrWildcardFilter extends WildcardFileFilter {
     * Checks to see if the filename matches one of the wildcards. Or, the
     * filename refers to a directory.
     *
-    * @param dir  the file directory (ignored)
-    * @param name the filename
-    * @return true if the filename matches one of the wildcards
-    */
-   @Override
-   public boolean accept(File dir, String name) {
-      return super.accept(dir, name);
-   }
-
-   /**
-    * Checks to see if the filename matches one of the wildcards. Or, the
-    * filename refers to a directory.
-    *
     * @param file the file to check
     * @return true if the filename matches one of the wildcards
     */

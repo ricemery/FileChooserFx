@@ -659,22 +659,22 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private Button createDoneButton() {
       final String text = getDoneButtonText();
-      final Button doneButton = new Button(text);
-      ButtonBar.setButtonData(doneButton, ButtonBar.ButtonData.OK_DONE);
-      doneButton.setId("doneButton");
-      doneButton.setDisable(!saveMode || getInitialFileName() == null);
-      doneButton.setOnAction(saveMode ? new SaveDoneEventHandler() : new BrowseDoneEventHandler());
+      final Button button = new Button(text);
+      ButtonBar.setButtonData(button, ButtonBar.ButtonData.OK_DONE);
+      button.setId("doneButton");
+      button.setDisable(!saveMode || getInitialFileName() == null);
+      button.setOnAction(saveMode ? new SaveDoneEventHandler() : new BrowseDoneEventHandler());
 
       if (saveMode) {
          fileNameField.textProperty().addListener((observable, oldValue, newValue) -> {
-            doneButton.setDisable(newValue == null || "".equals(newValue.trim()));
+            button.setDisable(newValue == null || "".equals(newValue.trim()));
          });
       }
 
       currentSelection.addListener((observable, oldValue, newValue) ->
-            doneButton.setDisable(newValue == null || (!hideFiles && newValue.isDirectory()))
+            button.setDisable(newValue == null || (!hideFiles && newValue.isDirectory()))
       );
-      return doneButton;
+      return button;
    }
 
    /**
@@ -798,9 +798,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    private Button createAddFavoriteButton() {
-      final Button addFavoriteButton = new Button(resourceBundle.getString("addfavoritebutton.txt"));
-      addFavoriteButton.setId("addFavoriteButton");
-      addFavoriteButton.setOnAction(event -> {
+      final Button button = new Button(resourceBundle.getString("addfavoritebutton.txt"));
+      button.setId("addFavoriteButton");
+      button.setOnAction(event -> {
          try {
             favoriteDirs.add(currentSelection.get().getCanonicalFile());
          } catch (IOException e) {
@@ -808,15 +808,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
          }
          updatePlaces();
       });
-      addFavoriteButton.setDisable(true);
-      return addFavoriteButton;
+      button.setDisable(true);
+      return button;
    }
 
    private Button createRemoveFavoriteButton() {
-      final Button removeFavoriteButton = new Button(resourceBundle.getString("removefavoritebutton.txt"));
-      removeFavoriteButton.setId("removeFavoriteButton");
-      removeFavoriteButton.setOnAction(new NewFolderAction());
-      removeFavoriteButton.setOnAction(event -> {
+      final Button button = new Button(resourceBundle.getString("removefavoritebutton.txt"));
+      button.setId("removeFavoriteButton");
+      button.setOnAction(new NewFolderAction());
+      button.setOnAction(event -> {
          final DirectoryListItem item = placesView.getSelectionModel().getSelectedItem();
          if (item == null) {
             return;
@@ -825,8 +825,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
          favoriteDirs.remove(item.getFile());
          updatePlaces();
       });
-      removeFavoriteButton.setDisable(true);
-      return removeFavoriteButton;
+      button.setDisable(true);
+      return button;
    }
 
    private Button createNewFolderButton() {

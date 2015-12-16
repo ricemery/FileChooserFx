@@ -4,8 +4,6 @@ package com.chainstaysoftware.filechooser.preview;
 import javafx.scene.layout.Pane;
 
 import java.io.File;
-import java.util.Optional;
-import java.util.logging.Logger;
 
 /**
  * Show preview of passed in {@link File}. Note that it is possible that the
@@ -15,7 +13,6 @@ import java.util.logging.Logger;
 public interface PreviewPane {
    /**
     * Sets the file to display within the Pane.
-    * @param file
     */
    void setFile(File file);
 
