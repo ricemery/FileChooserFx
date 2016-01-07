@@ -9,12 +9,15 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import org.apache.commons.io.FilenameUtils;
 import org.controlsfx.control.GridView;
 
 import java.io.File;
@@ -38,6 +41,7 @@ class IconsFilesView extends AbstractFilesView {
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
+   private OrderBy currentOrderBy;
 
    public IconsFilesView(final Stage parent,
                          final Map<String, Class<? extends PreviewPane>> previewHandlers,
@@ -60,6 +64,41 @@ class IconsFilesView extends AbstractFilesView {
       gridView.setCellWidth(CELL_WIDTH);
       gridView.setOnMouseClicked(new MouseClickHandler());
       gridView.setOnKeyPressed(new KeyClickHandler());
+      gridView.setContextMenu(createContextMenu());
+
+      currentOrderBy = OrderBy.Name;
+   }
+
+   private ContextMenu createContextMenu() {
+      final MenuItem nameItem = new MenuItem();
+      nameItem.setId("nameMenuItem");
+      nameItem.setText("Name");
+      nameItem.onActionProperty().setValue(event -> sort(OrderBy.Name));
+
+      final MenuItem sizeItem = new MenuItem();
+      sizeItem.setId("sizeMenuItem");
+      sizeItem.setText("Size");
+      sizeItem.onActionProperty().setValue(event -> sort(OrderBy.Size));
+
+      final MenuItem typeItem = new MenuItem();
+      typeItem.setId("typeMenuItem");
+      typeItem.setText("Type");
+      typeItem.onActionProperty().setValue(event -> sort(OrderBy.Type));
+
+      final MenuItem dateItem = new MenuItem();
+      dateItem.setId("dateMenuItem");
+      dateItem.setText("Modification Date");
+      dateItem.onActionProperty().setValue(event -> sort(OrderBy.ModificationDate));
+
+      final Menu sortOrderMenu = new Menu();
+      sortOrderMenu.setId("sortOrderMenu");
+      sortOrderMenu.setText("Arrange By");
+      sortOrderMenu.getItems().addAll(nameItem, sizeItem, typeItem, dateItem);
+
+      final ContextMenu contextMenu = new ContextMenu();
+      contextMenu.getItems().addAll(sortOrderMenu);
+
+      return contextMenu;
    }
 
    @Override
@@ -74,11 +113,67 @@ class IconsFilesView extends AbstractFilesView {
 
    @Override
    public void setFiles(final Stream<File> fileStream) {
+      setFiles(fileStream, currentOrderBy);
+   }
+
+   private void setFiles(final Stream<File> fileStream,
+                         final OrderBy orderBy) {
       selectedCellIndex.setValue(NOT_SELECTED);
 
-      gridView.getItems().setAll(getIcons(fileStream));
+      gridView.getItems().setAll(getIcons(sort(fileStream, orderBy)));
 
       selectCurrent();
+      currentOrderBy = orderBy;
+   }
+
+   /**
+    * Sort the existing view contents.
+    */
+   private void sort(final OrderBy orderBy) {
+      setFiles(getFileStream(), orderBy);
+   }
+
+   /**
+    * Sort the passed in Stream<File>
+    */
+   private Stream<File> sort(final Stream<File> fileStream,
+                             final OrderBy orderBy) {
+      // TODO: Move into own class and write junit..
+      return fileStream.sorted((o1, o2) -> {
+         if (OrderBy.ModificationDate.equals(orderBy)) {
+            if (o1.lastModified() < o2.lastModified()) return -1;
+            if (o1.lastModified() > o2.lastModified()) return 1;
+            return 0;
+         }
+
+         if (OrderBy.Size.equals(orderBy)) {
+            if (o1.length() < o2.length()) return -1;
+            if (o1.length() > o2.length()) return 1;
+            return 0;
+         }
+
+         if (OrderBy.Type.equals(orderBy)) {
+            if (o1.isDirectory()) {
+               if (o2.isDirectory()) {
+                  return o1.compareTo(o2);
+               }
+
+               return -1;
+            } else if (o2.isDirectory()) {
+               return 1;
+            }
+
+            final String extension1 = FilenameUtils.getExtension(o1.getName());
+            final String extension2 = FilenameUtils.getExtension(o2.getName());
+            return extension1.compareTo(extension2);
+         }
+
+         return o1.getName().compareTo(o2.getName());
+      });
+   }
+
+   private Stream<File> getFileStream() {
+      return gridView.getItems().stream().map(DirectoryListItem::getFile);
    }
 
    /**
@@ -109,6 +204,8 @@ class IconsFilesView extends AbstractFilesView {
    private class IconGridCellContextMenuFactImpl implements IconGridCellContextMenuFactory {
       @Override
       public ContextMenu create(final DirectoryListItem item) {
+         final ContextMenu contextMenu = createContextMenu();
+
          final File file = item.getFile();
          if (file.isDirectory()) {
             return null;
@@ -122,7 +219,8 @@ class IconsFilesView extends AbstractFilesView {
          final MenuItem imagePreviewItem = new MenuItem("Preview");
          imagePreviewItem.setOnAction(v -> showPreview(previewPaneClass, file));
 
-         return new ContextMenu(imagePreviewItem);
+         contextMenu.getItems().addAll(new SeparatorMenuItem(), imagePreviewItem);
+         return contextMenu;
       }
    }
 

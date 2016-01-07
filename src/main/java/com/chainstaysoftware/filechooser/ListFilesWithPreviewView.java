@@ -19,6 +19,8 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -37,7 +39,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
-
+   private List<TableColumn<DirectoryListItem, ?>> sortOrder;
 
    public ListFilesWithPreviewView(final Stage parent,
                                    final Map<String, Class<? extends PreviewPane>> previewHandlers,
@@ -60,6 +62,10 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
       tableView.getColumns().addAll(nameColumn);
       tableView.setOnMouseClicked(event -> {
+         if (tableView.getSelectionModel().getSelectedItem() == null) {
+            return;
+         }
+
          final File file = tableView.getSelectionModel().getSelectedItem().getFile();
          if (event.getClickCount() < 2) {
             return;
@@ -74,7 +80,8 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.setOnKeyPressed(new KeyPressedHandler());
       tableView.getSelectionModel().selectedItemProperty().addListener(new SelectedItemChanged());
       tableView.setPlaceholder(new Label(""));
-
+      sortOrder = new LinkedList<>();
+      sortOrder.add(nameColumn);
 
       splitPane = new SplitPane();
       splitPane.setId("previewSplitPane");
@@ -94,11 +101,36 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
    @Override
    public void setFiles(final Stream<File> fileStream) {
+      saveSortOrder();
+
       tableView.getItems().setAll(fileStream
             .map(f -> new DirectoryListItem(f, icons.getIconForFile(f)))
             .collect(Collectors.toList()));
 
+      restoreSortOrder();
+
       selectCurrent();
+   }
+
+   /**
+    * Save the sort order of the filesTreeView
+    */
+   private void saveSortOrder() {
+      if (!tableView.getSortOrder().isEmpty()) {
+         sortOrder.clear();
+         sortOrder.addAll(tableView.getSortOrder());
+      }
+   }
+
+   /**
+    * Reapply the sort order of the filesTreeView
+    */
+   private void restoreSortOrder() {
+      if (sortOrder != null) {
+         tableView.getSortOrder().clear();
+         tableView.getSortOrder().addAll(sortOrder);
+         sortOrder.get(0).setSortable(true); // This performs a sort
+      }
    }
 
    /**

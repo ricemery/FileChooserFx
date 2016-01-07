@@ -31,6 +31,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -44,6 +46,7 @@ class ListFilesView extends AbstractFilesView {
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
+   private List<TreeTableColumn<File, ?>> sortOrder;
 
    public ListFilesView(final Stage parent,
                         final Map<String, Class<? extends PreviewPane>> previewHandlers,
@@ -78,6 +81,8 @@ class ListFilesView extends AbstractFilesView {
          }
       });
       filesTreeView.setOnKeyPressed(event -> {if (keyEventHandler != null) {keyEventHandler.handle(event);}});
+      sortOrder = new LinkedList<>();
+      sortOrder.add(nameColumn);
    }
 
    private TreeTableColumn<File, String> createNameColumn(Stage parent) {
@@ -181,6 +186,8 @@ class ListFilesView extends AbstractFilesView {
 
    @Override
    public void setFiles(final Stream<File> fileStream) {
+      saveSortOrder();
+
       final TreeItem<File> rootItem = new TreeItem<>();
       rootItem.getChildren().addAll(fileStream
             .map(f -> {
@@ -193,7 +200,31 @@ class ListFilesView extends AbstractFilesView {
             .collect(Collectors.toList()));
 
       filesTreeView.setRoot(rootItem);
+
+      restoreSortOrder();
+
       selectCurrent();
+   }
+
+   /**
+    * Save the sort order of the filesTreeView
+    */
+   private void saveSortOrder() {
+      if (!filesTreeView.getSortOrder().isEmpty()) {
+         sortOrder.clear();
+         sortOrder.addAll(filesTreeView.getSortOrder());
+      }
+   }
+
+   /**
+    * Reapply the sort order of the filesTreeView
+    */
+   private void restoreSortOrder() {
+      if (sortOrder != null) {
+         filesTreeView.getSortOrder().clear();
+         filesTreeView.getSortOrder().addAll(sortOrder);
+         sortOrder.get(0).setSortable(true); // This performs a sort
+      }
    }
 
    /**
