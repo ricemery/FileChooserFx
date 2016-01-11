@@ -36,10 +36,10 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    private final HBox previewHbox;
    private final Icons icons;
    private final PropertiesPreviewPane propertiesPreviewPane;
+   private final List<TableColumn<DirectoryListItem, ?>> sortOrder;
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
-   private List<TableColumn<DirectoryListItem, ?>> sortOrder;
 
    public ListFilesWithPreviewView(final Stage parent,
                                    final Map<String, Class<? extends PreviewPane>> previewHandlers,

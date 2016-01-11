@@ -43,10 +43,10 @@ class ListFilesView extends AbstractFilesView {
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TreeTableView<File> filesTreeView;
    private final Icons icons;
+   private final List<TreeTableColumn<File, ?>> sortOrder;
 
    private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
-   private List<TreeTableColumn<File, ?>> sortOrder;
 
    public ListFilesView(final Stage parent,
                         final Map<String, Class<? extends PreviewPane>> previewHandlers,

@@ -1,6 +1,5 @@
 package com.chainstaysoftware.filechooser.icons;
 
-import com.sun.javafx.collections.ObservableMapWrapper;
 import javafx.beans.property.MapProperty;
 import javafx.beans.property.SimpleMapProperty;
 import javafx.collections.FXCollections;
@@ -141,7 +140,7 @@ public class IconsImpl implements Icons {
     */
    @Override
    public void setFileTypeIcons(final Map<String, Image> map) {
-      fileTypeIconsProperty().setValue(new ObservableMapWrapper<>(map));
+      fileTypeIconsProperty().setValue(FXCollections.observableMap(map));
    }
 
    /**

@@ -45,7 +45,7 @@ public class ImagePreviewPane implements PreviewPane {
          final Image image = new Image(new FileInputStream(file));
          imageView.setImage(image);
       } catch (FileNotFoundException e) {
-         logger.log(Level.WARNING, "File not found - " + file);
+         logger.log(Level.WARNING, "File not found - " + file, e);
       }
    }
 

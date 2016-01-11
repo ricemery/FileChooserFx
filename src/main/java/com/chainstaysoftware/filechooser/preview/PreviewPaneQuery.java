@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 /**
  * Determine the {@link PreviewPane} to utilize for a specific file.
  */
-public class PreviewPaneQuery {
+public final class PreviewPaneQuery {
    private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.preview.PreviewPaneQuery");
 
    private PreviewPaneQuery() {}
