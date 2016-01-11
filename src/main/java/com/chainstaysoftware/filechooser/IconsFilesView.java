@@ -17,7 +17,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import org.apache.commons.io.FilenameUtils;
 import org.controlsfx.control.GridView;
 
 import java.io.File;
@@ -138,38 +137,7 @@ class IconsFilesView extends AbstractFilesView {
     */
    private Stream<File> sort(final Stream<File> fileStream,
                              final OrderBy orderBy) {
-      // TODO: Move into own class and write junit..
-      return fileStream.sorted((o1, o2) -> {
-         if (OrderBy.ModificationDate.equals(orderBy)) {
-            if (o1.lastModified() < o2.lastModified()) return -1;
-            if (o1.lastModified() > o2.lastModified()) return 1;
-            return 0;
-         }
-
-         if (OrderBy.Size.equals(orderBy)) {
-            if (o1.length() < o2.length()) return -1;
-            if (o1.length() > o2.length()) return 1;
-            return 0;
-         }
-
-         if (OrderBy.Type.equals(orderBy)) {
-            if (o1.isDirectory()) {
-               if (o2.isDirectory()) {
-                  return o1.compareTo(o2);
-               }
-
-               return -1;
-            } else if (o2.isDirectory()) {
-               return 1;
-            }
-
-            final String extension1 = FilenameUtils.getExtension(o1.getName());
-            final String extension2 = FilenameUtils.getExtension(o2.getName());
-            return extension1.compareTo(extension2);
-         }
-
-         return o1.getName().compareTo(o2.getName());
-      });
+      return fileStream.sorted(new FilenameComparator(orderBy));
    }
 
    private Stream<File> getFileStream() {
