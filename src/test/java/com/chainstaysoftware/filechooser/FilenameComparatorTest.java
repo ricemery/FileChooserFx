@@ -22,6 +22,8 @@ public class FilenameComparatorTest {
    public void testOrderByModificationDate() {
       final FilenameComparator comparator = new FilenameComparator(OrderBy.ModificationDate);
 
+      bbb.setLastModified(System.currentTimeMillis());
+
       Assert.assertThat("Same file mod date should equal", comparator.compare(aaa, aaa), equalTo(0));
       Assert.assertThat("Less than mod date should be less than", comparator.compare(aaa, bbb), lessThan(0));
       Assert.assertThat("Greater than mod date should be greater than", comparator.compare(bbb, aaa), greaterThan(0));
