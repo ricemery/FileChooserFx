@@ -38,11 +38,7 @@ class DirectoryTreeItem extends TreeItem<File> {
 
    @Override
    public boolean isLeaf() {
-      if (!directoryListLoaded) {
-         loadChildren();
-      }
-
-      return getChildren().isEmpty();
+      return false;
    }
 
    @Override
