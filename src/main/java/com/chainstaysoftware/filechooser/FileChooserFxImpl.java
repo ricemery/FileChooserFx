@@ -599,6 +599,10 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       view.getColumns().addAll(placesColumn);
       view.setOnMouseClicked(event -> {
+         if (view.getSelectionModel().getSelectedItem() == null) {
+            return;
+         }
+         
          final File currentDir = view.getSelectionModel().getSelectedItem().getFile();
          changeDirectory(currentDir);
 
