@@ -5,7 +5,8 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
 import javafx.util.Callback;
-import org.apache.commons.lang3.StringUtils;
+
+import javax.swing.filechooser.FileSystemView;
 
 /**
  * CellFactory for {@link DirectoryListItem#getFile()} value.
@@ -35,8 +36,9 @@ class DirListNameColumnCellFactory
                setText(null);
                setGraphic(null);
             } else {
-               if (nameOnly && !StringUtils.isEmpty(item.getFile().getName())) {
-                  setText(item.getFile().getName());
+               if (nameOnly) {
+                  final String systemDisplayName = FileSystemView.getFileSystemView().getSystemDisplayName(item.getFile());
+                  setText("".equals(systemDisplayName) ? item.getFile().toString() : systemDisplayName);
                } else {
                   setText(item.getFile().toString());
                }

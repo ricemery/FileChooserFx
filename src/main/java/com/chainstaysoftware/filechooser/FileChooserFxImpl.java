@@ -52,6 +52,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.BreadCrumbBar;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -494,9 +495,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       // from getting focus. For now, I do not want any items in the toolbar
       // to get focus. This may need to change for accessibility/usability.
       breadCrumbBar.setCrumbFactory(param -> {
-         final Button button = new BreadCrumbBarSkin.BreadCrumbButton(param.getValue() != null
-               ? param.getValue().getName().equals("") ? param.getValue().toString() : param.getValue().getName()
-               : "");
+         final Button button = new BreadCrumbBarSkin.BreadCrumbButton(getBreadCrumbButtonText(param));
          button.setFocusTraversable(false);
          button.focusedProperty().addListener((observable, oldValue, newValue) -> {
             currentView.getNode().requestFocus();
@@ -519,6 +518,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
       vBox.getChildren().add(breadCrumbBar);
 
       return vBox;
+   }
+
+   private String getBreadCrumbButtonText(final TreeItem<File> param) {
+      final String text = param.getValue() != null
+            ? param.getValue().getName().equals("")
+            ? FileSystemView.getFileSystemView().getSystemDisplayName(param.getValue())
+            : param.getValue().getName()
+            : "";
+      return "/".equals(text) ? "" : text;
    }
 
    /**
