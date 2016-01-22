@@ -48,7 +48,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Callback;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.BreadCrumbBar;
 
@@ -923,7 +922,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
          Optional<String> result = dialog.showAndWait();
 
          result.ifPresent(name -> {
-            final File newDir = new File(FilenameUtils.concat(".", name));
+            final File newDir = new File(currentDirectory, name);
             newDir.mkdir();
 
             // Refresh
