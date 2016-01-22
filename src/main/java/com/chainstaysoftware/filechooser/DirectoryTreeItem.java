@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 class DirectoryTreeItem extends TreeItem<File> {
    private final FilesViewCallback callback;
    private final Icons icons;
+   private final boolean isLeaf;
 
    private boolean directoryListLoaded = false;
 
@@ -32,13 +33,14 @@ class DirectoryTreeItem extends TreeItem<File> {
 
       this.callback = callback;
       this.icons = icons;
+      this.isLeaf = !value.isDirectory();
 
       expandedProperty().addListener(new ExpandedListener());
    }
 
    @Override
    public boolean isLeaf() {
-      return false;
+      return isLeaf;
    }
 
    @Override
