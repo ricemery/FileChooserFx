@@ -494,7 +494,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       // from getting focus. For now, I do not want any items in the toolbar
       // to get focus. This may need to change for accessibility/usability.
       breadCrumbBar.setCrumbFactory(param -> {
-         final Button button = new BreadCrumbBarSkin.BreadCrumbButton(param.getValue() != null ? param.getValue().getName() : "");
+         final Button button = new BreadCrumbBarSkin.BreadCrumbButton(param.getValue() != null
+               ? param.getValue().getName().equals("") ? param.getValue().toString() : param.getValue().getName()
+               : "");
          button.setFocusTraversable(false);
          button.focusedProperty().addListener((observable, oldValue, newValue) -> {
             currentView.getNode().requestFocus();
@@ -602,7 +604,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
          if (view.getSelectionModel().getSelectedItem() == null) {
             return;
          }
-         
+
          final File currentDir = view.getSelectionModel().getSelectedItem().getFile();
          changeDirectory(currentDir);
 
