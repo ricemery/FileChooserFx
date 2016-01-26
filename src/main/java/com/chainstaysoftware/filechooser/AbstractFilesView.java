@@ -50,6 +50,7 @@ abstract class AbstractFilesView implements FilesView {
       pane.minHeightProperty().bind(stage.heightProperty());
 
       final Scene scene = new Scene(new Pane(pane));
+      scene.getStylesheets().add(new FileBrowserCss().getUrl());
       scene.setOnKeyPressed(event -> {
          if (event.getCode() == KeyCode.ESCAPE) {
             stage.close();

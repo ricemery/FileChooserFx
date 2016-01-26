@@ -82,6 +82,10 @@ public class PropertiesPreviewPane {
       vBox.getStyleClass().add("propertiespreview-vbox");
       vBox.setAlignment(Pos.CENTER);
       vBox.getChildren().addAll(previewPaneContainerPane, nameLabel, gridPane);
+
+      previewPaneContainerPane.minWidthProperty().bind(vBox.minWidthProperty());
+      previewPaneContainerPane.maxWidthProperty().bind(vBox.maxWidthProperty());
+      previewPaneContainerPane.prefWidthProperty().bind(vBox.prefWidthProperty());
       VBox.setVgrow(previewPaneContainerPane, Priority.ALWAYS);
    }
 
@@ -90,7 +94,7 @@ public class PropertiesPreviewPane {
     */
    private HBox createPreviewContainerPane() {
       final HBox hBox = new HBox();
-      hBox.setMinSize(0,0);
+      hBox.setId("previewContainerPane");
       hBox.setAlignment(Pos.CENTER);
       return hBox;
    }
@@ -166,7 +170,6 @@ public class PropertiesPreviewPane {
    private void setContainerNode(final File file) {
       final Class<? extends PreviewPane> previewPaneClass = PreviewPaneQuery.query(previewHandlers, file);
       if (previewPaneClass == null) {
-         previewPaneContainerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
          imageView.setImage(icons.getIconForFile(file));
          previewPaneContainerPane.getChildren().setAll(imageView);
       } else {
@@ -177,9 +180,9 @@ public class PropertiesPreviewPane {
          }
 
          final PreviewPane previewPane = previewPaneOpt.get();
-         previewPaneContainerPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_COMPUTED_SIZE);
          previewPane.setFile(file);
          previewPaneContainerPane.getChildren().setAll(previewPane.getPane());
+         HBox.setHgrow(previewPane.getPane(), Priority.ALWAYS);
       }
    }
 
