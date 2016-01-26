@@ -59,6 +59,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
       nameColumn.setCellFactory(new DirListNameColumnCellFactory(true));
       nameColumn.prefWidthProperty().bind(tableView.widthProperty());
+      nameColumn.setComparator((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getFile().getName(), o2.getFile().getName()));
 
       tableView.getColumns().addAll(nameColumn);
       tableView.setOnMouseClicked(event -> {
