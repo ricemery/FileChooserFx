@@ -48,6 +48,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Callback;
+import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.BreadCrumbBar;
 import org.controlsfx.control.spreadsheet.StringConverterWithFormat;
@@ -1097,7 +1098,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final List<String> extensionFilter = extensionsComboBox == null || extensionsComboBox.getValue() == null
             ? Collections.emptyList()
             : extensionsComboBox.getValue().getExtensions();
-      return new DirOrWildcardFilter(extensionFilter);
+      return new DirOrWildcardFilter(extensionFilter, IOCase.SYSTEM);
    }
 
    /**
