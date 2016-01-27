@@ -50,6 +50,7 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.BreadCrumbBar;
+import org.controlsfx.control.spreadsheet.StringConverterWithFormat;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
@@ -768,10 +769,22 @@ public final class FileChooserFxImpl implements FileChooserFx {
                ? allFiles
                : extensionFilters);
          extensionsComboBox.setCellFactory(new ExtensionsCellFactory());
-         extensionsComboBox.setButtonCell(new ExtensionsButtonCell());
+         extensionsComboBox.setButtonCell(new ExtensionsCell());
          extensionsComboBox.setOnAction(v -> {
             setSelectedExtensionFilter(extensionsComboBox.getValue());
             updateFiles(currentDirectory, false);
+         });
+         extensionsComboBox.setEditable(true);
+         extensionsComboBox.setConverter(new StringConverterWithFormat<FileChooser.ExtensionFilter>() {
+            @Override
+            public String toString(FileChooser.ExtensionFilter extensionFilter) {
+               return extensionFilter.getDescription();
+            }
+
+            @Override
+            public FileChooser.ExtensionFilter fromString(String string) {
+               return new FileChooser.ExtensionFilter(string, string);
+            }
          });
 
          updateSelectedExtensionFilter(extensionsComboBox);
@@ -877,18 +890,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private static class ExtensionsCellFactory implements Callback<ListView<FileChooser.ExtensionFilter>, ListCell<FileChooser.ExtensionFilter>> {
       @Override
       public ListCell<FileChooser.ExtensionFilter> call(ListView<FileChooser.ExtensionFilter> param) {
-         return new ListCell<FileChooser.ExtensionFilter>(){
-            @Override
-            protected void updateItem(FileChooser.ExtensionFilter item, boolean empty) {
-               super.updateItem(item, empty);
-
-               if (item == null) {
-                  setText(null);
-               } else {
-                  setText(item.getDescription());
-               }
-            }
-         };
+         return new ExtensionsCell();
       }
    }
 
@@ -896,7 +898,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
     * ButtonCell for file extensions ComboBox - this sets the text for the selected
     * item.
     */
-   private static class ExtensionsButtonCell extends ListCell<FileChooser.ExtensionFilter> {
+   private static class ExtensionsCell extends ListCell<FileChooser.ExtensionFilter> {
       @Override
       protected void updateItem(FileChooser.ExtensionFilter item, boolean empty) {
          super.updateItem(item, empty);
