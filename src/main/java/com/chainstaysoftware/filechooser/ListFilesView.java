@@ -152,14 +152,17 @@ class ListFilesView extends AbstractFilesView {
       final TreeTableColumn<File, Long> sizeColumn
             = new TreeTableColumn<>(resourceBundle.getString("listfilesview.size"));
 
-      sizeColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getValue().length()));
+      sizeColumn.setCellValueFactory(param ->
+            param.getValue().getValue().isDirectory()
+               ? null
+               : new ReadOnlyObjectWrapper<>(param.getValue().getValue().length()));
 
       sizeColumn.setCellFactory(param -> new TreeTableCell<File, Long>() {
          @Override
          protected void updateItem(Long item, boolean empty) {
             super.updateItem(item, empty);
 
-            if (empty) {
+            if (empty || item == null) {
                setText("");
             } else {
                setText(FileUtils.byteCountToDisplaySize(item));

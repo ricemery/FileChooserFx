@@ -10,14 +10,14 @@ import java.util.Comparator;
  * Comparator for {@link File} that allows specification of the {@link OrderBy}
  * to sort on.
  */
-public class FilenameComparator implements Comparator<File>, Serializable {
+public class FileMetaDataComparator implements Comparator<File>, Serializable {
    private static final long serialVersionUID = 8867211248432156391L;
 
    private final OrderBy orderBy;
    private final OrderDirection direction;
 
-   public FilenameComparator(final OrderBy orderBy,
-                             final OrderDirection direction) {
+   public FileMetaDataComparator(final OrderBy orderBy,
+                                 final OrderDirection direction) {
       this.orderBy = orderBy;
       this.direction = direction;
    }
@@ -36,7 +36,11 @@ public class FilenameComparator implements Comparator<File>, Serializable {
          return getAnswer(compareByType(o1, o2));
       }
 
-      return getAnswer(o1.getName().compareTo(o2.getName()));
+      return getAnswer(compareByName(o1, o2));
+   }
+
+   private int compareByName(final File o1, final File o2) {
+      return o1.getName().compareTo(o2.getName());
    }
 
    private int compareByType(final File o1, final File o2) {
@@ -56,14 +60,26 @@ public class FilenameComparator implements Comparator<File>, Serializable {
    }
 
    private int compareBySize(final File o1, final File o2) {
+      // treat directories as zero length. The length method on file does not
+      // return the total size of the directory contents.
+
+      if (o1.isDirectory()) {
+         if (o2.isDirectory()) {
+            return compareByName(o1, o2);
+         }
+
+         return -1;
+      }
+
+      if (o2.isDirectory()) {
+         return 1;
+      }
+
       if (o1.length() < o2.length()) {
          return -1;
       }
 
-      if (o1.length() > o2.length()) {
-         return 1;
-      }
-      return 0;
+      return o1.length() > o2.length() ? 1 : 0;
    }
 
    private int compareByDate(final File o1, final File o2) {

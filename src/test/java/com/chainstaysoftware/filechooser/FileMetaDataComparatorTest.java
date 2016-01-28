@@ -9,7 +9,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 
-public class FilenameComparatorTest {
+public class FileMetaDataComparatorTest {
    private final File testDataDir = new File("./src/test/resources/com/chainstaysoftware/filechooser");
    private final File aaa = new File(testDataDir, "aaa");
    private final File bbb = new File(testDataDir, "bbb");
@@ -20,7 +20,7 @@ public class FilenameComparatorTest {
 
    @Test
    public void testOrderByModificationDate() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.ModificationDate, OrderDirection.Ascending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.ModificationDate, OrderDirection.Ascending);
 
       bbb.setLastModified(System.currentTimeMillis());
 
@@ -31,7 +31,7 @@ public class FilenameComparatorTest {
 
    @Test
    public void testOrderByModificationDate_Descending() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.ModificationDate, OrderDirection.Descending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.ModificationDate, OrderDirection.Descending);
 
       bbb.setLastModified(System.currentTimeMillis());
 
@@ -42,16 +42,25 @@ public class FilenameComparatorTest {
 
    @Test
    public void testOrderBySize() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.Size, OrderDirection.Ascending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.Size, OrderDirection.Ascending);
 
       Assert.assertThat("Same file size should equal", comparator.compare(aaa, aaa), equalTo(0));
       Assert.assertThat("Less than size should be less than", comparator.compare(aaa, bbb), lessThan(0));
       Assert.assertThat("Greater than size should be greater than", comparator.compare(bbb, aaa), greaterThan(0));
+
+      Assert.assertThat("Directory should be lessthan file", comparator.compare(testDataDir, aaa), lessThan(0));
+      Assert.assertThat("File should be greatethan dir", comparator.compare(aaa, testDataDir), greaterThan(0));
+      Assert.assertThat("Directories should fall back to name compare",
+            comparator.compare(new File(testDataDir, "dir1"), new File(testDataDir, "dir2")), lessThan(0));
+      Assert.assertThat("Directories should fall back to name compare",
+            comparator.compare(new File(testDataDir, "dir1"), new File(testDataDir, "dir1")), equalTo(0));
+      Assert.assertThat("Directories should fall back to name compare",
+            comparator.compare(new File(testDataDir, "dir2"), new File(testDataDir, "dir1")), greaterThan(0));
    }
 
    @Test
    public void testOrderBySize_Descending() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.Size, OrderDirection.Descending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.Size, OrderDirection.Descending);
 
       Assert.assertThat("Same file size should equal", comparator.compare(aaa, aaa), equalTo(0));
       Assert.assertThat("Less than size should be greater than", comparator.compare(aaa, bbb), greaterThan(0));
@@ -60,7 +69,7 @@ public class FilenameComparatorTest {
 
    @Test
    public void testOrderByType() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.Type, OrderDirection.Ascending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.Type, OrderDirection.Ascending);
 
       Assert.assertThat("Same file type date should equal - no extension", comparator.compare(aaa, aaa), equalTo(0));
       Assert.assertThat("Same file type date should equal - with extension", comparator.compare(emptyTxt, emptyTxt), equalTo(0));
@@ -77,7 +86,7 @@ public class FilenameComparatorTest {
 
    @Test
    public void testOrderByType_Descending() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.Type, OrderDirection.Descending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.Type, OrderDirection.Descending);
 
       Assert.assertThat("Same file type date should equal - no extension", comparator.compare(aaa, aaa), equalTo(0));
       Assert.assertThat("Same file type date should equal - with extension", comparator.compare(emptyTxt, emptyTxt), equalTo(0));
@@ -94,7 +103,7 @@ public class FilenameComparatorTest {
 
    @Test
    public void testOrderByName() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.Name, OrderDirection.Ascending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.Name, OrderDirection.Ascending);
 
       Assert.assertThat("Same file name should equal", comparator.compare(aaa, aaa), equalTo(0));
       Assert.assertThat("Less than name should be less than", comparator.compare(aaa, bbb), lessThan(0));
@@ -103,7 +112,7 @@ public class FilenameComparatorTest {
 
    @Test
    public void testOrderByName_Descending() {
-      final FilenameComparator comparator = new FilenameComparator(OrderBy.Name, OrderDirection.Descending);
+      final FileMetaDataComparator comparator = new FileMetaDataComparator(OrderBy.Name, OrderDirection.Descending);
 
       Assert.assertThat("Same file name should equal", comparator.compare(aaa, aaa), equalTo(0));
       Assert.assertThat("Less than name should be greater than", comparator.compare(aaa, bbb), greaterThan(0));

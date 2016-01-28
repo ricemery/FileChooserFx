@@ -177,7 +177,7 @@ class IconsFilesView extends AbstractFilesView {
     * Sort the passed in Stream<File>
     */
    private Stream<File> sort(final Stream<File> fileStream) {
-      return fileStream.sorted(new FilenameComparator(callback.orderByProperty().get(),
+      return fileStream.sorted(new FileMetaDataComparator(callback.orderByProperty().get(),
            callback.orderDirectionProperty().get()));
    }
 
