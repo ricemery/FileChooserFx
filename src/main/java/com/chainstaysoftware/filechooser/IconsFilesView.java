@@ -44,7 +44,6 @@ class IconsFilesView extends AbstractFilesView {
    private final IntegerProperty selectedCellIndex = new SimpleIntegerProperty(NOT_SELECTED);
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final FilesViewCallback callback;
-   private final ContextMenu contextMenu;
 
    private EventHandler<? super KeyEvent> keyEventHandler;
    private boolean disableListeners;
@@ -72,8 +71,7 @@ class IconsFilesView extends AbstractFilesView {
       gridView.setCellWidth(CELL_WIDTH);
       gridView.setOnMouseClicked(new MouseClickHandler());
       gridView.setOnKeyPressed(new KeyClickHandler());
-      contextMenu = createContextMenu();
-      gridView.setContextMenu(contextMenu);
+      gridView.setContextMenu(createContextMenu());
    }
 
    private ContextMenu createContextMenu() {
@@ -129,7 +127,10 @@ class IconsFilesView extends AbstractFilesView {
          callback.orderDirectionProperty().setValue(newValue ? OrderDirection.Descending : OrderDirection.Ascending);
          sort(callback.orderByProperty().get());
       });
+
+      disableListeners = true;
       reverseOrder.setSelected(OrderDirection.Descending.equals(initialDirection));
+      disableListeners = false;
 
       final Menu sortOrderMenu = new Menu();
       sortOrderMenu.setId("sortOrderMenu");
@@ -224,8 +225,7 @@ class IconsFilesView extends AbstractFilesView {
    private class IconGridCellContextMenuFactImpl implements IconGridCellContextMenuFactory {
       @Override
       public ContextMenu create(final DirectoryListItem item) {
-         final ContextMenu contextMenu = new ContextMenu();
-         contextMenu.getItems().addAll(contextMenu.getItems());
+         final ContextMenu contextMenu = createContextMenu();
 
          final File file = item.getFile();
          if (file.isDirectory()) {
