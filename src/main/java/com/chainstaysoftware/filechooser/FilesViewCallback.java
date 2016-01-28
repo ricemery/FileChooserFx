@@ -1,5 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
+import javafx.beans.property.ObjectProperty;
+
 import java.io.File;
 import java.util.stream.Stream;
 
@@ -32,4 +34,8 @@ public interface FilesViewCallback {
     * Update all the files in the view.
     */
    void updateFiles();
+
+   ObjectProperty<OrderBy> orderByProperty();
+
+   ObjectProperty<OrderDirection> orderDirectionProperty();
 }

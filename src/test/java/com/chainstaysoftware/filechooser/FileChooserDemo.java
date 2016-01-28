@@ -44,7 +44,8 @@ public class FileChooserDemo extends Application {
                fileOptional -> textFlow.getChildren()
                      .add(new Text("File to open - " + fileOptional.toString() + "\r\n"
                                     + "Selected Extension Filter - " + fileChooser.getSelectedExtensionFilter().getDescription() + "\r\n"
-                                    + "View Type - " + fileChooser.getViewType() + "\r\n")));
+                                    + "View Type - " + fileChooser.getViewType() + "\r\n"
+                                    + "Sort - " + fileChooser.getOrderBy() + " " + fileChooser.getOrderDirection() + "\r\n")));
       });
 
       final Button fileSaveButton = new Button("Save File");

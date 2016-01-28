@@ -94,6 +94,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilter;
    private ObjectProperty<ViewType> viewTypeProperty;
    private BooleanProperty showHiddenFiles;
+   private ObjectProperty<OrderBy> orderByProperty;
+   private ObjectProperty<OrderDirection> orderDirectionProperty;
    private File currentDirectory;
    private Button backButton;
    private BreadCrumbBar<File> breadCrumbBar;
@@ -221,6 +223,62 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
 
       return showHiddenFiles;
+   }
+
+   /**
+    * Set the sort field.
+    */
+   @Override
+   public void setOrderBy(final OrderBy orderBy) {
+      orderByProperty().setValue(orderBy);
+   }
+
+   /**
+    * Retrieve the current sort field. Defaults to {@link OrderBy#Name}.
+    */
+   @Override
+   public OrderBy getOrderBy() {
+      return orderByProperty().getValue();
+   }
+
+   /**
+    * Retrieve the current sort field. Defaults to {@link OrderBy#Name}.
+    */
+   @Override
+   public ObjectProperty<OrderBy> orderByProperty() {
+      if (orderByProperty == null) {
+         orderByProperty = new SimpleObjectProperty<>(this, "orderBy", OrderBy.Name);
+      }
+
+      return orderByProperty;
+   }
+
+   /**
+    * Set the sort direction.
+    */
+   @Override
+   public void setOrderDirection(final OrderDirection orderDirection) {
+      orderDirectionProperty().setValue(orderDirection);
+   }
+
+   /**
+    * Retrieve the sort direction. Defaults to {@link OrderDirection#Ascending}.
+    */
+   @Override
+   public OrderDirection getOrderDirection() {
+      return orderDirectionProperty().get();
+   }
+
+   /**
+    * Retrieve the sort direction. Defaults to {@link OrderDirection#Ascending}.
+    */
+   @Override
+   public ObjectProperty<OrderDirection> orderDirectionProperty() {
+      if (orderDirectionProperty == null) {
+         orderDirectionProperty = new SimpleObjectProperty<>(this, "orderDirection", OrderDirection.Ascending);
+      }
+
+      return orderDirectionProperty;
    }
 
    @Override
@@ -368,22 +426,23 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    private IconsFilesView createIconsFilesView() {
-      final IconsFilesView view = new IconsFilesView(stage, previewHandlers, icons);
-      view.setCallback(new FilesViewCallbackImpl());
+      final IconsFilesView view = new IconsFilesView(stage, previewHandlers, icons,
+            new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }
 
    private ListFilesView createListFilesView() {
-      final ListFilesView view = new ListFilesView(stage, previewHandlers, icons);
-      view.setCallback(new FilesViewCallbackImpl());
+      final ListFilesView view = new ListFilesView(stage, previewHandlers,
+            icons, new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }
 
    private ListFilesWithPreviewView createListFilesWithPreviewView() {
-      final ListFilesWithPreviewView view = new ListFilesWithPreviewView(stage, previewHandlers, icons);
-      view.setCallback(new FilesViewCallbackImpl());
+      final ListFilesWithPreviewView view
+            = new ListFilesWithPreviewView(stage, previewHandlers, icons,
+               new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }
@@ -1180,6 +1239,16 @@ public final class FileChooserFxImpl implements FileChooserFx {
       @Override
       public void updateFiles() {
          FileChooserFxImpl.this.updateFiles();
+      }
+
+      @Override
+      public ObjectProperty<OrderBy> orderByProperty() {
+         return FileChooserFxImpl.this.orderByProperty();
+      }
+
+      @Override
+      public ObjectProperty<OrderDirection> orderDirectionProperty() {
+         return FileChooserFxImpl.this.orderDirectionProperty();
       }
    }
 

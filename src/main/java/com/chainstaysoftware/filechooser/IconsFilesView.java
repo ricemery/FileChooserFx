@@ -8,10 +8,13 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -22,6 +25,7 @@ import org.controlsfx.control.GridView;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -37,18 +41,21 @@ class IconsFilesView extends AbstractFilesView {
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final Icons icons;
    private final IntegerProperty selectedCellIndex = new SimpleIntegerProperty(NOT_SELECTED);
+   private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
+   private final FilesViewCallback callback;
 
-   private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
-   private OrderBy currentOrderBy;
+   private boolean disableListeners;
 
    public IconsFilesView(final Stage parent,
                          final Map<String, Class<? extends PreviewPane>> previewHandlers,
-                         final Icons icons) {
+                         final Icons icons,
+                         final FilesViewCallback callback) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
       this.icons = icons;
+      this.callback = callback;
 
       gridView.setCellFactory(gridView1 -> {
          final IconGridCell cell = new IconGridCell(true, new IconGridCellContextMenuFactImpl());
@@ -64,35 +71,68 @@ class IconsFilesView extends AbstractFilesView {
       gridView.setOnMouseClicked(new MouseClickHandler());
       gridView.setOnKeyPressed(new KeyClickHandler());
       gridView.setContextMenu(createContextMenu());
-
-      currentOrderBy = OrderBy.Name;
    }
 
    private ContextMenu createContextMenu() {
-      final MenuItem nameItem = new MenuItem();
+      final OrderBy initialOrderBy = callback.orderByProperty().get();
+      final OrderDirection initialDirection = callback.orderDirectionProperty().get();
+
+      final ToggleGroup toggleGroup = new ToggleGroup();
+
+      final RadioMenuItem nameItem = new RadioMenuItem();
       nameItem.setId("nameMenuItem");
-      nameItem.setText("Name");
+      nameItem.setText(resourceBundle.getString("iconsview.context.name"));
+      nameItem.setToggleGroup(toggleGroup);
       nameItem.onActionProperty().setValue(event -> sort(OrderBy.Name));
+      if (OrderBy.Name.equals(initialOrderBy)) {
+         nameItem.setSelected(true);
+      }
 
-      final MenuItem sizeItem = new MenuItem();
+      final RadioMenuItem sizeItem = new RadioMenuItem();
       sizeItem.setId("sizeMenuItem");
-      sizeItem.setText("Size");
+      sizeItem.setText(resourceBundle.getString("iconsview.context.size"));
+      sizeItem.setToggleGroup(toggleGroup);
       sizeItem.onActionProperty().setValue(event -> sort(OrderBy.Size));
+      if (OrderBy.Size.equals(initialOrderBy)) {
+         sizeItem.setSelected(true);
+      }
 
-      final MenuItem typeItem = new MenuItem();
+      final RadioMenuItem typeItem = new RadioMenuItem();
       typeItem.setId("typeMenuItem");
-      typeItem.setText("Type");
+      typeItem.setText(resourceBundle.getString("iconsview.context.type"));
+      typeItem.setToggleGroup(toggleGroup);
       typeItem.onActionProperty().setValue(event -> sort(OrderBy.Type));
+      if (OrderBy.Type.equals(initialOrderBy)) {
+         typeItem.setSelected(true);
+      }
 
-      final MenuItem dateItem = new MenuItem();
+      final RadioMenuItem dateItem = new RadioMenuItem();
       dateItem.setId("dateMenuItem");
-      dateItem.setText("Modification Date");
+      dateItem.setText(resourceBundle.getString("iconsview.context.modificationdate"));
+      dateItem.setToggleGroup(toggleGroup);
       dateItem.onActionProperty().setValue(event -> sort(OrderBy.ModificationDate));
+      if (OrderBy.ModificationDate.equals(initialOrderBy)) {
+         dateItem.setSelected(true);
+      }
+
+      final CheckMenuItem reverseOrder = new CheckMenuItem();
+      reverseOrder.setId("reverserOrderItem");
+      reverseOrder.setText(resourceBundle.getString("iconsview.context.reverseorder"));
+      reverseOrder.selectedProperty().addListener((observable, oldValue, newValue) -> {
+         if (disableListeners) {
+            return;
+         }
+
+         callback.orderDirectionProperty().setValue(newValue ? OrderDirection.Descending : OrderDirection.Ascending);
+         sort();
+      });
+      reverseOrder.setSelected(OrderDirection.Descending.equals(initialDirection));
 
       final Menu sortOrderMenu = new Menu();
       sortOrderMenu.setId("sortOrderMenu");
-      sortOrderMenu.setText("Arrange By");
-      sortOrderMenu.getItems().addAll(nameItem, sizeItem, typeItem, dateItem);
+      sortOrderMenu.setText(resourceBundle.getString("iconsview.context.arrangeby"));
+      sortOrderMenu.getItems().addAll(nameItem, sizeItem, typeItem, dateItem,
+            new SeparatorMenuItem(), reverseOrder);
 
       final ContextMenu contextMenu = new ContextMenu();
       contextMenu.getItems().addAll(sortOrderMenu);
@@ -106,38 +146,39 @@ class IconsFilesView extends AbstractFilesView {
    }
 
    @Override
-   public void setCallback(final FilesViewCallback callback) {
-      this.callback = callback;
-   }
-
-   @Override
    public void setFiles(final Stream<File> fileStream) {
-      setFiles(fileStream, currentOrderBy);
-   }
-
-   private void setFiles(final Stream<File> fileStream,
-                         final OrderBy orderBy) {
       selectedCellIndex.setValue(NOT_SELECTED);
 
-      gridView.getItems().setAll(getIcons(sort(fileStream, orderBy)));
+      // Disable event listeners in gridView while being updated programmatically
+      disableListeners = true;
+      gridView.getItems().setAll(getIcons(sort(fileStream)));
+      disableListeners = false;
 
       selectCurrent();
-      currentOrderBy = orderBy;
    }
 
    /**
     * Sort the existing view contents.
     */
    private void sort(final OrderBy orderBy) {
-      setFiles(getFileStream(), orderBy);
+      callback.orderByProperty().set(orderBy);
+
+      sort();
+   }
+
+   /**
+    * Sort the existing view contents.
+    */
+   private void sort() {
+      setFiles(getFileStream());
    }
 
    /**
     * Sort the passed in Stream<File>
     */
-   private Stream<File> sort(final Stream<File> fileStream,
-                             final OrderBy orderBy) {
-      return fileStream.sorted(new FilenameComparator(orderBy));
+   private Stream<File> sort(final Stream<File> fileStream) {
+      return fileStream.sorted(new FilenameComparator(callback.orderByProperty().get(),
+           callback.orderDirectionProperty().get()));
    }
 
    private Stream<File> getFileStream() {

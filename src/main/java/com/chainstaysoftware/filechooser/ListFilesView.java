@@ -8,6 +8,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
@@ -43,22 +44,27 @@ class ListFilesView extends AbstractFilesView {
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TreeTableView<File> filesTreeView;
    private final Icons icons;
-   private final List<TreeTableColumn<File, ?>> sortOrder;
+   private final List<TreeTableColumn<File, ?>> sortOrder = new LinkedList<>();
+   private final TreeTableColumn<File, String> nameColumn;
+   private final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn;
+   private final TreeTableColumn<File, Long> sizeColumn;
+   private final FilesViewCallback callback;
 
-   private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
 
    public ListFilesView(final Stage parent,
                         final Map<String, Class<? extends PreviewPane>> previewHandlers,
-                        final Icons icons) {
+                        final Icons icons,
+                        final FilesViewCallback callback) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
       this.icons = icons;
+      this.callback = callback;
 
-      final TreeTableColumn<File, String> nameColumn = createNameColumn(parent);
-      final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn = createDateModifiedColumn();
-      final TreeTableColumn<File, Long> sizeColumn = createSizeColumn();
+      nameColumn = createNameColumn(parent);
+      dateModifiedColumn = createDateModifiedColumn();
+      sizeColumn = createSizeColumn();
 
       filesTreeView = new TreeTableView<>();
       filesTreeView.setShowRoot(false);
@@ -81,8 +87,29 @@ class ListFilesView extends AbstractFilesView {
          }
       });
       filesTreeView.setOnKeyPressed(event -> {if (keyEventHandler != null) {keyEventHandler.handle(event);}});
-      sortOrder = new LinkedList<>();
-      sortOrder.add(nameColumn);
+
+      initializeSort();
+   }
+
+   private void initializeSort() {
+      final TreeTableColumn<File, ?> sortColumn = orderByToColumn(callback.orderByProperty().get());
+      sortColumn.setSortType(orderDirectionToSortType(callback.orderDirectionProperty().get()));
+      sortOrder.add(sortColumn);
+
+      // Set the updated sort values back into the properties of the FileChooser.
+      filesTreeView.getSortOrder().addListener((ListChangeListener<TreeTableColumn<File, ?>>) c -> {
+         if (c.getList().isEmpty()) {
+            return;
+         }
+
+         callback.orderByProperty().setValue(columnToOrderBy(c.getList().get(0)));
+      });
+
+      final ChangeListener<TreeTableColumn.SortType> sortTypeChangeListener = (observable, oldValue, newValue) ->
+            callback.orderDirectionProperty().setValue(sortTypeToOrderDirection(newValue));
+      nameColumn.sortTypeProperty().addListener(sortTypeChangeListener);
+      dateModifiedColumn.sortTypeProperty().addListener(sortTypeChangeListener);
+      sizeColumn.sortTypeProperty().addListener(sortTypeChangeListener);
    }
 
    private TreeTableColumn<File, String> createNameColumn(Stage parent) {
@@ -180,11 +207,6 @@ class ListFilesView extends AbstractFilesView {
    }
 
    @Override
-   public void setCallback(final FilesViewCallback callback) {
-      this.callback = callback;
-   }
-
-   @Override
    public void setFiles(final Stream<File> fileStream) {
       saveSortOrder();
 
@@ -213,6 +235,9 @@ class ListFilesView extends AbstractFilesView {
       if (!filesTreeView.getSortOrder().isEmpty()) {
          sortOrder.clear();
          sortOrder.addAll(filesTreeView.getSortOrder());
+
+         // Reset OrderBy property in case it was mapped to something other than input.
+         callback.orderByProperty().setValue(columnToOrderBy(filesTreeView.getSortOrder().get(0)));
       }
    }
 
@@ -255,5 +280,53 @@ class ListFilesView extends AbstractFilesView {
 
          callback.setCurrentSelection(newValue.getValue());
       }
+   }
+
+   /**
+    * Map {@link OrderBy} to {@link TreeTableCell}
+    */
+   private TreeTableColumn<File, ?> orderByToColumn(final OrderBy orderBy) {
+      if (OrderBy.ModificationDate.equals(orderBy)) {
+         return dateModifiedColumn;
+      }
+
+      if (OrderBy.Size.equals(orderBy)) {
+         return sizeColumn;
+      }
+
+      return nameColumn;
+   }
+
+   /**
+    * Map {@link TreeTableCell} to {@link OrderBy}
+    */
+   private OrderBy columnToOrderBy(final TreeTableColumn<File, ?> column) {
+      if (column == dateModifiedColumn) {
+         return OrderBy.ModificationDate;
+      }
+
+      if (column == sizeColumn) {
+         return OrderBy.Size;
+      }
+
+      return OrderBy.Name;
+   }
+
+   /**
+    * Map {@link OrderDirection} to {@link javafx.scene.control.TreeTableColumn.SortType}
+    */
+   private TreeTableColumn.SortType orderDirectionToSortType(final OrderDirection orderDirection) {
+      return OrderDirection.Descending.equals(orderDirection)
+            ? TreeTableColumn.SortType.DESCENDING
+            : TreeTableColumn.SortType.ASCENDING;
+   }
+
+   /**
+    * Map {@link javafx.scene.control.TreeTableColumn.SortType} to {@link OrderDirection}
+    */
+   private OrderDirection sortTypeToOrderDirection(final TreeTableColumn.SortType sortType) {
+      return TreeTableColumn.SortType.DESCENDING.equals(sortType)
+            ? OrderDirection.Descending
+            : OrderDirection.Ascending;
    }
 }

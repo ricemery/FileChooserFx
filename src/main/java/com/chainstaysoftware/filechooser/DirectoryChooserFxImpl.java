@@ -81,6 +81,54 @@ public class DirectoryChooserFxImpl implements DirectoryChooserFx {
       return fileChooser.viewTypeProperty();
    }
 
+   /**
+    * Set the sort field.
+    */
+   @Override
+   public void setOrderBy(final OrderBy orderBy) {
+      fileChooser.setOrderBy(orderBy);
+   }
+
+   /**
+    * Retrieve the current sort field. Defaults to {@link OrderBy#Name}.
+    */
+   @Override
+   public OrderBy getOrderBy() {
+      return fileChooser.getOrderBy();
+   }
+
+   /**
+    * Retrieve the current sort field. Defaults to {@link OrderBy#Name}.
+    */
+   @Override
+   public ObjectProperty<OrderBy> orderByProperty() {
+      return fileChooser.orderByProperty();
+   }
+
+   /**
+    * Set the sort direction.
+    */
+   @Override
+   public void setOrderDirection(final OrderDirection orderDirection) {
+      fileChooser.setOrderDirection(orderDirection);
+   }
+
+   /**
+    * Retrieve the sort direction. Defaults to {@link OrderDirection#Ascending}.
+    */
+   @Override
+   public OrderDirection getOrderDirection() {
+      return fileChooser.getOrderDirection();
+   }
+
+   /**
+    * Retrieve the sort direction. Defaults to {@link OrderDirection#Ascending}.
+    */
+   @Override
+   public ObjectProperty<OrderDirection> orderDirectionProperty() {
+      return fileChooser.orderDirectionProperty();
+   }
+
    @Override
    public void setHelpCallback(final HelpCallback helpCallback) {
       fileChooser.setHelpCallback(helpCallback);

@@ -14,26 +14,29 @@ public class FilenameComparator implements Comparator<File>, Serializable {
    private static final long serialVersionUID = 8867211248432156391L;
 
    private final OrderBy orderBy;
+   private final OrderDirection direction;
 
-   public FilenameComparator(final OrderBy orderBy) {
+   public FilenameComparator(final OrderBy orderBy,
+                             final OrderDirection direction) {
       this.orderBy = orderBy;
+      this.direction = direction;
    }
 
    @Override
    public int compare(final File o1, final File o2) {
       if (OrderBy.ModificationDate.equals(orderBy)) {
-         return compareByDate(o1, o2);
+         return getAnswer(compareByDate(o1, o2));
       }
 
       if (OrderBy.Size.equals(orderBy)) {
-         return compareBySize(o1, o2);
+         return getAnswer(compareBySize(o1, o2));
       }
 
       if (OrderBy.Type.equals(orderBy)) {
-         return compareByType(o1, o2);
+         return getAnswer(compareByType(o1, o2));
       }
 
-      return o1.getName().compareTo(o2.getName());
+      return getAnswer(o1.getName().compareTo(o2.getName()));
    }
 
    private int compareByType(final File o1, final File o2) {
@@ -73,5 +76,13 @@ public class FilenameComparator implements Comparator<File>, Serializable {
       }
 
       return 0;
+   }
+
+   private int getAnswer(final int ascending) {
+      if (OrderDirection.Ascending.equals(direction)) {
+         return ascending;
+      }
+
+      return -ascending;
    }
 }

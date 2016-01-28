@@ -54,6 +54,36 @@ public interface FileChooserFx {
    BooleanProperty showHiddenFilesProperty();
 
    /**
+    * Set the sort field.
+    */
+   void setOrderBy(OrderBy orderBy);
+
+   /**
+    * Retrieve the current sort field. Defaults to {@link OrderBy#Name}.
+    */
+   OrderBy getOrderBy();
+
+   /**
+    * Retrieve the current sort field. Defaults to {@link OrderBy#Name}.
+    */
+   ObjectProperty<OrderBy> orderByProperty();
+
+   /**
+    * Set the sort direction.
+    */
+   void setOrderDirection(OrderDirection orderDirection);
+
+   /**
+    * Retrieve the sort direction. Defaults to {@link OrderDirection#Ascending}.
+    */
+   OrderDirection getOrderDirection();
+
+   /**
+    * Retrieve the sort direction. Defaults to {@link OrderDirection#Ascending}.
+    */
+   ObjectProperty<OrderDirection> orderDirectionProperty();
+
+   /**
     * List of directories to show in the Favorites list. As favorites are add and removed
     * by the user, the list is updated.
     */

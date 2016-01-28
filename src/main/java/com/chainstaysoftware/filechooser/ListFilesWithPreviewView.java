@@ -37,29 +37,34 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    private final Icons icons;
    private final PropertiesPreviewPane propertiesPreviewPane;
    private final List<TableColumn<DirectoryListItem, ?>> sortOrder;
+   private final FilesViewCallback callback;
 
-   private FilesViewCallback callback;
    private EventHandler<? super KeyEvent> keyEventHandler;
+   private final TableColumn<DirectoryListItem, DirectoryListItem> nameColumn;
 
    public ListFilesWithPreviewView(final Stage parent,
                                    final Map<String, Class<? extends PreviewPane>> previewHandlers,
-                                   final Icons icons) {
+                                   final Icons icons,
+                                   final FilesViewCallback callback) {
       super(parent);
 
       propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers, icons);
       this.icons = icons;
+      this.callback = callback;
 
       previewHbox = new HBox();
       previewHbox.setId("previewHbox");
       previewHbox.setAlignment(Pos.CENTER);
       previewHbox.setMinSize(0, 0);
 
-      final TableColumn<DirectoryListItem, DirectoryListItem> nameColumn
-            = new TableColumn<>(resourceBundle.getString("listfilesview.name"));
+      nameColumn = new TableColumn<>(resourceBundle.getString("listfilesview.name"));
       nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
       nameColumn.setCellFactory(new DirListNameColumnCellFactory(true));
       nameColumn.prefWidthProperty().bind(tableView.widthProperty());
       nameColumn.setComparator((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getFile().getName(), o2.getFile().getName()));
+      nameColumn.setSortType(orderDirectionToSortType(callback.orderDirectionProperty().get()));
+      nameColumn.sortTypeProperty().addListener((observable, oldValue, newValue) ->
+         callback.orderDirectionProperty().set(sortTypeToOrderDirection(newValue)));
 
       tableView.getColumns().addAll(nameColumn);
       tableView.setOnMouseClicked(event -> {
@@ -96,11 +101,6 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    }
 
    @Override
-   public void setCallback(final FilesViewCallback callback) {
-      this.callback = callback;
-   }
-
-   @Override
    public void setFiles(final Stream<File> fileStream) {
       saveSortOrder();
 
@@ -120,6 +120,9 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       if (!tableView.getSortOrder().isEmpty()) {
          sortOrder.clear();
          sortOrder.addAll(tableView.getSortOrder());
+
+         // Only name sort is supported.
+         callback.orderByProperty().setValue(OrderBy.Name);
       }
    }
 
@@ -145,6 +148,25 @@ class ListFilesWithPreviewView extends AbstractFilesView {
             .filter(item -> compareFilePaths(item.getFile(), currentSelectedFile))
             .findFirst()
             .ifPresent(item -> tableView.getSelectionModel().select(item));
+   }
+
+
+   /**
+    * Map {@link OrderDirection} to {@link javafx.scene.control.TableColumn.SortType}
+    */
+   private TableColumn.SortType orderDirectionToSortType(final OrderDirection orderDirection) {
+      return OrderDirection.Descending.equals(orderDirection)
+            ? TableColumn.SortType.DESCENDING
+            : TableColumn.SortType.ASCENDING;
+   }
+
+   /**
+    * Map {@link javafx.scene.control.TableColumn.SortType} to {@link OrderDirection}
+    */
+   private OrderDirection sortTypeToOrderDirection(final TableColumn.SortType sortType) {
+      return TableColumn.SortType.DESCENDING.equals(sortType)
+            ? OrderDirection.Descending
+            : OrderDirection.Ascending;
    }
 
    public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {

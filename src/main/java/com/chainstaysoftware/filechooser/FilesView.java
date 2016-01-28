@@ -8,7 +8,5 @@ import java.util.stream.Stream;
 interface FilesView {
    Node getNode();
 
-   void setCallback(FilesViewCallback callback);
-
    void setFiles(Stream<File> fileStream);
 }
