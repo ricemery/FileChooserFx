@@ -45,6 +45,8 @@ class IconGridCell extends GridCell<DirectoryListItem> {
 
       if (empty) {
          setGraphic(null);
+         setText(null);
+         setUserData(null);
       } else {
          final Image image = item.getIcon();
          final String text = item.getFile().getName();

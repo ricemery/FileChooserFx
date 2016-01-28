@@ -23,6 +23,7 @@ import javafx.stage.Stage;
 import org.controlsfx.control.GridView;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -43,6 +44,7 @@ class IconsFilesView extends AbstractFilesView {
    private final IntegerProperty selectedCellIndex = new SimpleIntegerProperty(NOT_SELECTED);
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final FilesViewCallback callback;
+   private final ContextMenu contextMenu;
 
    private EventHandler<? super KeyEvent> keyEventHandler;
    private boolean disableListeners;
@@ -70,7 +72,8 @@ class IconsFilesView extends AbstractFilesView {
       gridView.setCellWidth(CELL_WIDTH);
       gridView.setOnMouseClicked(new MouseClickHandler());
       gridView.setOnKeyPressed(new KeyClickHandler());
-      gridView.setContextMenu(createContextMenu());
+      contextMenu = createContextMenu();
+      gridView.setContextMenu(contextMenu);
    }
 
    private ContextMenu createContextMenu() {
@@ -124,7 +127,7 @@ class IconsFilesView extends AbstractFilesView {
          }
 
          callback.orderDirectionProperty().setValue(newValue ? OrderDirection.Descending : OrderDirection.Ascending);
-         sort();
+         sort(callback.orderByProperty().get());
       });
       reverseOrder.setSelected(OrderDirection.Descending.equals(initialDirection));
 
@@ -151,6 +154,7 @@ class IconsFilesView extends AbstractFilesView {
 
       // Disable event listeners in gridView while being updated programmatically
       disableListeners = true;
+      gridView.getItems().clear();
       gridView.getItems().setAll(getIcons(sort(fileStream)));
       disableListeners = false;
 
@@ -170,7 +174,7 @@ class IconsFilesView extends AbstractFilesView {
     * Sort the existing view contents.
     */
    private void sort() {
-      setFiles(getFileStream());
+      setFiles(getFileStreamFromView());
    }
 
    /**
@@ -181,8 +185,15 @@ class IconsFilesView extends AbstractFilesView {
            callback.orderDirectionProperty().get()));
    }
 
-   private Stream<File> getFileStream() {
-      return gridView.getItems().stream().map(DirectoryListItem::getFile);
+   /**
+    * Retrieve the files currently shown in view.
+    */
+   private Stream<File> getFileStreamFromView() {
+      // Copy the values out of the UI and into a temp list, so that the UI
+      // can be updated without stomping on the grabbed values.
+      final List<DirectoryListItem> items = new ArrayList<>(gridView.getItems());
+
+      return items.stream().map(DirectoryListItem::getFile);
    }
 
    /**
@@ -213,7 +224,8 @@ class IconsFilesView extends AbstractFilesView {
    private class IconGridCellContextMenuFactImpl implements IconGridCellContextMenuFactory {
       @Override
       public ContextMenu create(final DirectoryListItem item) {
-         final ContextMenu contextMenu = createContextMenu();
+         final ContextMenu contextMenu = new ContextMenu();
+         contextMenu.getItems().addAll(contextMenu.getItems());
 
          final File file = item.getFile();
          if (file.isDirectory()) {
