@@ -582,9 +582,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private String getBreadCrumbButtonText(final TreeItem<File> param) {
       final String text = param.getValue() != null
-            ? param.getValue().getName().equals("")
-            ? FileSystemView.getFileSystemView().getSystemDisplayName(param.getValue())
-            : param.getValue().getName()
+            ? "".equals(param.getValue().getName())
+               ? FileSystemView.getFileSystemView().getSystemDisplayName(param.getValue())
+               : param.getValue().getName()
             : "";
       return "/".equals(text) ? "" : text;
    }

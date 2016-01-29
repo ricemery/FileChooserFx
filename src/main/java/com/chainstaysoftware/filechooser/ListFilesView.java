@@ -113,24 +113,24 @@ class ListFilesView extends AbstractFilesView {
    }
 
    private TreeTableColumn<File, String> createNameColumn(Stage parent) {
-      final TreeTableColumn<File, String> nameColumn
+      final TreeTableColumn<File, String> column
             = new TreeTableColumn<>(resourceBundle.getString("listfilesview.name"));
-      nameColumn.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getName()));
-      nameColumn.prefWidthProperty().bind(parent.widthProperty().divide(2));
-      return nameColumn;
+      column.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getName()));
+      column.prefWidthProperty().bind(parent.widthProperty().divide(2));
+      return column;
    }
 
    private TreeTableColumn<File, ZonedDateTime> createDateModifiedColumn() {
-      final TreeTableColumn<File, ZonedDateTime> dateModifiedColumn
+      final TreeTableColumn<File, ZonedDateTime> column
             = new TreeTableColumn<>(resourceBundle.getString("listfilesview.datemodified"));
 
-      dateModifiedColumn.setCellValueFactory(param -> {
+      column.setCellValueFactory(param -> {
          final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(param.getValue().getValue().lastModified()),
                ZoneId.systemDefault());
          return new ReadOnlyObjectWrapper<>(zonedDateTime);
       });
 
-      dateModifiedColumn.setCellFactory(param ->  new TreeTableCell<File, ZonedDateTime>() {
+      column.setCellFactory(param ->  new TreeTableCell<File, ZonedDateTime>() {
                @Override
                protected void updateItem(ZonedDateTime item, boolean empty) {
                   super.updateItem(item, empty);
@@ -144,20 +144,20 @@ class ListFilesView extends AbstractFilesView {
                }
             });
 
-      dateModifiedColumn.setPrefWidth(175);
-      return dateModifiedColumn;
+      column.setPrefWidth(175);
+      return column;
    }
 
    private TreeTableColumn<File, Long> createSizeColumn() {
-      final TreeTableColumn<File, Long> sizeColumn
+      final TreeTableColumn<File, Long> column
             = new TreeTableColumn<>(resourceBundle.getString("listfilesview.size"));
 
-      sizeColumn.setCellValueFactory(param ->
+      column.setCellValueFactory(param ->
             param.getValue().getValue().isDirectory()
                ? null
                : new ReadOnlyObjectWrapper<>(param.getValue().getValue().length()));
 
-      sizeColumn.setCellFactory(param -> new TreeTableCell<File, Long>() {
+      column.setCellFactory(param -> new TreeTableCell<File, Long>() {
          @Override
          protected void updateItem(Long item, boolean empty) {
             super.updateItem(item, empty);
@@ -170,8 +170,8 @@ class ListFilesView extends AbstractFilesView {
          }
       });
 
-      sizeColumn.setPrefWidth(100);
-      return sizeColumn;
+      column.setPrefWidth(100);
+      return column;
    }
 
    private class RowFactory implements Callback<TreeTableView<File>, TreeTableRow<File>> {
@@ -304,11 +304,11 @@ class ListFilesView extends AbstractFilesView {
     * Map {@link TreeTableCell} to {@link OrderBy}
     */
    private OrderBy columnToOrderBy(final TreeTableColumn<File, ?> column) {
-      if (column == dateModifiedColumn) {
+      if (column.equals(dateModifiedColumn)) {
          return OrderBy.ModificationDate;
       }
 
-      if (column == sizeColumn) {
+      if (column.equals(sizeColumn)) {
          return OrderBy.Size;
       }
 
