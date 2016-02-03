@@ -26,6 +26,11 @@ public class IconsImpl implements Icons {
 
    public static final String FOLDER_64 = "/icons8/64x64/Folder-64.png";
    public static final String HARDDISK_64 = "/icons8/64x64/HDD-64.png";
+   public static final String CD_64 = "/icons8/64x64/CD-64.png";
+   public static final String DVD_64 = "/icons8/64x64/CD-64.png";
+   public static final String FLOPPY_64 = "/icons8/64x64/Save-64.png";
+   public static final String NETWORK_64 = "/icons8/64x64/Network-64.png";
+   public static final String USB_64 = "/icons8/64x64/USB 2-64.png";
    public static final String OPEN_FOLDER_64 = "/icons8/64x64/Open Folder-64.png";
    public static final String USER_HOME_64 = "/icons8/64x64/User Folder-64.png";
 

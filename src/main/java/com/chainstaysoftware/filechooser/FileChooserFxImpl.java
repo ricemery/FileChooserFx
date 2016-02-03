@@ -2,6 +2,9 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.icons.IconsImpl;
+import com.chainstaysoftware.filechooser.os.Place;
+import com.chainstaysoftware.filechooser.os.PlaceType;
+import com.chainstaysoftware.filechooser.os.Places;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
@@ -65,8 +68,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
@@ -79,6 +84,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private static final int SCENE_WIDTH = 800;
    private static final int SCENE_HEIGHT = 600;
+   private static final Map<PlaceType, String> placeToIcon = new HashMap<>();
+   static {
+      placeToIcon.put(PlaceType.Cd, IconsImpl.CD_64);
+      placeToIcon.put(PlaceType.Dvd, IconsImpl.DVD_64);
+      placeToIcon.put(PlaceType.FloppyDisk, IconsImpl.FLOPPY_64);
+      placeToIcon.put(PlaceType.HardDisk, IconsImpl.HARDDISK_64);
+      placeToIcon.put(PlaceType.Network, IconsImpl.NETWORK_64);
+      placeToIcon.put(PlaceType.Usb, IconsImpl.USB_64);
+   }
 
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final ObservableList<FileChooser.ExtensionFilter> extensionFilters =
@@ -690,12 +704,10 @@ public final class FileChooserFxImpl implements FileChooserFx {
     * Update the Places View with drives, home dir and favorites.
     */
    private void updatePlaces() {
-      // TODO: Do a better job determining/showing the available mount points.
       final LinkedList<DirectoryListItem> places = new LinkedList<>();
 
-      final Image driveIcon = icons.getIcon(IconsImpl.HARDDISK_64);
-      final List<File> roots = Arrays.asList(File.listRoots());
-      roots.forEach(r -> places.add(new DirectoryListItem(r, driveIcon)));
+      final List<Place> defaultPlaces = new Places().getDefaultPlaces();
+      defaultPlaces.forEach(place -> places.add(new DirectoryListItem(place.getPath(), toIcon(place))));
 
       final String homeDirStr = System.getProperty("user.home");
       if (homeDirStr != null) {
@@ -710,6 +722,18 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
 
       placesView.getItems().setAll(places);
+   }
+
+   /**
+    * Get the icon for the passed in place.
+    */
+   private Image toIcon(final Place place) {
+      String filename = placeToIcon.get(place.getType());
+      if (filename == null) {
+         filename = IconsImpl.HARDDISK_64;
+      }
+
+      return icons.getIcon(filename);
    }
 
    private ButtonBar createButtonBar() {
@@ -827,8 +851,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
          extensionsComboBox = new ComboBox<>();
          extensionsComboBox.getItems().addAll(extensionFilters.isEmpty()
-               ? allFiles
-               : extensionFilters);
+            ? allFiles
+            : extensionFilters);
          extensionsComboBox.setCellFactory(new ExtensionsCellFactory());
          extensionsComboBox.setButtonCell(new ExtensionsCell());
          extensionsComboBox.setOnAction(v -> {
