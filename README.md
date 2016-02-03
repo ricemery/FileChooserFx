@@ -29,7 +29,7 @@ implementation will always return null to the probeContentType
 call if there is no ~/.mime.types file found. And, the ~/.mime.types file is
 not installed within OS-X by default.
 
-To work around the problem a ~/mime.types file can be created. On source of the
+To work around the problem a ~/mime.types file can be created. One source of the
 file content  can be found at
 http://svn.apache.org/viewvc/httpd/httpd/branches/2.2.x/docs/conf/mime.types?revision=1576707&view=co
 
