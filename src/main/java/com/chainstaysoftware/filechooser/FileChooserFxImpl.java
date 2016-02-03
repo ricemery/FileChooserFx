@@ -666,6 +666,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       placesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
       placesColumn.setCellFactory(new DirListNameColumnCellFactory(true));
       placesColumn.prefWidthProperty().bind(view.widthProperty());
+      placesColumn.setSortable(false);
 
       view.getColumns().addAll(placesColumn);
       view.setOnMouseClicked(event -> {
