@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Get the default list of {@link Place} to show in the Places list.
  */
-public class Places implements PlacesProvider {
+public class Places {
    private final PlacesProvider defaultPlacesProvider = new DefaultPlacesProvider();
    private final PlacesProvider linuxPlacesProvider = new LinuxPlacesProvider();
    private final PlacesProvider osxPlacesProvider = new OsxPlacesProvider();
@@ -17,8 +17,11 @@ public class Places implements PlacesProvider {
    /**
     * Get the default list of {@link Place} to show in the Places list.
     */
-   @Override
-   public List<Place> getDefaultPlaces() {
+   public List<Place> getDefaultPlaces(final boolean showMountPoints) {
+      if (!showMountPoints) {
+         return defaultPlacesProvider.getDefaultPlaces();
+      }
+
       if (OsInfo.isLinux()) {
          return linuxPlacesProvider.getDefaultPlaces();
       }

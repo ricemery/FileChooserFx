@@ -110,6 +110,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private BooleanProperty showHiddenFiles;
    private ObjectProperty<OrderBy> orderByProperty;
    private ObjectProperty<OrderDirection> orderDirectionProperty;
+   private BooleanProperty showMountPointsProperty;
    private File currentDirectory;
    private Button backButton;
    private BreadCrumbBar<File> breadCrumbBar;
@@ -302,6 +303,34 @@ public final class FileChooserFxImpl implements FileChooserFx {
       }
 
       return title;
+   }
+
+   /**
+    * Disable/enable the display of mount points on Linux/OSX.
+    */
+   @Override
+   public void setShowMountPoints(final boolean value) {
+      showMountPointsProperty().setValue(value);
+   }
+
+   /**
+    * Showing/not showing Linux/OSX mount points.
+    */
+   @Override
+   public boolean showMountPoints() {
+      return showMountPointsProperty().getValue();
+   }
+
+   /**
+    * Disable/enable the display of mount points on Linux/OSX.
+    */
+   @Override
+   public BooleanProperty showMountPointsProperty() {
+      if (showMountPointsProperty == null) {
+         showMountPointsProperty = new SimpleBooleanProperty(this, "showMountPoints", false);
+      }
+
+      return showMountPointsProperty;
    }
 
    @Override
@@ -706,7 +735,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private void updatePlaces() {
       final LinkedList<DirectoryListItem> places = new LinkedList<>();
 
-      final List<Place> defaultPlaces = new Places().getDefaultPlaces();
+      final List<Place> defaultPlaces = new Places().getDefaultPlaces(showMountPoints());
       defaultPlaces.forEach(place -> places.add(new DirectoryListItem(place.getPath(), toIcon(place))));
 
       final String homeDirStr = System.getProperty("user.home");

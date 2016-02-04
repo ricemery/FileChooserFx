@@ -36,6 +36,7 @@ public class FileChooserDemo extends Application {
          fileChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("XML files (xml)", "*.xml"));
          fileChooser.getPreviewHandlers().putAll(previewHandlers);
          fileChooser.setHelpCallback(() -> System.out.println("Help invoked"));
+         fileChooser.setShowMountPoints(true);
          fileChooser.setFavoriteDirsCallbacks(directory -> System.out.println("Add favorite - " + directory),
             directory -> System.out.println("Remove favorite - " + directory));
          fileChooser.setViewType(ViewType.Icon);
