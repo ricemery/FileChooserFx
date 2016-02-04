@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
  */
 public class LinuxPlacesProvider implements PlacesProvider {
    // List of Linux file systems that we want to show. Any others will be filtered out.
-   private static final List<String> supportedFsTypes = Arrays.asList("btrfs", "exfat", "ext", "ext2", "ext3", "ext4",
+   private static final List<String> supportedFsTypes = Arrays.asList("btrfs", "cifs", "exfat", "ext", "ext2", "ext3", "ext4",
       "f2fs", "hfs", "hpfs", "iso9660", "jfs", "minix", "msdos", "ncpfs", "nfs", "ntfs", "prl_fs", "reiser4", "reiserFS",
       "smb", "smbfs", "umsdos", "vfat", "xfs", "zfs");
-   private static final List<String> networkFsTypes = Arrays.asList("ncpfs", "nfs", "smb", "smvfs");
+   private static final List<String> networkFsTypes = Arrays.asList("cifs", "ncpfs", "nfs", "smb", "smvfs");
    private static final List<String> cdFsTypes = Arrays.asList("iso9660");
 
    private final LinuxFileSystem linuxFileSystem = new LinuxFileSystem();
