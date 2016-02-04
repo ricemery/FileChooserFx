@@ -14,11 +14,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@link PlacesProvider} for Linux. NOTE - This may not be the best way to
- * get this info from Linux. Java does not make it easy..
+ * {@link PlacesProvider} for OS X. NOTE - This may not be the best way to
+ * get this info from OS X. Java does not make it easy..
  */
 public class OsxPlacesProvider implements PlacesProvider {
    private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.os.osx.OsxPlacesProvider");
+
+   private static final List<String> networkFsTypes = Arrays.asList("afpfs", "cifs", "ncpfs", "nfs", "smb", "smbfs");
+   private static final List<String> cdFsTypes = Arrays.asList("cd9660");
 
    /**
     * Return the default list of {@link Place} for the supporting OS instance.
@@ -50,8 +53,12 @@ public class OsxPlacesProvider implements PlacesProvider {
    private PlaceType toPlaceType(final File path)
          throws IOException {
       final String fsType = Files.getFileStore(path.toPath()).type();
-      if ("cd9660".equals(fsType)) {
+      if (cdFsTypes.contains(fsType)) {
          return PlaceType.Cd;
+      }
+
+      if (networkFsTypes.contains(fsType)) {
+         return PlaceType.Network;
       }
 
       // Code is assuming that "msdos" is a Usb drive.. This probably
