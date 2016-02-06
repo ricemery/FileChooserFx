@@ -9,7 +9,6 @@ import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -30,14 +29,14 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -124,7 +123,10 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private FavoritesCallback addFavorite;
    private FavoritesCallback removeFavorite;
    private Stage stage;
-   private TableView<DirectoryListItem> placesView;
+   private TitledPane placesPane;
+   private TreeView<PlacesTreeItem> placesView;
+   private TreeItem<PlacesTreeItem> defaultPlacesNode;
+   private TreeItem<PlacesTreeItem> favoritesPlacesNode;
    private boolean saveMode;
    private boolean hideFiles;
    private ToggleButton viewIconsButton;
@@ -461,10 +463,14 @@ public final class FileChooserFxImpl implements FileChooserFx {
       listFilesWithPreviewView = createListFilesWithPreviewView();
 
       placesView = createPlacesView();
+      placesPane = createPlacesPane(placesView);
 
       final SplitPane pane = new SplitPane();
       pane.setId("splitPane");
-      pane.setDividerPosition(0, .15);
+      pane.setDividerPosition(0, .25);
+
+      placesPane.prefHeightProperty().bind(pane.heightProperty());
+
       return pane;
    }
 
@@ -700,24 +706,36 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return viewButton;
    }
 
-   private TableView<DirectoryListItem> createPlacesView() {
-      final TableView<DirectoryListItem> view = new TableView<>();
+   /**
+    * Create the Places {@link TreeView}. Also initializes the defaultPlacesNode
+    * and favoritePlacesNode member vars.
+    */
+   private TreeView<PlacesTreeItem> createPlacesView() {
+      final TreeView<PlacesTreeItem> view = new TreeView<>();
       view.setId("placesView");
+      view.setShowRoot(false);
+      view.setCellFactory(new PlacesTreeItemCellFactory());
 
-      final TableColumn<DirectoryListItem, DirectoryListItem> placesColumn
-            = new TableColumn<>(resourceBundle.getString("placeslist.text"));
-      placesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-      placesColumn.setCellFactory(new DirListNameColumnCellFactory(true));
-      placesColumn.prefWidthProperty().bind(view.widthProperty());
-      placesColumn.setSortable(false);
+      defaultPlacesNode = new TreeItem<>();
+      defaultPlacesNode.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("computer.text")),
+            Optional.empty(), icons.getIcon(IconsImpl.COMPUTER_64)));
+      defaultPlacesNode.setExpanded(true);
 
-      view.getColumns().addAll(placesColumn);
+      favoritesPlacesNode = new TreeItem<>();
+      favoritesPlacesNode.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("favorites.text")),
+            Optional.empty(), icons.getIcon(IconsImpl.STAR_64)));
+      favoritesPlacesNode.setExpanded(true);
+
+      final TreeItem<PlacesTreeItem> root = new TreeItem<>();
+      view.setRoot(root);
+
       view.setOnMouseClicked(event -> {
-         if (view.getSelectionModel().getSelectedItem() == null) {
+         final TreeItem<PlacesTreeItem> selectedItem = view.getSelectionModel().getSelectedItem();
+         if (selectedItem == null || !selectedItem.getValue().getFile().isPresent()) {
             return;
          }
 
-         final File currentDir = view.getSelectionModel().getSelectedItem().getFile();
+         final File currentDir = selectedItem.getValue().getFile().get();
          changeDirectory(currentDir);
 
          if (removeFavoriteButton != null) {
@@ -730,27 +748,50 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    /**
+    * Create the {@link TitledPane} to hold the Places Tree. This pane is used
+    * to put a title bar on the Places..
+    */
+   private TitledPane createPlacesPane(final TreeView treeView) {
+      final TitledPane titledPane = new TitledPane(resourceBundle.getString("placeslist.text"), treeView);
+      titledPane.setId("placesPane");
+      titledPane.setCollapsible(false);
+      return titledPane;
+   }
+
+   /**
     * Update the Places View with drives, home dir and favorites.
     */
    private void updatePlaces() {
-      final LinkedList<DirectoryListItem> places = new LinkedList<>();
+      final TreeItem<PlacesTreeItem> rootNode = placesView.getRoot();
+      rootNode.getChildren().clear();
+      rootNode.getChildren().add(defaultPlacesNode);
+
+      defaultPlacesNode.getChildren().clear();
+      favoritesPlacesNode.getChildren().clear();
 
       final List<Place> defaultPlaces = new Places().getDefaultPlaces(showMountPoints());
-      defaultPlaces.forEach(place -> places.add(new DirectoryListItem(place.getPath(), toIcon(place))));
+      defaultPlaces.forEach(place ->
+            defaultPlacesNode.getChildren().add(new TreeItem<>(new PlacesTreeItem(Optional.empty(),
+                  Optional.of(place.getPath()), toIcon(place)), null)));
 
       final String homeDirStr = System.getProperty("user.home");
       if (homeDirStr != null) {
-         places.add(new DirectoryListItem(new File(homeDirStr), icons.getIcon(IconsImpl.USER_HOME_64)));
+         defaultPlacesNode.getChildren().add(new TreeItem<>(new PlacesTreeItem(Optional.empty(),
+               Optional.of(new File(homeDirStr)), icons.getIcon(IconsImpl.USER_HOME_64)), null));
       }
 
-      favoriteDirs.forEach(file -> places.add(new DirectoryListItem(file, icons.getIcon(IconsImpl.FOLDER_64))));
+      if (!favoriteDirs.isEmpty()) {
+         rootNode.getChildren().add(favoritesPlacesNode);
+
+         favoriteDirs.forEach(file ->
+               favoritesPlacesNode.getChildren().add(new TreeItem<>(new PlacesTreeItem(Optional.empty(),
+                     Optional.of(file), icons.getIcon(IconsImpl.FOLDER_64)), null)));
+      }
 
       if (addFavoriteButton != null) {
          addFavoriteButton.setDisable(true);
          removeFavoriteButton.setDisable(true);
       }
-
-      placesView.getItems().setAll(places);
    }
 
    /**
@@ -957,12 +998,12 @@ public final class FileChooserFxImpl implements FileChooserFx {
       button.setId("removeFavoriteButton");
       button.setOnAction(new NewFolderAction());
       button.setOnAction(event -> {
-         final DirectoryListItem item = placesView.getSelectionModel().getSelectedItem();
-         if (item == null) {
+         final TreeItem<PlacesTreeItem> item = placesView.getSelectionModel().getSelectedItem();
+         if (item == null || item.getValue() == null || !item.getValue().getFile().isPresent()) {
             return;
          }
 
-         favoriteDirs.remove(item.getFile());
+         favoriteDirs.remove(item.getValue().getFile().get());
          updatePlaces();
       });
       button.setDisable(true);
@@ -1100,7 +1141,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private void setCurrentView(final FilesView filesView) {
       currentView = filesView;
 
-      splitPane.getItems().setAll(placesView, currentView.getNode());
+      splitPane.getItems().setAll(placesPane, currentView.getNode());
 
       updateFiles(currentDirectory);
    }

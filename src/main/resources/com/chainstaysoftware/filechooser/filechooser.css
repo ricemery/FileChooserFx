@@ -40,7 +40,7 @@
 }
 
 .propertiespreview-grid {
-    -fx-padding: 2, 2, 2, 2;
+    -fx-padding: 0;
     -fx-hgap: 10;
     -fx-vgap: 2;
 }
@@ -64,5 +64,9 @@
     -fx-font-size: 1.166667em; /* 14pt - 2 more than the default font */
 }
 
+.tree-cell {
+    -fx-padding: 1 0 1 0;
+    -fx-indent: 2;
+}
 
 

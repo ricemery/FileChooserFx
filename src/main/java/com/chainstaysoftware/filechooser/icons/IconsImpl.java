@@ -24,6 +24,8 @@ public class IconsImpl implements Icons {
    public static final String LIST_VIEW_24 = "/icons8/24x24/List-24.png";
    public static final String LIST_WITH_PREVIEW_VIEW_24 = "/icons8/24x24/Columns-24.png";
 
+   public static final String COMPUTER_64 = "/icons8/64x64/Computer-64.png";
+   public static final String STAR_64 = "/icons8/64x64/Star Filled-64.png";
    public static final String FOLDER_64 = "/icons8/64x64/Folder-64.png";
    public static final String HARDDISK_64 = "/icons8/64x64/HDD-64.png";
    public static final String CD_64 = "/icons8/64x64/CD-64.png";
