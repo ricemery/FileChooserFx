@@ -46,7 +46,7 @@ public class DirectoryChooserFxImpl implements DirectoryChooserFx {
     */
    @Override
    public ObservableList<File> getFavoriteDirs() {
-      return fileChooser.getFavoriteDirs();
+      return fileChooser.favoriteDirsProperty();
    }
 
    /**

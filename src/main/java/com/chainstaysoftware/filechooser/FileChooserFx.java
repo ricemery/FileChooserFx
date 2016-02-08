@@ -102,7 +102,7 @@ public interface FileChooserFx {
     * List of directories to show in the Favorites list. As favorites are add and removed
     * by the user, the list is updated.
     */
-   ObservableList<File> getFavoriteDirs();
+   ObservableList<File> favoriteDirsProperty();
 
    /**
     * Sets callbacks for when user wants to add and/or remove director favorites.

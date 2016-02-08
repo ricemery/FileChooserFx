@@ -1,6 +1,8 @@
 package com.chainstaysoftware.filechooser;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.collections.ObservableList;
 
 import java.io.File;
 import java.util.stream.Stream;
@@ -30,6 +32,10 @@ public interface FilesViewCallback {
 
    void fireDoneButton();
 
+   void disableAddFavoriteButton(boolean disable);
+
+   void disableRemoveFavoritieButton(boolean disable);
+
    /**
     * Update all the files in the view.
     */
@@ -38,4 +44,8 @@ public interface FilesViewCallback {
    ObjectProperty<OrderBy> orderByProperty();
 
    ObjectProperty<OrderDirection> orderDirectionProperty();
+
+   ObservableList<File> favoriteDirsProperty();
+
+   BooleanProperty showMountPointsProperty();
 }
