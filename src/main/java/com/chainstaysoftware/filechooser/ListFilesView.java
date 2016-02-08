@@ -40,6 +40,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class ListFilesView extends AbstractFilesView {
+   private static final int DATE_MODIFIED_COL_PREF_WIDTH = 175;
+   private static final int SIZE_COLUMN_PREF_WIDTH = 100;
+
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TreeTableView<File> filesTreeView;
@@ -62,11 +65,12 @@ class ListFilesView extends AbstractFilesView {
       this.icons = icons;
       this.callback = callback;
 
-      nameColumn = createNameColumn(parent);
+      filesTreeView = new TreeTableView<>();
+
+      nameColumn = createNameColumn(filesTreeView);
       dateModifiedColumn = createDateModifiedColumn();
       sizeColumn = createSizeColumn();
 
-      filesTreeView = new TreeTableView<>();
       filesTreeView.setShowRoot(false);
       filesTreeView.setPlaceholder(new Label(""));
       filesTreeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectItemListener());
@@ -112,11 +116,13 @@ class ListFilesView extends AbstractFilesView {
       sizeColumn.sortTypeProperty().addListener(sortTypeChangeListener);
    }
 
-   private TreeTableColumn<File, String> createNameColumn(Stage parent) {
+   private TreeTableColumn<File, String> createNameColumn(final TreeTableView parent) {
       final TreeTableColumn<File, String> column
             = new TreeTableColumn<>(resourceBundle.getString("listfilesview.name"));
       column.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getName()));
-      column.prefWidthProperty().bind(parent.widthProperty().divide(2));
+      column.prefWidthProperty().bind(parent.widthProperty()
+            .subtract(DATE_MODIFIED_COL_PREF_WIDTH)
+            .subtract(SIZE_COLUMN_PREF_WIDTH));
       return column;
    }
 
@@ -144,7 +150,7 @@ class ListFilesView extends AbstractFilesView {
                }
             });
 
-      column.setPrefWidth(175);
+      column.setPrefWidth(DATE_MODIFIED_COL_PREF_WIDTH);
       return column;
    }
 
@@ -170,7 +176,7 @@ class ListFilesView extends AbstractFilesView {
          }
       });
 
-      column.setPrefWidth(100);
+      column.setPrefWidth(SIZE_COLUMN_PREF_WIDTH);
       return column;
    }
 
