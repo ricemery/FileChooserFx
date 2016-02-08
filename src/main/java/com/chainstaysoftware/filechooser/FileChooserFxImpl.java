@@ -875,6 +875,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
          placesView.updatePlaces();
       });
       button.setDisable(true);
+      button.setTooltip(new Tooltip(resourceBundle.getString("addfavoritebutton.tooltip.txt")));
       return button;
    }
 
@@ -890,6 +891,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
          });
       });
       button.setDisable(true);
+      button.setTooltip(new Tooltip(resourceBundle.getString("removefavoritebutton.tooltip.txt")));
       return button;
    }
 

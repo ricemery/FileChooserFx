@@ -37,8 +37,9 @@ class PlacesView {
    private final FilesViewCallback callback;
    private final Icons icons;
 
-   private TitledPane placesPane;
-   private TreeView<PlacesTreeItem> placesTreeView;
+   private final TitledPane placesPane;
+   private final TreeView<PlacesTreeItem> placesTreeView;
+
    private TreeItem<PlacesTreeItem> defaultPlacesNode;
    private TreeItem<PlacesTreeItem> favoritesPlacesNode;
 
@@ -47,6 +48,8 @@ class PlacesView {
       this.callback = callback;
       this.icons = icons;
 
+      defaultPlacesNode = createDefaultPlacesItem();
+      favoritesPlacesNode = createFavoritePlacesItem();
       placesTreeView = createPlacesView();
       placesPane = createPlacesPane(placesTreeView);
    }
@@ -78,25 +81,31 @@ class PlacesView {
       return titledPane;
    }
 
+   private TreeItem<PlacesTreeItem> createDefaultPlacesItem() {
+      final TreeItem<PlacesTreeItem> item = new TreeItem<>();
+      item.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("computer.text")),
+            Optional.empty(), icons.getIcon(IconsImpl.COMPUTER_64)));
+      item.setExpanded(true);
+
+      return item;
+   }
+
+   private TreeItem<PlacesTreeItem> createFavoritePlacesItem() {
+      final TreeItem<PlacesTreeItem> item = new TreeItem<>();
+      item.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("favorites.text")),
+            Optional.empty(), icons.getIcon(IconsImpl.STAR_64)));
+      item.setExpanded(true);
+      return item;
+   }
+
    /**
-    * Create the Places {@link TreeView}. Also initializes the defaultPlacesNode
-    * and favoritePlacesNode member vars.
+    * Create the Places {@link TreeView}.
     */
    private TreeView<PlacesTreeItem> createPlacesView() {
       final TreeView<PlacesTreeItem> view = new TreeView<>();
       view.setId("placesView");
       view.setShowRoot(false);
       view.setCellFactory(new PlacesTreeItemCellFactory());
-
-      defaultPlacesNode = new TreeItem<>();
-      defaultPlacesNode.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("computer.text")),
-            Optional.empty(), icons.getIcon(IconsImpl.COMPUTER_64)));
-      defaultPlacesNode.setExpanded(true);
-
-      favoritesPlacesNode = new TreeItem<>();
-      favoritesPlacesNode.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("favorites.text")),
-            Optional.empty(), icons.getIcon(IconsImpl.STAR_64)));
-      favoritesPlacesNode.setExpanded(true);
 
       final TreeItem<PlacesTreeItem> root = new TreeItem<>();
       view.setRoot(root);
