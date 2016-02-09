@@ -24,25 +24,25 @@ public class MountInfo {
    /**
     * The dumping frequency for dump(8); see fstab(5).
     */
-   private final int fs_freq;
+   private final int dump;
    /**
     * The order in which file system checks are done at reboot time; see
     * fstab(5).
     */
-   private final int fs_passno;
+   private final int pass;
 
    public MountInfo(final String device,
                     final String mountpoint,
                     final String fs,
                     final String options,
-                    final int fs_freq,
-                    final int fs_passno) {
+                    final int dump,
+                    final int pass) {
       this.device = device;
       this.mountpoint = mountpoint;
       this.fs = fs;
       this.options = options;
-      this.fs_freq = fs_freq;
-      this.fs_passno = fs_passno;
+      this.dump = dump;
+      this.pass = pass;
    }
 
    public String getDevice() {
@@ -61,11 +61,11 @@ public class MountInfo {
       return options;
    }
 
-   public int getFs_freq() {
-      return fs_freq;
+   public int getDump() {
+      return dump;
    }
 
-   public int getFs_passno() {
-      return fs_passno;
+   public int getPass() {
+      return pass;
    }
 }

@@ -69,7 +69,7 @@ public class LinuxPlacesProvider implements PlacesProvider {
     * Predicate to determine if a {@link MountInfo} should be included within the Places view.
     * This code tries to filter out the "special" mounts such as "proc", "rootfs", etc.
     */
-   private class ShouldInclude implements Predicate<MountInfo> {
+   private static class ShouldInclude implements Predicate<MountInfo> {
       @Override
       public boolean test(MountInfo mountInfo) {
          return supportedFsTypes.contains(mountInfo.getFs().toLowerCase())

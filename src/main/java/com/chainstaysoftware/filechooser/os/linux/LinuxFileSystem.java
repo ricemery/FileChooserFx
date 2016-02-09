@@ -8,6 +8,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -30,25 +32,11 @@ public class LinuxFileSystem {
          try (BufferedReader bufferedReader = new BufferedReader(reader)) {
             do {
                final String line = bufferedReader.readLine();
-               if (line == null)
+               if (line == null) {
                   break;
-
-               String[] parts = line.split(" ");
-               if (parts.length < 6)
-                  continue;
-
-               try {
-                  final String device = parts[0];
-                  final String mountpoint = parts[1].replace("\\040", " ");
-                  final String fs = parts[2];
-                  final String options = parts[3];
-                  final int fs_freq = Integer.parseInt(parts[4]);
-                  final int fs_passno = Integer.parseInt(parts[5]);
-
-                  mounts.add(new MountInfo(device, mountpoint, fs, options, fs_freq, fs_passno));
-               } catch (NumberFormatException e) {
-                  logger.warning("Error parsing fs_freq or fs_passno");
                }
+
+               getMountInfo(line).ifPresent(mounts::add);
             } while (true);
 
             return mounts;
@@ -56,6 +44,27 @@ public class LinuxFileSystem {
       } catch (IOException e) {
          logger.warning("Unable to open /proc/mounts to get mountpoint info");
          return Collections.emptyList();
+      }
+   }
+
+   private Optional<MountInfo> getMountInfo(final String line) {
+      String[] parts = line.split(" ");
+      if (parts.length < 6) {
+         return Optional.empty();
+      }
+
+      try {
+         final String device = parts[0];
+         final String mountpoint = parts[1].replace("\\040", " ");
+         final String fs = parts[2];
+         final String options = parts[3];
+         final int fs_freq = Integer.parseInt(parts[4]);
+         final int fs_passno = Integer.parseInt(parts[5]);
+
+         return Optional.of(new MountInfo(device, mountpoint, fs, options, fs_freq, fs_passno));
+      } catch (NumberFormatException e) {
+         logger.log(Level.WARNING, "Error parsing fs_freq or fs_passno", e);
+         return Optional.empty();
       }
    }
 }
