@@ -39,9 +39,8 @@ class PlacesView {
 
    private final TitledPane placesPane;
    private final TreeView<PlacesTreeItem> placesTreeView;
-
-   private TreeItem<PlacesTreeItem> defaultPlacesNode;
-   private TreeItem<PlacesTreeItem> favoritesPlacesNode;
+   private final TreeItem<PlacesTreeItem> defaultPlacesNode;
+   private final TreeItem<PlacesTreeItem> favoritesPlacesNode;
 
    PlacesView(final FilesViewCallback callback,
               final Icons icons) {

@@ -164,7 +164,7 @@ public class PlacesTreeItemCellFactory implements Callback<TreeView<PlacesTreeIt
          private void moveToHead(final TreeItem<PlacesTreeItem> dropTarget,
                                  final File draggedDir) {
             final List<TreeItem<PlacesTreeItem>> currentItems = dropTarget.getChildren();
-            if (currentItems.size() == 0) {
+            if (currentItems.isEmpty()) {
                // NOOP
                return;
             }
@@ -198,13 +198,13 @@ public class PlacesTreeItemCellFactory implements Callback<TreeView<PlacesTreeIt
                   .get();
 
             for (TreeItem<PlacesTreeItem> item : currentItems) {
-               if (item == draggedItem) {
+               if (item.equals(draggedItem)) {
                   continue;
                }
 
                updated.add(item);
 
-               if (item == dropTarget) {
+               if (item.equals(dropTarget)) {
                   // insert draggedItem after this item.
                   updated.add(draggedItem);
                }
