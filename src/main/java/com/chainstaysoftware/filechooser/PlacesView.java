@@ -84,7 +84,7 @@ class PlacesView {
    private TreeItem<PlacesTreeItem> createDefaultPlacesItem() {
       final TreeItem<PlacesTreeItem> item = new TreeItem<>();
       item.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("computer.text")),
-            Optional.empty(), icons.getIcon(IconsImpl.COMPUTER_64)));
+            Optional.empty(), icons.getIcon(IconsImpl.COMPUTER_64), false));
       item.setExpanded(true);
 
       return item;
@@ -93,7 +93,7 @@ class PlacesView {
    private TreeItem<PlacesTreeItem> createFavoritePlacesItem() {
       final TreeItem<PlacesTreeItem> item = new TreeItem<>();
       item.setValue(new PlacesTreeItem(Optional.of(resourceBundle.getString("favorites.text")),
-            Optional.empty(), icons.getIcon(IconsImpl.STAR_64)));
+            Optional.empty(), icons.getIcon(IconsImpl.STAR_64), true));
       item.setExpanded(true);
       return item;
    }
@@ -105,7 +105,7 @@ class PlacesView {
       final TreeView<PlacesTreeItem> view = new TreeView<>();
       view.setId("placesView");
       view.setShowRoot(false);
-      view.setCellFactory(new PlacesTreeItemCellFactory());
+      view.setCellFactory(new PlacesTreeItemCellFactory(callback.favoriteDirsProperty()));
 
       final TreeItem<PlacesTreeItem> root = new TreeItem<>();
       view.setRoot(root);
@@ -140,12 +140,12 @@ class PlacesView {
       final List<Place> defaultPlaces = new Places().getDefaultPlaces(callback.showMountPointsProperty().get());
       defaultPlaces.forEach(place ->
             defaultPlacesNode.getChildren().add(new TreeItem<>(new PlacesTreeItem(Optional.empty(),
-                  Optional.of(place.getPath()), toIcon(place)), null)));
+                  Optional.of(place.getPath()), toIcon(place), false), null)));
 
       final String homeDirStr = System.getProperty("user.home");
       if (homeDirStr != null) {
          defaultPlacesNode.getChildren().add(new TreeItem<>(new PlacesTreeItem(Optional.empty(),
-               Optional.of(new File(homeDirStr)), icons.getIcon(IconsImpl.USER_HOME_64)), null));
+               Optional.of(new File(homeDirStr)), icons.getIcon(IconsImpl.USER_HOME_64), false), null));
       }
 
       if (!callback.favoriteDirsProperty().isEmpty()) {
@@ -153,7 +153,7 @@ class PlacesView {
 
          callback.favoriteDirsProperty().forEach(file ->
                favoritesPlacesNode.getChildren().add(new TreeItem<>(new PlacesTreeItem(Optional.empty(),
-                     Optional.of(file), icons.getIcon(IconsImpl.FOLDER_64)), null)));
+                     Optional.of(file), icons.getIcon(IconsImpl.FOLDER_64), true), null)));
       }
 
       callback.disableAddFavoriteButton(true);

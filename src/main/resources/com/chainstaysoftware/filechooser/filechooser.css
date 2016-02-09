@@ -69,4 +69,8 @@
     -fx-indent: 2;
 }
 
+.places-droptarget {
+    -fx-background-color: #FFFF66;
+}
+
 
