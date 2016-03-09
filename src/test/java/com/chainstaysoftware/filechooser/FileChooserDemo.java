@@ -70,6 +70,7 @@ public class FileChooserDemo extends Application {
          dirChooser.setTitle("Directory Chooser");
          dirChooser.setHelpCallback(() -> System.out.println("Help invoked"));
          dirChooser.setViewType(ViewType.ListWithPreview);
+         dirChooser.setShowMountPoints(true);
 
          dirChooser.showDialog(primaryStage,
                fileOptional -> textFlow.getChildren()

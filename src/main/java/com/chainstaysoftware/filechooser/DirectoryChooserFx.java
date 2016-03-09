@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
@@ -56,6 +57,20 @@ public interface DirectoryChooserFx {
     */
    ObjectProperty<OrderDirection> orderDirectionProperty();
 
+   /**
+    * Disable/enable the display of mount points on Linux/OSX.
+    */
+   void setShowMountPoints(boolean value);
+
+   /**
+    * Showing/not showing Linux/OSX mount points.
+    */
+   boolean showMountPoints();
+
+   /**
+    * Disable/enable the display of mount points on Linux/OSX.
+    */
+   BooleanProperty showMountPointsProperty();
    /**
     * List of directories to show in the Favorites list. As favorites are add and removed
     * by the user the list is updated.

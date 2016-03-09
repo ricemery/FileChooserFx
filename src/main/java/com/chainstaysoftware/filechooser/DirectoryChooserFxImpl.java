@@ -1,5 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
@@ -127,6 +128,30 @@ public class DirectoryChooserFxImpl implements DirectoryChooserFx {
    @Override
    public ObjectProperty<OrderDirection> orderDirectionProperty() {
       return fileChooser.orderDirectionProperty();
+   }
+
+   /**
+    * Disable/enable the display of mount points on Linux/OSX.
+    */
+   @Override
+   public void setShowMountPoints(boolean value) {
+      fileChooser.setShowMountPoints(value);
+   }
+
+   /**
+    * Showing/not showing Linux/OSX mount points.
+    */
+   @Override
+   public boolean showMountPoints() {
+      return fileChooser.showMountPoints();
+   }
+
+   /**
+    * Disable/enable the display of mount points on Linux/OSX.
+    */
+   @Override
+   public BooleanProperty showMountPointsProperty() {
+      return fileChooser.showMountPointsProperty();
    }
 
    @Override
