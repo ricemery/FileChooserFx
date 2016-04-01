@@ -8,7 +8,8 @@ import javafx.scene.layout.Pane;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,11 +42,11 @@ public class ImagePreviewPane implements PreviewPane {
     */
    @Override
    public void setFile(final File file) {
-      try {
-         final Image image = new Image(new FileInputStream(file));
+      try (final InputStream is = new FileInputStream(file)){
+         final Image image = new Image(is);
          imageView.setImage(image);
-      } catch (FileNotFoundException e) {
-         logger.log(Level.WARNING, "File not found - " + file, e);
+      } catch (IOException e) {
+         logger.log(Level.WARNING, "Error opening - " + file, e);
       }
    }
 

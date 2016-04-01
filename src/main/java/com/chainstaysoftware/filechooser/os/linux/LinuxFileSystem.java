@@ -23,9 +23,8 @@ public class LinuxFileSystem {
     * An empty list is returned if /proc/mounts cannot be loaded.
     */
    public List<MountInfo> getMounts() {
-      try {
-         final InputStreamReader reader = new InputStreamReader(new FileInputStream("/proc/mounts"),
-            Charset.defaultCharset());
+      try (final InputStreamReader reader = new InputStreamReader(new FileInputStream("/proc/mounts"),
+            Charset.defaultCharset())) {
 
          final List<MountInfo> mounts = new ArrayList<>();
 
