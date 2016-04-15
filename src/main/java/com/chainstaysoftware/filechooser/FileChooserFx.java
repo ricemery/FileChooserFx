@@ -4,6 +4,7 @@ import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -13,6 +14,36 @@ import javafx.stage.Window;
 import java.io.File;
 
 public interface FileChooserFx {
+   /**
+    * Property representing the height of the FileChooser.
+    */
+   ReadOnlyDoubleProperty heightProperty();
+
+   /**
+    * Get the height of the FileChooser.
+    */
+   double getHeight();
+
+   /**
+    * Set the height of the FileChooser.
+    */
+   void setHeight(double height);
+
+   /**
+    * Property representing the width of the FileChooser.
+    */
+   ReadOnlyDoubleProperty widthProperty();
+
+   /**
+    * Get the width of the FileChooser.
+    */
+   double getWidth();
+
+   /**
+    * Set the width of the FileChooser.
+    */
+   void setWidth(double width);
+
    ObservableList<FileChooser.ExtensionFilter> getExtensionFilters();
 
    ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilterProperty();

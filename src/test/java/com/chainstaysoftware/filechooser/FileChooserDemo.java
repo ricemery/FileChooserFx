@@ -40,6 +40,8 @@ public class FileChooserDemo extends Application {
          fileChooser.setFavoriteDirsCallbacks(directory -> System.out.println("Add favorite - " + directory),
             directory -> System.out.println("Remove favorite - " + directory));
          fileChooser.setViewType(ViewType.Icon);
+         fileChooser.setWidth(1024);
+         fileChooser.setHeight(768);
 
          fileChooser.showOpenDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
@@ -47,7 +49,8 @@ public class FileChooserDemo extends Application {
                                     + "Selected Extension Filter - " + fileChooser.getSelectedExtensionFilter().getDescription() + "\r\n"
                                     + "View Type - " + fileChooser.getViewType() + "\r\n"
                                     + "Sort - " + fileChooser.getOrderBy() + " " + fileChooser.getOrderDirection() + "\r\n"
-                                    + "Favorites - " + fileChooser.favoriteDirsProperty() + "\r\n")));
+                                    + "Favorites - " + fileChooser.favoriteDirsProperty() + "\r\n"
+                                    + "Window size - " + fileChooser.getWidth() + " " + fileChooser.getHeight() + "\r\n")));
       });
 
       final Button fileSaveButton = new Button("Save File");
@@ -75,7 +78,8 @@ public class FileChooserDemo extends Application {
          dirChooser.showDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
                      .add(new Text("Directory to open - " + fileOptional.toString() + "\r\n"
-                            + "View Type - " + dirChooser.getViewType() + "\r\n")));
+                           + "View Type - " + dirChooser.getViewType() + "\r\n"
+                           + "Window size - " + dirChooser.getWidth() + " " + dirChooser.getHeight() + "\r\n")));
       });
 
       final ToolBar toolBar = new ToolBar();

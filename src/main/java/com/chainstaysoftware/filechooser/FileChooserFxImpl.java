@@ -5,8 +5,11 @@ import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -76,6 +79,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private static final int SCENE_WIDTH = 800;
    private static final int SCENE_HEIGHT = 600;
 
+   private final DoubleProperty heightProperty = new SimpleDoubleProperty(SCENE_HEIGHT);
+   private final DoubleProperty widthProperty = new SimpleDoubleProperty(SCENE_WIDTH);
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final ObservableList<FileChooser.ExtensionFilter> extensionFilters =
          FXCollections.observableArrayList();
@@ -121,6 +126,53 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private WatchService watcher;
    private WatchKey watchKey;
 
+   /**
+    * Property representing the height of the FileChooser.
+    */
+   @Override
+   public ReadOnlyDoubleProperty heightProperty() {
+      return heightProperty;
+   }
+
+   /**
+    * Get the height of the FileChooser.
+    */
+   @Override
+   public double getHeight() {
+      return heightProperty.doubleValue();
+   }
+
+   /**
+    * Set the height of the FileChooser.
+    */
+   @Override
+   public void setHeight(final double height) {
+      heightProperty.setValue(height);
+   }
+
+   /**
+    * Property representing the width of the FileChooser.
+    */
+   @Override
+   public ReadOnlyDoubleProperty widthProperty() {
+      return widthProperty;
+   }
+
+   /**
+    * Get the width of the FileChooser.
+    */
+   @Override
+   public double getWidth() {
+      return widthProperty.doubleValue();
+   }
+
+   /**
+    * Set the width of the FileChooser.
+    */
+   @Override
+   public void setWidth(final double width) {
+      widthProperty.setValue(width);
+   }
 
    @Override
    public ObservableList<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -409,9 +461,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
       borderPane.setCenter(splitPane);
       borderPane.setBottom(bottomVbox);
 
-      final Scene scene = new Scene(borderPane, SCENE_WIDTH, SCENE_HEIGHT);
+      final Scene scene = new Scene(borderPane, widthProperty.doubleValue(), heightProperty.doubleValue());
       scene.getStylesheets().add(new FileBrowserCss().getUrl());
       scene.setOnKeyPressed(new KeyEventHandler());
+      scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+         heightProperty.setValue(newValue);
+      });
+      scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+         widthProperty.setValue(newValue);
+      });
 
       stage.setTitle(getTitle());
       stage.setScene(scene);

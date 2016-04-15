@@ -2,6 +2,7 @@ package com.chainstaysoftware.filechooser;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.stage.Window;
@@ -10,6 +11,56 @@ import java.io.File;
 
 public class DirectoryChooserFxImpl implements DirectoryChooserFx {
    private final FileChooserFxImpl fileChooser = new FileChooserFxImpl();
+
+   /**
+    * Property representing the height of the FileChooser.
+    */
+   @Override
+   public ReadOnlyDoubleProperty heightProperty() {
+      return fileChooser.heightProperty();
+   }
+
+   /**
+    * Get the height of the FileChooser.
+    */
+   @Override
+   public double getHeight() {
+      return fileChooser.getHeight();
+   }
+
+   /**
+    * Set the height of the FileChooser.
+    *
+    * @param height
+    */
+   @Override
+   public void setHeight(final double height) {
+      fileChooser.setHeight(height);
+   }
+
+   /**
+    * Property representing the width of the FileChooser.
+    */
+   @Override
+   public ReadOnlyDoubleProperty widthProperty() {
+      return fileChooser.widthProperty();
+   }
+
+   /**
+    * Get the width of the FileChooser.
+    */
+   @Override
+   public double getWidth() {
+      return fileChooser.getWidth();
+   }
+
+   /**
+    * Set the width of the FileChooser.
+    */
+   @Override
+   public void setWidth(final double width) {
+      fileChooser.setWidth(width);
+   }
 
    @Override
    public void setInitialDirectory(final File value) {
