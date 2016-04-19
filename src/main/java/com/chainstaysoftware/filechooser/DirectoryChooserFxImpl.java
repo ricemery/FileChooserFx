@@ -62,6 +62,25 @@ public class DirectoryChooserFxImpl implements DirectoryChooserFx {
       fileChooser.setWidth(width);
    }
 
+   /**
+    * Sets the position of the dividers. Should be called before "show" is invoked.
+    *
+    * @param placesDivider the position of the divider that separates the places view from
+    *                      the directories, between 0.0 and 1.0 (inclusive).
+    */
+   @Override
+   public void setDividerPosition(final double placesDivider) {
+      fileChooser.setDividerPositions(placesDivider, 0);
+   }
+
+   /**
+    * Returns the position of the divider.
+    */
+   @Override
+   public double getDividerPosition() {
+      return fileChooser.getDividerPositions()[0];
+   }
+
    @Override
    public void setInitialDirectory(final File value) {
       fileChooser.setInitialDirectory(value);

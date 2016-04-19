@@ -44,6 +44,26 @@ public interface FileChooserFx {
     */
    void setWidth(double width);
 
+   /**
+    * Sets the position of the dividers. Should be called before "show" is invoked.
+    *
+    * @param placesDivider the position of the divider that separates the places view from
+    *                      the file/directories, between 0.0 and 1.0 (inclusive).
+    * @param previewDivider the position of the divider that separates the preview pane from
+    *                       the list of files/directories, between 0.0 and 1.0 (inclusive).
+    *                       The value is relative to the placesDivider. 0.0 indicates right ontop
+    *                       of the places divider. And, 1.0 indicates thr far right of the window.
+    */
+   void setDividerPositions(double placesDivider, double previewDivider);
+
+
+   /**
+    * Returns the position of the dividers. The returned array contain 2 elements.
+    * The first element is the position of the places divider. The second element
+    * is the position of the divider between the file list and the preview pane.
+    */
+   double[] getDividerPositions();
+
    ObservableList<FileChooser.ExtensionFilter> getExtensionFilters();
 
    ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilterProperty();

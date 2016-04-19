@@ -40,6 +40,19 @@ public interface DirectoryChooserFx {
     */
    void setWidth(double width);
 
+   /**
+    * Sets the position of the dividers. Should be called before "show" is invoked.
+    *
+    * @param placesDivider the position of the divider that separates the places view from
+    *                      the directories, between 0.0 and 1.0 (inclusive).
+    */
+   void setDividerPosition(double placesDivider);
+
+   /**
+    * Returns the position of the divider.
+    */
+   double getDividerPosition();
+
    void setInitialDirectory(File value);
 
    File getInitialDirectory();

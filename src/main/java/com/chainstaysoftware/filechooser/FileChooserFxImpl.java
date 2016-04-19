@@ -78,6 +78,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
    private static final int SCENE_WIDTH = 800;
    private static final int SCENE_HEIGHT = 600;
+   private static final double PLACES_DIVIDER_POSITION = 0.25;
+   private static final double PREVIEW_DIVIDER_POSITION = 0.25;
 
    private final DoubleProperty heightProperty = new SimpleDoubleProperty(SCENE_HEIGHT);
    private final DoubleProperty widthProperty = new SimpleDoubleProperty(SCENE_WIDTH);
@@ -89,6 +91,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
 
+   private double placesDivider = PLACES_DIVIDER_POSITION;
+   private double previewDivider = PREVIEW_DIVIDER_POSITION;
    private StringProperty title;
    private ObjectProperty<File> initialDirectory;
    private ObjectProperty<String> initialFileName;
@@ -172,6 +176,38 @@ public final class FileChooserFxImpl implements FileChooserFx {
    @Override
    public void setWidth(final double width) {
       widthProperty.setValue(width);
+   }
+
+   /**
+    * Sets the position of the dividers.
+    *
+    * @param placesDivider  the position of the divider that separates the places view from
+    *                       the file/directories, between 0.0 and 1.0 (inclusive).
+    * @param previewDivider the position of the divider that separates the preview pane from
+    *                       the list of files/directories, between 0.0 and 1.0 (inclusion).
+    *                       The value is relative to the placesDivider. 0.0 indicates right ontop
+    *                       of the places divider. And, 1.0 indicates thr far right of the window.
+    */
+   @Override
+   public void setDividerPositions(final double placesDivider, final double previewDivider) {
+      this.placesDivider = placesDivider;
+      this.previewDivider = previewDivider;
+   }
+
+   /**
+    * Returns the position of the dividers. The returned array contain 2 elements.
+    * The first element is the position of the places divider. The second element
+    * is the position of the divider between the file list and the preview pane.
+    */
+   @Override
+   public double[] getDividerPositions() {
+      if (splitPane != null) {
+         final double placesDivider = splitPane.getDividerPositions()[0];
+         final double previewDivider = listFilesWithPreviewView.getDividerPosition();
+         return new double[] {placesDivider, previewDivider};
+      }
+
+      return new double[] {placesDivider, previewDivider};
    }
 
    @Override
@@ -504,7 +540,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       final SplitPane pane = new SplitPane();
       pane.setId("splitPane");
-      pane.setDividerPosition(0, .25);
+      pane.setDividerPosition(0, placesDivider);
 
       placesView.toPane().prefHeightProperty().bind(pane.heightProperty());
 
@@ -528,7 +564,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private ListFilesWithPreviewView createListFilesWithPreviewView() {
       final ListFilesWithPreviewView view
             = new ListFilesWithPreviewView(stage, previewHandlers, icons,
-               new FilesViewCallbackImpl());
+               previewDivider, new FilesViewCallbackImpl());
       view.setOnKeyPressed(new KeyEventHandler());
       return view;
    }

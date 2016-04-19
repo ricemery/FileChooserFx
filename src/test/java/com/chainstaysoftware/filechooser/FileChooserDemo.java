@@ -13,6 +13,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class FileChooserDemo extends Application {
@@ -42,6 +43,7 @@ public class FileChooserDemo extends Application {
          fileChooser.setViewType(ViewType.Icon);
          fileChooser.setWidth(1024);
          fileChooser.setHeight(768);
+         fileChooser.setDividerPositions(.15, .30);
 
          fileChooser.showOpenDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
@@ -50,7 +52,8 @@ public class FileChooserDemo extends Application {
                                     + "View Type - " + fileChooser.getViewType() + "\r\n"
                                     + "Sort - " + fileChooser.getOrderBy() + " " + fileChooser.getOrderDirection() + "\r\n"
                                     + "Favorites - " + fileChooser.favoriteDirsProperty() + "\r\n"
-                                    + "Window size - " + fileChooser.getWidth() + " " + fileChooser.getHeight() + "\r\n")));
+                                    + "Window size - " + fileChooser.getWidth() + " " + fileChooser.getHeight() + "\r\n"
+                                    + "Divider positions - " + Arrays.toString(fileChooser.getDividerPositions()) +  "\r\n")));
       });
 
       final Button fileSaveButton = new Button("Save File");
@@ -74,12 +77,14 @@ public class FileChooserDemo extends Application {
          dirChooser.setHelpCallback(() -> System.out.println("Help invoked"));
          dirChooser.setViewType(ViewType.ListWithPreview);
          dirChooser.setShowMountPoints(true);
+         dirChooser.setDividerPosition(.15);
 
          dirChooser.showDialog(primaryStage,
                fileOptional -> textFlow.getChildren()
                      .add(new Text("Directory to open - " + fileOptional.toString() + "\r\n"
                            + "View Type - " + dirChooser.getViewType() + "\r\n"
-                           + "Window size - " + dirChooser.getWidth() + " " + dirChooser.getHeight() + "\r\n")));
+                           + "Window size - " + dirChooser.getWidth() + " " + dirChooser.getHeight() + "\r\n"
+                           + "Divider position - " + dirChooser.getDividerPosition() + "\r\n")));
       });
 
       final ToolBar toolBar = new ToolBar();

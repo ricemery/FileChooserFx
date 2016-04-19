@@ -45,6 +45,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    public ListFilesWithPreviewView(final Stage parent,
                                    final Map<String, Class<? extends PreviewPane>> previewHandlers,
                                    final Icons icons,
+                                   final double dividerPosition,
                                    final FilesViewCallback callback) {
       super(parent);
 
@@ -92,7 +93,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       splitPane = new SplitPane();
       splitPane.setId("previewSplitPane");
       splitPane.getItems().addAll(tableView, previewHbox);
-      splitPane.setDividerPositions(0.30);
+      splitPane.setDividerPositions(dividerPosition);
    }
 
    @Override
@@ -171,6 +172,10 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
    public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
       this.keyEventHandler = eventHandler;
+   }
+
+   public double getDividerPosition() {
+      return splitPane.getDividerPositions()[0];
    }
 
    private class KeyPressedHandler implements EventHandler<KeyEvent> {
