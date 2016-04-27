@@ -922,7 +922,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
                return extensionFilters.stream()
                      .filter(filter -> string.equals(filter.getDescription()))
                      .findFirst()
-                     .orElseThrow(() -> new IllegalStateException("string not in extensionFilters."));
+                     .orElse(new FileChooser.ExtensionFilter(string, string));
             }
          });
 
