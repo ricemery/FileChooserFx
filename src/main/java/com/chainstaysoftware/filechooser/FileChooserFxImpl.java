@@ -905,19 +905,24 @@ public final class FileChooserFxImpl implements FileChooserFx {
          extensionsComboBox.setCellFactory(new ExtensionsCellFactory());
          extensionsComboBox.setButtonCell(new ExtensionsCell());
          extensionsComboBox.setOnAction(v -> {
-            setSelectedExtensionFilter(extensionsComboBox.getValue());
+            setSelectedExtensionFilter(extensionsComboBox.getSelectionModel().getSelectedItem());
             updateFiles(currentDirectory, false);
          });
          extensionsComboBox.setEditable(true);
          extensionsComboBox.setConverter(new StringConverterWithFormat<FileChooser.ExtensionFilter>() {
             @Override
-            public String toString(FileChooser.ExtensionFilter extensionFilter) {
+            public String toString(final FileChooser.ExtensionFilter extensionFilter) {
                return extensionFilter.getDescription();
             }
 
             @Override
-            public FileChooser.ExtensionFilter fromString(String string) {
-               return new FileChooser.ExtensionFilter(string, string);
+            public FileChooser.ExtensionFilter fromString(final String string) {
+               // Since only the description is serialized into the string, lookup
+               // the ExtensionFilter by description from the current list of ExtensionFilter.
+               return extensionFilters.stream()
+                     .filter(filter -> string.equals(filter.getDescription()))
+                     .findFirst()
+                     .orElseThrow(() -> new IllegalStateException("string not in extensionFilters."));
             }
          });
 
