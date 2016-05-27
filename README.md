@@ -8,7 +8,7 @@ and DirectoryChooser completely in JavaFx code so that the implementations can b
 ## Limitations
 * The FileChooser does not support multifile select.
 * There are file previews implemented for jpg, png and text files. Other file previews can be plugged in.
-* Linux and OSX can optionally be shown in the "Places" list. The code to determine the list of mount points is "experimental". Java does not include a good way of determining all the mount points and the types. The names and types may show differently than a native file browser.
+* Linux and OSX mount points can optionally be shown in the "Places" list. The code to determine the list of mount points is "experimental". Java does not include a good way of determining all the mount points and the types. The names and types may show differently than a native file browser.
 * Localization hooks are provided, but only English text is provided.
 
 ## Dependencies
