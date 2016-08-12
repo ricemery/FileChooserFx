@@ -19,6 +19,10 @@ class DirectoryTreeItem extends TreeItem<File> {
    private final Icons icons;
    private final boolean isLeaf;
 
+   // Hold onto graphic at this level instead of passing to super class.
+   // This is to work around JDK issue - https://bugs.openjdk.java.net/browse/JDK-8156049.
+   private Node graphic;
+
    private boolean directoryListLoaded = false;
 
    public DirectoryTreeItem(final File value, final FilesViewCallback callback,
@@ -29,11 +33,12 @@ class DirectoryTreeItem extends TreeItem<File> {
    public DirectoryTreeItem(final File value, final Node graphic,
                             final FilesViewCallback callback,
                             final Icons icons) {
-      super(value, graphic);
+      super(value, null);
 
       this.callback = callback;
       this.icons = icons;
       this.isLeaf = !value.isDirectory();
+      this.graphic = graphic;
 
       expandedProperty().addListener(new ExpandedListener());
    }
@@ -71,11 +76,19 @@ class DirectoryTreeItem extends TreeItem<File> {
       getChildren().addAll(children);
    }
 
+   public Node getGraphic2() {
+      return graphic;
+   }
+
+   public void setGraphic2(Node graphic) {
+      this.graphic = graphic;
+   }
+
    private class ExpandedListener implements ChangeListener<Boolean> {
       @Override
       public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean expanded) {
          if (getValue().isDirectory()) {
-            setGraphic(getIcon(expanded));
+            setGraphic2(getIcon(expanded));
          }
       }
 

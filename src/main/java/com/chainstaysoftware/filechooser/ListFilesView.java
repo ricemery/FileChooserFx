@@ -123,6 +123,32 @@ class ListFilesView extends AbstractFilesView {
       column.prefWidthProperty().bind(parent.widthProperty()
             .subtract(DATE_MODIFIED_COL_PREF_WIDTH)
             .subtract(SIZE_COLUMN_PREF_WIDTH));
+
+      column.setCellFactory(param -> new TreeTableCell<File, String>() {
+         @Override
+         protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty) {
+               setText("");
+               setGraphic(null);
+            } else {
+               // This is a hack to work around JDK bug - https://bugs.openjdk.java.net/browse/JDK-8156049 .
+               final TreeTableRow row = getTreeTableRow();
+               if (row != null && row.getTreeItem() != null) {
+                  final TreeItem treeItem = row.getTreeItem();
+                  if (getTreeTableRow().getTreeItem() instanceof DirectoryTreeItem) {
+                     setGraphic(((DirectoryTreeItem)treeItem).getGraphic2());
+                  } else {
+                     setGraphic(treeItem.getGraphic());
+                  }
+               }
+
+               setText(item.toString());
+            }
+         }
+      });
+
       return column;
    }
 
