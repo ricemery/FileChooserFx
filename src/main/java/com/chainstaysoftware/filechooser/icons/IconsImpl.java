@@ -121,17 +121,11 @@ public class IconsImpl implements Icons {
     */
    @Override
    public Image getIconForFile(final File file) {
-      if (file.isDirectory()) {
-         return getIcon(IconsImpl.FOLDER_64);
-      }
-
       final String extension = FilenameUtils.getExtension(file.getName()).toLowerCase(Locale.ENGLISH);
       final Image image = fileTypeIconsProperty.getValue().get(extension);
-      if (image == null) {
-         return getIcon(IconsImpl.GENERIC_FILE_64);
-      }
-
-      return image;
+      return image == null
+         ? getIcon(IconsImpl.GENERIC_FILE_64)
+         : image;
    }
 
    /**

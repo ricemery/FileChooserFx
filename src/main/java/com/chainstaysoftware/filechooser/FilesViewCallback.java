@@ -5,7 +5,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableList;
 
 import java.io.File;
-import java.util.stream.Stream;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 
 /**
  * Callbacks from the {@link FilesView} implementations back into the
@@ -18,10 +20,9 @@ public interface FilesViewCallback {
     */
    void requestChangeDirectory(File directory);
 
-   /**
-    * Get a Stream of File for the the passed in directory.
-    */
-   Stream<File> getFileStream(File directory);
+   DirectoryStream<Path> getDirectoryStream(File directory) throws IOException;
+
+   DirectoryStream<Path> unfilteredDirectoryStream(File directory) throws IOException;
 
    /**
     * Update the currently selected file.
@@ -48,4 +49,8 @@ public interface FilesViewCallback {
    ObservableList<File> favoriteDirsProperty();
 
    BooleanProperty showMountPointsProperty();
+
+   BooleanProperty showHiddenFilesProperty();
+
+   BooleanProperty shouldHideFilesProperty();
 }

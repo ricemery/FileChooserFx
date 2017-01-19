@@ -16,6 +16,8 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -56,22 +58,22 @@ import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public final class FileChooserFxImpl implements FileChooserFx {
    private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.FileChooserFxImpl");
@@ -90,6 +92,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private final ObservableList<File> favoriteDirs = FXCollections.observableArrayList();
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
+   private final UpdateWatchKeyService updateWatchKeyService = new UpdateWatchKeyService();
+   private final BooleanProperty hideFiles = new SimpleBooleanProperty(this, "shouldHideFiles", false);
 
    private double placesDivider = PLACES_DIVIDER_POSITION;
    private double previewDivider = PREVIEW_DIVIDER_POSITION;
@@ -117,7 +121,6 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private Stage stage;
    private PlacesView placesView;
    private boolean saveMode;
-   private boolean hideFiles;
    private ToggleButton viewIconsButton;
    private ToggleButton viewListButton;
    private ToggleButton viewListWithPreviewButton;
@@ -310,6 +313,21 @@ public final class FileChooserFxImpl implements FileChooserFx {
       return showHiddenFiles;
    }
 
+   @Override
+   public void setShouldHideFiles(boolean value) {
+      hideFiles.setValue(value);
+   }
+
+   @Override
+   public boolean shouldHideFiles() {
+      return hideFiles.get();
+   }
+
+   @Override
+   public BooleanProperty shouldHideFilesProperty() {
+      return hideFiles;
+   }
+
    /**
     * Set the sort field.
     */
@@ -470,7 +488,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
                        final FileChooserCallback fileChooserCallback,
                        final boolean hideFiles) {
       saveMode = false;
-      this.hideFiles = hideFiles;
+      this.hideFiles.setValue(hideFiles);
       showDialog(ownerWindow, fileChooserCallback);
    }
 
@@ -478,7 +496,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    public void showSaveDialog(final Window ownerWindow,
                               final FileChooserCallback fileChooserCallback) {
       saveMode = true;
-      hideFiles = false;
+      hideFiles.set(false);
       showDialog(ownerWindow, fileChooserCallback);
    }
 
@@ -500,12 +518,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final Scene scene = new Scene(borderPane, widthProperty.doubleValue(), heightProperty.doubleValue());
       scene.getStylesheets().add(new FileBrowserCss().getUrl());
       scene.setOnKeyPressed(new KeyEventHandler());
-      scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-         heightProperty.setValue(newValue);
-      });
-      scene.widthProperty().addListener((observable, oldValue, newValue) -> {
-         widthProperty.setValue(newValue);
-      });
+      scene.heightProperty().addListener((observable, oldValue, newValue) -> heightProperty.setValue(newValue));
+      scene.widthProperty().addListener((observable, oldValue, newValue) -> widthProperty.setValue(newValue));
 
       stage.setTitle(getTitle());
       stage.setScene(scene);
@@ -622,7 +636,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       backButton = createBackButton();
       final VBox breadCrumbHBox = createBreadCrumbBar();
       viewListButton = createViewListButton();
-      if (!hideFiles) {
+      if (!hideFiles.get()) {
          viewListWithPreviewButton = createViewListWithPreviewButton();
       }
       viewIconsButton = createViewIconsButton();
@@ -632,7 +646,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       toolBar.getStyleClass().add("toolbar");
       final ObservableList<Node> items = toolBar.getItems();
       items.add(viewListButton);
-      if(!hideFiles) {
+      if(!hideFiles.get()) {
          items.add(viewListWithPreviewButton);
       }
       items.add(viewIconsButton);
@@ -679,9 +693,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       breadCrumbBar.setCrumbFactory(param -> {
          final Button button = new BreadCrumbBarSkin.BreadCrumbButton(getBreadCrumbButtonText(param));
          button.setFocusTraversable(false);
-         button.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            currentView.getNode().requestFocus();
-         });
+         button.focusedProperty().addListener((observable, oldValue, newValue) -> currentView.getNode().requestFocus());
          return button;
       });
       breadCrumbBar.setOnCrumbAction(event -> {
@@ -793,9 +805,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       buttons.add(createCancelButton());
 
       final Optional<Button> helpButton = createHelpButton();
-      if (helpButton.isPresent()) {
-         buttons.add(helpButton.get());
-      }
+      helpButton.ifPresent(buttons::add);
 
       final ButtonBar buttonBar = new ButtonBar();
       buttonBar.setId("buttonBar");
@@ -814,13 +824,12 @@ public final class FileChooserFxImpl implements FileChooserFx {
       button.setOnAction(saveMode ? new SaveDoneEventHandler() : new BrowseDoneEventHandler());
 
       if (saveMode) {
-         fileNameField.textProperty().addListener((observable, oldValue, newValue) -> {
-            button.setDisable(newValue == null || "".equals(newValue.trim()));
-         });
+         fileNameField.textProperty().addListener((observable, oldValue, newValue)
+            -> button.setDisable(newValue == null || "".equals(newValue.trim())));
       }
 
       currentSelection.addListener((observable, oldValue, newValue) ->
-            button.setDisable(newValue == null || (!hideFiles && newValue.isDirectory()))
+            button.setDisable(newValue == null || (!hideFiles.get() && newValue.isDirectory()))
       );
       return button;
    }
@@ -894,7 +903,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       borderPane.setId("extensionsBorderPane");
       borderPane.getStyleClass().add("extensionspane");
 
-      if (!hideFiles) {
+      if (!hideFiles.get()) {
          final List<FileChooser.ExtensionFilter> allFiles = new ArrayList<>(1);
          allFiles.add(new FileChooser.ExtensionFilter(resourceBundle.getString("filterdropdown.allfiles"), "*.*"));
 
@@ -950,7 +959,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
          buttonsHbox.getChildren().addAll(addFavoriteButton, removeFavoriteButton);
       }
 
-      if (saveMode || hideFiles) {
+      if (saveMode || hideFiles.get()) {
          // Include the New FolderButton
          buttonsHbox.getChildren().add(createNewFolderButton());
       }
@@ -1077,7 +1086,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
     */
    private void setCurrentView(final ViewType view) {
       if (ViewType.List.equals(view)
-            || ViewType.ListWithPreview.equals(view) && hideFiles) {
+            || ViewType.ListWithPreview.equals(view) && hideFiles.get()) {
 
          setListView();
          return;
@@ -1152,10 +1161,14 @@ public final class FileChooserFxImpl implements FileChooserFx {
     */
    private void updateFiles(final File directory,
                             final boolean updateBreadCrumbBar) {
-      currentView.setFiles(getFiles(directory));
-
       if (updateBreadCrumbBar) {
          updateDirBreadCrumbBar(currentDirectory);
+      }
+
+      try {
+         currentView.setFiles(getFilteredDirStream(directory), getNegatedFilteredDirStream(directory));
+      } catch (IOException e) {
+         logger.log(Level.WARNING, "Error settings files on view", e);
       }
    }
 
@@ -1216,16 +1229,20 @@ public final class FileChooserFxImpl implements FileChooserFx {
     * Depending on the mode of operation, some of the directory contents
     * may be filtered out.
     */
-   private Stream<File> getFiles(final File directory) {
-      if (!directory.isDirectory()) {
-         return Stream.empty();
-      }
-
+   private DirectoryStream<Path> getFilteredDirStream(final File directory) throws IOException {
       final FileFilter filter = getFileFilter();
-      final File[] files = directory.listFiles(filter);
-      return files == null
-            ? Stream.empty()
-            : Arrays.stream(files).filter(new GetFilesPredicate());
+      return Files.newDirectoryStream(directory.toPath(), entry -> filter.accept(entry.toFile()));
+   }
+
+   /**
+    * Retrieve a Stream of File from the contents of the passed in directory.
+    * Depending on the mode of operation, some of the directory contents
+    * may be filtered out. This method returns all the files/directories that would be
+    * filtered out by getFilteredDirStream.
+    */
+   private DirectoryStream<Path> getNegatedFilteredDirStream(final File directory) throws IOException {
+      final FileFilter filter = getFileFilter();
+      return Files.newDirectoryStream(directory.toPath(), entry -> !filter.accept(entry.toFile()));
    }
 
    /**
@@ -1234,20 +1251,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
     */
    private WildcardFileFilter getFileFilter() {
       final List<String> extensionFilter = extensionsComboBox == null || extensionsComboBox.getValue() == null
-            ? Collections.emptyList()
-            : extensionsComboBox.getValue().getExtensions();
-      return new DirOrWildcardFilter(extensionFilter, IOCase.SYSTEM);
-   }
-
-   /**
-    * Predicate to determine if a File should be included in the file list.
-    */
-   private class GetFilesPredicate implements Predicate<File> {
-      @Override
-      public boolean test(final File file) {
-         final boolean filterHidden = !showHiddenFiles();
-         return !(filterHidden && file.isHidden()) && (!hideFiles || file.isDirectory());
-      }
+         ? Collections.emptyList()
+         : extensionsComboBox.getValue().getExtensions();
+      return new WildcardFileFilter(extensionFilter, IOCase.SYSTEM);
    }
 
    /**
@@ -1264,12 +1270,14 @@ public final class FileChooserFxImpl implements FileChooserFx {
          changeDirectory(directory);
       }
 
-      /**
-       * Get a Stream of File for the the passed in directory.
-       */
       @Override
-      public Stream<File> getFileStream(final File directory) {
-         return getFiles(directory);
+      public DirectoryStream<Path> getDirectoryStream(final File directory) throws IOException {
+         return getFilteredDirStream(directory);
+      }
+
+      @Override
+      public DirectoryStream<Path> unfilteredDirectoryStream(File directory) throws IOException {
+         return getNegatedFilteredDirStream(directory);
       }
 
       /**
@@ -1353,6 +1361,16 @@ public final class FileChooserFxImpl implements FileChooserFx {
       public BooleanProperty showMountPointsProperty() {
          return FileChooserFxImpl.this.showMountPointsProperty();
       }
+
+      @Override
+      public BooleanProperty showHiddenFilesProperty() {
+         return FileChooserFxImpl.this.showHiddenFilesProperty();
+      }
+
+      @Override
+      public BooleanProperty shouldHideFilesProperty() {
+         return FileChooserFxImpl.this.shouldHideFilesProperty();
+      }
    }
 
    /**
@@ -1369,14 +1387,31 @@ public final class FileChooserFxImpl implements FileChooserFx {
             watcherThread.start();
          }
 
-         if (watchKey != null) {
-            watchKey.cancel();
-         }
+         updateWatchKeyService.restart();
 
-         watchKey = currentDirectory.toPath().register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
-               StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
       } catch (IOException e) {
          logger.log(Level.WARNING, "Error setting up WatchService", e);
+      }
+   }
+
+   private class UpdateWatchKeyService extends Service<Void> {
+      @Override
+      protected Task<Void> createTask() {
+         return new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+               synchronized (this) {
+                  if (watchKey != null) {
+                     watchKey.cancel();
+                  }
+
+                  watchKey = currentDirectory.toPath().register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
+                     StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+               }
+
+               return null;
+            }
+         };
       }
    }
 

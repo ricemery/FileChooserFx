@@ -90,6 +90,6 @@ public class DirOrWildcardFilter extends WildcardFileFilter {
     */
    @Override
    public boolean accept(File file) {
-      return file.isDirectory() || super.accept(file);
+      return super.accept(file) || file.isDirectory();
    }
 }

@@ -3,9 +3,16 @@ package com.chainstaysoftware.filechooser;
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
+import com.sun.javafx.collections.ObservableListWrapper;
 import impl.org.controlsfx.skin.GridViewSkin;
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
@@ -23,15 +30,20 @@ import javafx.stage.Stage;
 import org.controlsfx.control.GridView;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 class IconsFilesView extends AbstractFilesView {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.IconsFilesView");
+
    private static final int NOT_SELECTED = -1;
 
    // Width and Height of Icon and Filename Cell.
@@ -48,10 +60,10 @@ class IconsFilesView extends AbstractFilesView {
    private EventHandler<? super KeyEvent> keyEventHandler;
    private boolean disableListeners;
 
-   public IconsFilesView(final Stage parent,
-                         final Map<String, Class<? extends PreviewPane>> previewHandlers,
-                         final Icons icons,
-                         final FilesViewCallback callback) {
+   IconsFilesView(final Stage parent,
+                  final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                  final Icons icons,
+                  final FilesViewCallback callback) {
       super(parent);
 
       this.previewHandlers = previewHandlers;
@@ -60,9 +72,8 @@ class IconsFilesView extends AbstractFilesView {
 
       gridView.setCellFactory(gridView1 -> {
          final IconGridCell cell = new IconGridCell(true, new IconGridCellContextMenuFactImpl());
-         cell.indexProperty().addListener((observable, oldValue, newValue) -> {
-            cell.updateSelected(selectedCellIndex.intValue() == newValue.intValue());
-         });
+         cell.indexProperty().addListener((observable, oldValue, newValue) ->
+               cell.updateSelected(selectedCellIndex.intValue() == newValue.intValue()));
          selectedCellIndex.addListener((observable, oldValue, newValue) ->
                cell.updateSelected(newValue.intValue() == cell.getIndex()));
          return cell;
@@ -71,7 +82,7 @@ class IconsFilesView extends AbstractFilesView {
       gridView.setCellWidth(CELL_WIDTH);
       gridView.setOnMouseClicked(new MouseClickHandler());
       gridView.setOnKeyPressed(new KeyClickHandler());
-      gridView.setContextMenu(createContextMenu());
+      //gridView.setContextMenu(createContextMenu());
    }
 
    private ContextMenu createContextMenu() {
@@ -149,17 +160,79 @@ class IconsFilesView extends AbstractFilesView {
       return gridView;
    }
 
+   /**
+    * sets the files on the view.
+    * @param directoryStream Filtered stream of files to show in view.
+    * @param remainingDirectoryStream This stream contains the files not to
+    *                                 show in the view. But, may include
+    *                                 directories that should be shown in the
+    *                                 view but were filtered out in the directoryStream.
+    */
    @Override
-   public void setFiles(final Stream<File> fileStream) {
+   public void setFiles(final DirectoryStream<Path> directoryStream,
+                        final DirectoryStream<Path> remainingDirectoryStream) {
       selectedCellIndex.setValue(NOT_SELECTED);
 
       // Disable event listeners in gridView while being updated programmatically
       disableListeners = true;
-      gridView.getItems().clear();
-      gridView.getItems().setAll(getIcons(sort(fileStream)));
+      final ObservableList<DirectoryListItem> directoryListItems
+         = FXCollections.synchronizedObservableList(new ObservableListWrapper<>(new LinkedList<>()));
+      final SortedList<DirectoryListItem> items
+         = directoryListItems.sorted(new DirListItemComparator(callback.orderByProperty().get(),
+            callback.orderDirectionProperty().get()));
+      gridView.setItems(items);
       disableListeners = false;
 
-      selectCurrent();
+      // Update the GridView from Services so that the UI is not blocked on OS calls.
+      final UpdateIconsList updateIconsListListService = new UpdateIconsList(directoryListItems, icons);
+      final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream, directoryListItems, icons);
+      final Predicate<File> shouldHideFile
+         = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
+      final FilterHiddenFromDirList filterListService = new FilterHiddenFromDirList(directoryListItems, shouldHideFile);
+      final SelectCurrentService selectCurrentService = new SelectCurrentService();
+      filterListService.setOnSucceeded(event -> {
+         updateIconsListListService.start();
+         selectCurrentService.start();
+      });
+      updateDirectoryListService.setOnSucceeded(event -> filterListService.start());
+      updateDirectoryListService.start();
+   }
+
+   /**
+    * If there is a currently selected file, then update the GridView with
+    * the selection.
+    */
+   private class SelectCurrentService extends Service<Void> {
+
+      protected Task<Void> createTask() {
+         return new SelectTask();
+      }
+
+      private class SelectTask extends Task<Void> {
+         private final CountDownLatch latch = new CountDownLatch(1);
+
+         @Override
+         protected Void call() throws Exception {
+            Platform.runLater(() -> {
+               selectCurrent();
+
+               latch.countDown();
+            });
+
+            latch.await();
+
+            return null;
+         }
+      }
+   }
+
+   private void selectCurrent() {
+      final File currentSelection = callback.getCurrentSelection();
+      final List<DirectoryListItem> items = gridView.getItems();
+      IntStream.range(0, items.size())
+         .filter(i -> compareFilePaths(items.get(i).getFile(), currentSelection))
+         .findFirst()
+         .ifPresent(selectedCellIndex::setValue);
    }
 
    /**
@@ -175,51 +248,14 @@ class IconsFilesView extends AbstractFilesView {
     * Sort the existing view contents.
     */
    private void sort() {
-      setFiles(getFileStreamFromView());
+      if (gridView.getItems() instanceof SortedList) {
+         ((SortedList) gridView.getItems()).setComparator(new DirListItemComparator(callback.orderByProperty().get(), callback.orderDirectionProperty().get()));
+         selectCurrent();
+      }
    }
 
-   /**
-    * Sort the passed in Stream<File>
-    */
-   private Stream<File> sort(final Stream<File> fileStream) {
-      return fileStream.sorted(new FileMetaDataComparator(callback.orderByProperty().get(),
-           callback.orderDirectionProperty().get()));
-   }
-
-   /**
-    * Retrieve the files currently shown in view.
-    */
-   private Stream<File> getFileStreamFromView() {
-      // Copy the values out of the UI and into a temp list, so that the UI
-      // can be updated without stomping on the grabbed values.
-      final List<DirectoryListItem> items = new ArrayList<>(gridView.getItems());
-
-      return items.stream().map(DirectoryListItem::getFile);
-   }
-
-   /**
-    * If there is a currently selected file, then update the GridView with
-    * the selection.
-    */
-   private void selectCurrent() {
-      final File currentSelection = callback.getCurrentSelection();
-      final List<DirectoryListItem> items = gridView.getItems();
-      IntStream.range(0, items.size())
-            .filter(i -> compareFilePaths(items.get(i).getFile(), currentSelection))
-            .findFirst()
-            .ifPresent(selectedCellIndex::setValue);
-   }
-
-   public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
+   void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
       this.keyEventHandler = eventHandler;
-   }
-
-   private List<DirectoryListItem> getIcons(final Stream<File> fileStream) {
-      return fileStream.map(this::getDirListItem).collect(Collectors.toList());
-   }
-
-   private DirectoryListItem getDirListItem(final File file) {
-      return new DirectoryListItem(file, icons.getIconForFile(file));
    }
 
    private class IconGridCellContextMenuFactImpl implements IconGridCellContextMenuFactory {
@@ -229,12 +265,12 @@ class IconsFilesView extends AbstractFilesView {
 
          final File file = item.getFile();
          if (file.isDirectory()) {
-            return null;
+            return contextMenu;
          }
 
          final Class<? extends PreviewPane> previewPaneClass = PreviewPaneQuery.query(previewHandlers, file);
          if (previewPaneClass == null) {
-            return null;
+            return contextMenu;
          }
 
          final MenuItem imagePreviewItem = new MenuItem("Preview");

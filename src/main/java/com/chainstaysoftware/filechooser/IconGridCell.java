@@ -62,9 +62,11 @@ class IconGridCell extends GridCell<DirectoryListItem> {
          setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
          setUserData(item.getFile());
 
-         if (contextMenuFactory != null) {
-            setContextMenu(contextMenuFactory.create(item));
-         }
+         setOnContextMenuRequested(event -> {
+            if (contextMenuFactory != null) {
+               contextMenuFactory.create(item).show(this, event.getScreenX(), event.getScreenY());
+            }
+         });
       }
    }
 

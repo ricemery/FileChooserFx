@@ -2,6 +2,7 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.icons.IconsImpl;
+import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -10,14 +11,20 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 
 import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class DirectoryTreeItem extends TreeItem<File> {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.DirectoryTreeItem");
+
    private final FilesViewCallback callback;
    private final Icons icons;
    private final boolean isLeaf;
+   private final PopulateTreeItemRunnableFactory factory;
 
    // Hold onto graphic at this level instead of passing to super class.
    // This is to work around JDK issue - https://bugs.openjdk.java.net/browse/JDK-8156049.
@@ -25,20 +32,26 @@ class DirectoryTreeItem extends TreeItem<File> {
 
    private boolean directoryListLoaded = false;
 
-   public DirectoryTreeItem(final File value, final FilesViewCallback callback,
-                            final Icons icons) {
-      this(value, null, callback, icons);
+   DirectoryTreeItem(final File value,
+                     final Node graphic,
+                     final Icons icons,
+                     final boolean isLeaf) {
+      this(value, graphic, null, null, icons, isLeaf);
    }
 
-   public DirectoryTreeItem(final File value, final Node graphic,
-                            final FilesViewCallback callback,
-                            final Icons icons) {
+   DirectoryTreeItem(final File value,
+                     final Node graphic,
+                     final FilesViewCallback callback,
+                     final PopulateTreeItemRunnableFactory factory,
+                     final Icons icons,
+                     final boolean isLeaf) {
       super(value, null);
 
       this.callback = callback;
       this.icons = icons;
-      this.isLeaf = !value.isDirectory();
       this.graphic = graphic;
+      this.factory = factory;
+      this.isLeaf = isLeaf;
 
       expandedProperty().addListener(new ExpandedListener());
    }
@@ -50,6 +63,10 @@ class DirectoryTreeItem extends TreeItem<File> {
 
    @Override
    public ObservableList<TreeItem<File>> getChildren() {
+      if (isLeaf) {
+         return new ObservableListWrapper<>(Collections.emptyList());
+      }
+
       if (!directoryListLoaded) {
          loadChildren();
       }
@@ -60,27 +77,22 @@ class DirectoryTreeItem extends TreeItem<File> {
    private void loadChildren() {
       directoryListLoaded = true;
 
-      final Stream<File> fileStream = callback.getFileStream(getValue());
-      final List<TreeItem<File>> children = fileStream
-            .map(f -> {
-               final ImageView graphic = new ImageView(icons.getIconForFile(f));
-               graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
-               graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
-               graphic.setPreserveRatio(true);
+      try {
+         final DirectoryStream<Path> filteredStream = callback.getDirectoryStream(getValue());
+         final DirectoryStream<Path> unfilteredStream = callback.unfilteredDirectoryStream(getValue());
+         final Runnable runnable = factory.create(filteredStream, unfilteredStream, this);
+         runnable.run();
 
-               return f.isDirectory()
-                  ? new DirectoryTreeItem(f, graphic, callback, icons)
-                  : new TreeItem<>(f, graphic);
-            })
-            .collect(Collectors.toList());
-      getChildren().addAll(children);
+      } catch (IOException e) {
+         logger.log(Level.WARNING, "Error loading directory children.", e);
+      }
    }
 
-   public Node getGraphic2() {
+   Node getGraphic2() {
       return graphic;
    }
 
-   public void setGraphic2(Node graphic) {
+   void setGraphic2(final Node graphic) {
       this.graphic = graphic;
    }
 

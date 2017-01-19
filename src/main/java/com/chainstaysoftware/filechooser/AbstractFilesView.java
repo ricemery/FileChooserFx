@@ -79,7 +79,7 @@ abstract class AbstractFilesView implements FilesView {
       return StringUtils.abbreviateMiddle(file.getPath(), "...", maxLength);
    }
 
-   protected boolean compareFilePaths(final File f1, final File f2) {
+   boolean compareFilePaths(final File f1, final File f2) {
       if (f1 == null || f2 == null) {
          return false;
       }

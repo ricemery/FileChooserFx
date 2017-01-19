@@ -7,6 +7,7 @@ import javafx.scene.image.ImageView;
 import javafx.util.Callback;
 
 import javax.swing.filechooser.FileSystemView;
+import java.io.File;
 
 /**
  * CellFactory for {@link DirectoryListItem#getFile()} value.
@@ -15,14 +16,18 @@ class DirListNameColumnCellFactory
       implements Callback<TableColumn<DirectoryListItem, DirectoryListItem>, TableCell<DirectoryListItem, DirectoryListItem>> {
 
    private final boolean nameOnly;
+   private final FilesViewCallback callback;
 
    /**
     * Constructor
     * @param nameOnly Indicates if the cell text should include the file.getPath() value
     *                 or file.getName()
+    * @param callback {@link FilesViewCallback}
     */
-   DirListNameColumnCellFactory(final boolean nameOnly) {
+   DirListNameColumnCellFactory(final boolean nameOnly,
+                                final FilesViewCallback callback) {
       this.nameOnly = nameOnly;
+      this.callback = callback;
    }
 
    @Override
@@ -35,6 +40,7 @@ class DirListNameColumnCellFactory
             if (empty || item == null) {
                setText(null);
                setGraphic(null);
+               setOnMouseClicked(null);
             } else {
                if (nameOnly) {
                   final String systemDisplayName = FileSystemView.getFileSystemView().getSystemDisplayName(item.getFile());
@@ -48,6 +54,19 @@ class DirListNameColumnCellFactory
                graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
                graphic.setPreserveRatio(true);
                setGraphic(graphic);
+
+               setOnMouseClicked(event -> {
+                  final File file = item.getFile();
+                  if (event.getClickCount() < 2) {
+                     return;
+                  }
+
+                  if (file.isDirectory()) {
+                     callback.requestChangeDirectory(file);
+                  } else {
+                     callback.fireDoneButton();
+                  }
+               });
             }
          }
       };

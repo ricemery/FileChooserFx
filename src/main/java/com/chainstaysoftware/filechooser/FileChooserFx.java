@@ -104,6 +104,12 @@ public interface FileChooserFx {
 
    BooleanProperty showHiddenFilesProperty();
 
+   void setShouldHideFiles(boolean value);
+
+   boolean shouldHideFiles();
+
+   BooleanProperty shouldHideFilesProperty();
+
    /**
     * Set the sort field.
     */

@@ -1,14 +1,16 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
-import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
@@ -19,7 +21,6 @@ import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
@@ -27,6 +28,8 @@ import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -36,8 +39,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 
 class ListFilesView extends AbstractFilesView {
    private static final int DATE_MODIFIED_COL_PREF_WIDTH = 175;
@@ -129,10 +132,10 @@ class ListFilesView extends AbstractFilesView {
          protected void updateItem(String item, boolean empty) {
             super.updateItem(item, empty);
 
-            if (empty) {
-               setText("");
-               setGraphic(null);
-            } else {
+            setText("");
+            setGraphic(null);
+
+            if (!empty) {
                // This is a hack to work around JDK bug - https://bugs.openjdk.java.net/browse/JDK-8156049 .
                final TreeTableRow row = getTreeTableRow();
                if (row != null && row.getTreeItem() != null) {
@@ -144,7 +147,7 @@ class ListFilesView extends AbstractFilesView {
                   }
                }
 
-               setText(item.toString());
+               setText(item);
             }
          }
       });
@@ -241,26 +244,63 @@ class ListFilesView extends AbstractFilesView {
       return filesTreeView;
    }
 
+   /**
+    * sets the files on the view.
+    * @param directoryStream Filtered stream of files to show in view.
+    * @param remainingDirectoryStream This stream contains the files not to
+    *                                 show in the view. But, may include
+    *                                 directories that should be shown in the
+    *                                 view but were filtered out in the directoryStream.
+    */
    @Override
-   public void setFiles(final Stream<File> fileStream) {
+   public void setFiles(final DirectoryStream<Path> directoryStream,
+                        final DirectoryStream<Path> remainingDirectoryStream) {
       saveSortOrder();
 
       final TreeItem<File> rootItem = new TreeItem<>();
-      rootItem.getChildren().addAll(fileStream
-            .map(f -> {
-               final ImageView graphic = new ImageView(icons.getIconForFile(f));
-               graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
-               graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
-               graphic.setPreserveRatio(true);
-               return new DirectoryTreeItem(f, graphic, callback, icons);
-            })
-            .collect(Collectors.toList()));
-
       filesTreeView.setRoot(rootItem);
 
-      restoreSortOrder();
+      new PopulateTreeItemRunnable(directoryStream, remainingDirectoryStream, rootItem).run();
+   }
 
-      selectCurrent();
+   private class PopulateTreeItemRunnable implements Runnable {
+      private final DirectoryStream<Path> directoryStream;
+      private final DirectoryStream<Path> unfilteredDirectoryStream;
+      private final TreeItem<File> parentItem;
+
+      PopulateTreeItemRunnable(final DirectoryStream<Path> directoryStream,
+                               final DirectoryStream<Path> unfilteredDirectoryStream,
+                               final TreeItem<File> parentItem) {
+         this.directoryStream = directoryStream;
+         this.unfilteredDirectoryStream = unfilteredDirectoryStream;
+         this.parentItem = parentItem;
+      }
+
+      @Override
+      public void run() {
+         final List<TreeItem<File>> directoryTreeItems = parentItem.getChildren();
+
+         // Update the TreeView from Services so that the UI is not blocked on OS calls.
+         final UpdateIconsTree updateIconsTreeService = new UpdateIconsTree(directoryTreeItems, callback, new PopulateFactory(), icons);
+         final UpdateDirectoryTree updateDirectoryTreeService = new UpdateDirectoryTree(directoryStream, unfilteredDirectoryStream, directoryTreeItems, icons);
+         final Predicate<File> shouldHideFile
+            = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
+         final FilterHiddenFromDirTree filterTreeService = new FilterHiddenFromDirTree(directoryTreeItems, shouldHideFile);
+         final SelectCurrentService selectCurrentService = new SelectCurrentService();
+         filterTreeService.setOnSucceeded(event -> updateIconsTreeService.start());
+         updateIconsTreeService.setOnSucceeded(event ->  selectCurrentService.start());
+         updateDirectoryTreeService.setOnSucceeded(event -> filterTreeService.start());
+         updateDirectoryTreeService.start();
+      }
+   }
+
+   private class PopulateFactory implements PopulateTreeItemRunnableFactory {
+      @Override
+      public Runnable create(final DirectoryStream<Path> directoryStream,
+                             final DirectoryStream<Path> unfilteredDirectoryStream,
+                             final TreeItem<File> parentItem) {
+         return new PopulateTreeItemRunnable(directoryStream, unfilteredDirectoryStream, parentItem);
+      }
    }
 
    /**
@@ -288,19 +328,44 @@ class ListFilesView extends AbstractFilesView {
    }
 
    /**
-    * If there is a currently selected file, then update the TreeView with
+    * If there is a currently selected file, then update the GridView with
     * the selection.
     */
-   private void selectCurrent() {
-      final File currentSelectedFile = callback.getCurrentSelection();
-      filesTreeView.getRoot().getChildren()
-            .stream()
-            .filter(item -> compareFilePaths(item.getValue(), currentSelectedFile))
-            .findFirst()
-            .ifPresent(item -> filesTreeView.getSelectionModel().select(item));
+   private class SelectCurrentService extends Service<Void> {
+
+      private final CountDownLatch latch = new CountDownLatch(1);
+
+      protected Task<Void> createTask() {
+         return new SelectTask();
+      }
+
+      private class SelectTask extends Task<Void> {
+         @Override
+         protected Void call() throws Exception {
+            Platform.runLater(() -> {
+               restoreSortOrder();
+
+               final File currentSelectedFile = callback.getCurrentSelection();
+               filesTreeView.getRoot().getChildren()
+                  .stream()
+                  .filter(item -> compareFilePaths(item.getValue(), currentSelectedFile))
+                  .findFirst()
+                  .ifPresent(item -> filesTreeView.getSelectionModel().select(item));
+
+
+               filesTreeView.refresh();
+
+               latch.countDown();
+            });
+
+            latch.await();
+
+            return null;
+         }
+      }
    }
 
-   public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
+   void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
       this.keyEventHandler = eventHandler;
    }
 

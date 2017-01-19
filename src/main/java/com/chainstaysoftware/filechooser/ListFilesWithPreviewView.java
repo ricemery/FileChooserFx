@@ -2,9 +2,16 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
+import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -19,18 +26,19 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 
 /**
  * View files as list along with preview of file.
  */
 class ListFilesWithPreviewView extends AbstractFilesView {
-   private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final TableView<DirectoryListItem> tableView = new TableView<>();
    private final SplitPane splitPane;
    private final HBox previewHbox;
@@ -42,11 +50,11 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    private EventHandler<? super KeyEvent> keyEventHandler;
    private final TableColumn<DirectoryListItem, DirectoryListItem> nameColumn;
 
-   public ListFilesWithPreviewView(final Stage parent,
-                                   final Map<String, Class<? extends PreviewPane>> previewHandlers,
-                                   final Icons icons,
-                                   final double dividerPosition,
-                                   final FilesViewCallback callback) {
+   ListFilesWithPreviewView(final Stage parent,
+                            final Map<String, Class<? extends PreviewPane>> previewHandlers,
+                            final Icons icons,
+                            final double dividerPosition,
+                            final FilesViewCallback callback) {
       super(parent);
 
       propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers, icons);
@@ -58,9 +66,10 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       previewHbox.setAlignment(Pos.CENTER);
       previewHbox.setMinSize(0, 0);
 
+      final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
       nameColumn = new TableColumn<>(resourceBundle.getString("listfilesview.name"));
       nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-      nameColumn.setCellFactory(new DirListNameColumnCellFactory(true));
+      nameColumn.setCellFactory(new DirListNameColumnCellFactory(true, callback));
       nameColumn.prefWidthProperty().bind(tableView.widthProperty());
       nameColumn.setComparator((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getFile().getName(), o2.getFile().getName()));
       nameColumn.setSortType(orderDirectionToSortType(callback.orderDirectionProperty().get()));
@@ -68,22 +77,6 @@ class ListFilesWithPreviewView extends AbstractFilesView {
          callback.orderDirectionProperty().set(sortTypeToOrderDirection(newValue)));
 
       tableView.getColumns().addAll(nameColumn);
-      tableView.setOnMouseClicked(event -> {
-         if (tableView.getSelectionModel().getSelectedItem() == null) {
-            return;
-         }
-
-         final File file = tableView.getSelectionModel().getSelectedItem().getFile();
-         if (event.getClickCount() < 2) {
-            return;
-         }
-
-         if (file.isDirectory()) {
-            callback.requestChangeDirectory(file);
-         } else {
-            callback.fireDoneButton();
-         }
-      });
       tableView.setOnKeyPressed(new KeyPressedHandler());
       tableView.getSelectionModel().selectedItemProperty().addListener(new SelectedItemChanged());
       tableView.setPlaceholder(new Label(""));
@@ -101,17 +94,38 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       return splitPane;
    }
 
+   /**
+    * sets the files on the view.
+    * @param directoryStream Filtered stream of files to show in view.
+    * @param remainingDirectoryStream This stream contains the files not to
+    *                                 show in the view. But, may include
+    *                                 directories that should be shown in the
+    *                                 view but were filtered out in the directoryStream.
+    */
    @Override
-   public void setFiles(final Stream<File> fileStream) {
+   public void setFiles(final DirectoryStream<Path> directoryStream,
+                        final DirectoryStream<Path> remainingDirectoryStream) {
       saveSortOrder();
 
-      tableView.getItems().setAll(fileStream
-            .map(f -> new DirectoryListItem(f, icons.getIconForFile(f)))
-            .collect(Collectors.toList()));
+      final ObservableList<DirectoryListItem> directoryListItems
+         = FXCollections.synchronizedObservableList(new ObservableListWrapper<>(new LinkedList<>()));
+      final SortedList<DirectoryListItem> items = directoryListItems.sorted();
+      items.comparatorProperty().bind(tableView.comparatorProperty());
+      tableView.setItems(items);
 
-      restoreSortOrder();
-
-      selectCurrent();
+      // Update the TableView from Services so that the UI is not blocked on OS calls.
+      final UpdateIconsList updateIconsListListService = new UpdateIconsList(directoryListItems, icons);
+      final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream, directoryListItems, icons);
+      final Predicate<File> shouldHideFile
+         = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
+      final FilterHiddenFromDirList filterListService = new FilterHiddenFromDirList(directoryListItems, shouldHideFile);
+      final SelectCurrentService selectCurrentService = new SelectCurrentService();
+      filterListService.setOnSucceeded(event -> {
+         updateIconsListListService.start();
+         selectCurrentService.start();
+      });
+      updateDirectoryListService.setOnSucceeded(event -> filterListService.start());
+      updateDirectoryListService.start();
    }
 
    /**
@@ -142,15 +156,36 @@ class ListFilesWithPreviewView extends AbstractFilesView {
     * If there is a currently selected file, then update the TableView with
     * the selection.
     */
-   private void selectCurrent() {
-      final File currentSelectedFile = callback.getCurrentSelection();
-      tableView.getItems()
-            .stream()
-            .filter(item -> compareFilePaths(item.getFile(), currentSelectedFile))
-            .findFirst()
-            .ifPresent(item -> tableView.getSelectionModel().select(item));
-   }
+   private class SelectCurrentService extends Service<Void> {
 
+      protected Task<Void> createTask() {
+         return new SelectTask();
+      }
+
+      private class SelectTask extends Task<Void> {
+         private final CountDownLatch latch = new CountDownLatch(1);
+
+         @Override
+         protected Void call() throws Exception {
+            Platform.runLater(() -> {
+               restoreSortOrder();
+
+               final File currentSelectedFile = callback.getCurrentSelection();
+               tableView.getItems()
+                  .stream()
+                  .filter(item -> compareFilePaths(item.getFile(), currentSelectedFile))
+                  .findFirst()
+                  .ifPresent(item -> tableView.getSelectionModel().select(item));
+
+               latch.countDown();
+            });
+
+            latch.await();
+
+            return null;
+         }
+      }
+   }
 
    /**
     * Map {@link OrderDirection} to {@link javafx.scene.control.TableColumn.SortType}
@@ -170,11 +205,11 @@ class ListFilesWithPreviewView extends AbstractFilesView {
             : OrderDirection.Ascending;
    }
 
-   public void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
+   void setOnKeyPressed(final EventHandler<? super KeyEvent> eventHandler) {
       this.keyEventHandler = eventHandler;
    }
 
-   public double getDividerPosition() {
+   double getDividerPosition() {
       return splitPane.getDividerPositions()[0];
    }
 
