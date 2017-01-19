@@ -163,15 +163,6 @@ class IconsFilesView extends AbstractFilesView {
    /**
     * Sort the existing view contents.
     */
-   private void sort(final OrderBy orderBy) {
-      callback.orderByProperty().set(orderBy);
-
-      sort();
-   }
-
-   /**
-    * Sort the existing view contents.
-    */
    private void sort() {
       if (gridView.getItems() instanceof SortedList) {
          ((SortedList) gridView.getItems()).setComparator(new DirListItemComparator(callback.orderByProperty().get(), callback.orderDirectionProperty().get()));
@@ -273,6 +264,15 @@ class IconsFilesView extends AbstractFilesView {
          contextMenu.getItems().addAll(sortOrderMenu);
 
          return contextMenu;
+      }
+
+      /**
+       * Sort the existing view contents.
+       */
+      private void sort(final OrderBy orderBy) {
+         callback.orderByProperty().set(orderBy);
+
+         IconsFilesView.this.sort();
       }
    }
 

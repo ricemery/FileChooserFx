@@ -351,16 +351,15 @@ class ListFilesView extends AbstractFilesView {
 
             return null;
          }
-      }
 
-
-      /**
-       * Reapply the sort order of the filesTreeView
-       */
-      private void restoreSortOrder() {
-         filesTreeView.getSortOrder().clear();
-         filesTreeView.getSortOrder().addAll(sortOrder);
-         sortOrder.get(0).setSortable(true); // This performs a sort
+         /**
+          * Reapply the sort order of the filesTreeView
+          */
+         private void restoreSortOrder() {
+            filesTreeView.getSortOrder().clear();
+            filesTreeView.getSortOrder().addAll(sortOrder);
+            sortOrder.get(0).setSortable(true); // This performs a sort
+         }
       }
    }
 
