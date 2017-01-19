@@ -42,23 +42,39 @@ class UpdateIconsList extends Service<Void> {
       }
 
       private void updateIcons() {
-         final List<DirectoryListItem> temp = new LinkedList<>();
-         temp.addAll(itemList);
+         final List<DirectoryListItem> itemsToUpdate = new LinkedList<>();
 
-         for (DirectoryListItem item: temp) {
+         for (DirectoryListItem item: itemList) {
             if (isCancelled()) {
                return;
             }
 
             if (item.getFile().isDirectory()) {
-               Platform.runLater(() -> {
-                  itemList.remove(item);
-                  itemList.add(new DirectoryListItem(item.getFile(), icons.getIcon(IconsImpl.FOLDER_64)));
-               });
+               itemsToUpdate.add(item);
+
+               if (shouldSchedule(itemsToUpdate)) {
+                  scheduleJavaFx(itemsToUpdate);
+                  itemsToUpdate.clear();
+               }
             }
          }
 
+         scheduleJavaFx(itemsToUpdate);
          Platform.runLater(latch::countDown);
+      }
+
+      private boolean shouldSchedule(final List<DirectoryListItem> itemsToUpdate) {
+         return itemsToUpdate.size() % 100 == 0;
+      }
+
+      private void scheduleJavaFx(final List<DirectoryListItem> itemsToUpdate) {
+         final List<DirectoryListItem> temp = new LinkedList<>();
+         temp.addAll(itemsToUpdate);
+
+         Platform.runLater(() -> temp.forEach(item -> {
+            itemList.remove(item);
+            itemList.add(new DirectoryListItem(item.getFile(), icons.getIcon(IconsImpl.FOLDER_64)));
+         }));
       }
    }
 }

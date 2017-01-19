@@ -55,30 +55,46 @@ class UpdateIconsTree extends Service<Void> {
       }
 
       private void updateIcons() {
-         final List<TreeItem<File>> temp = new LinkedList<>();
-         temp.addAll(itemList);
+         final List<TreeItem<File>> itemsToUpdate = new LinkedList<>();
 
-         for (TreeItem<File> item: temp) {
+         for (TreeItem<File> item: itemList) {
             if (isCancelled()) {
                return;
             }
 
             final File file = item.getValue();
             if (file.isDirectory()) {
-               Platform.runLater(() -> {
-                  itemList.remove(item);
+               itemsToUpdate.add(item);
 
-                  final ImageView graphic = new ImageView(icons.getIcon(IconsImpl.FOLDER_64));
-                  graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
-                  graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
-                  graphic.setPreserveRatio(true);
-
-                  itemList.add(new DirectoryTreeItem(file, graphic, callback, factory, icons, false));
-               });
+               if (shouldSchedule(itemsToUpdate)) {
+                  scheduleJavaFx(itemsToUpdate);
+                  itemsToUpdate.clear();
+               }
             }
          }
 
+         scheduleJavaFx(itemsToUpdate);
          Platform.runLater(latch::countDown);
+      }
+
+      private boolean shouldSchedule(final List<TreeItem<File>> itemsToUpdate) {
+         return itemsToUpdate.size() % 100 == 0;
+      }
+
+      private void scheduleJavaFx(final List<TreeItem<File>> itemsToUpdate) {
+         final List<TreeItem<File>> temp = new LinkedList<>();
+         temp.addAll(itemsToUpdate);
+
+         Platform.runLater(() -> temp.forEach(item -> {
+            itemList.remove(item);
+
+            final ImageView graphic = new ImageView(icons.getIcon(IconsImpl.FOLDER_64));
+            graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
+            graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
+            graphic.setPreserveRatio(true);
+
+            itemList.add(new DirectoryTreeItem(item.getValue(), graphic, callback, factory, icons, false));
+         }));
       }
    }
 }

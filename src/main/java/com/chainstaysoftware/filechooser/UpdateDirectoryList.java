@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
@@ -55,52 +56,56 @@ class UpdateDirectoryList extends Service<Void> {
    private class UpdateListTask extends Task<Void> {
       @Override
       protected Void call() throws Exception {
-         updateFiltered();
+         update(dirStream, false);
          if (isCancelled()) {
             return null;
          }
 
-         updateUnfiltered();
+         update(unfilteredDirStream, true);
+
+         Platform.runLater(latch::countDown);
 
          latch.await();
 
          return null;
       }
 
-      private void updateFiltered()  {
+      private void update(final DirectoryStream<Path> directoryStream,
+                          final boolean dirOnly)  {
+         final List<DirectoryListItem> itemsToAdd = new LinkedList<>();
+
          try {
-            for (Path path: dirStream) {
+            for (Path path: directoryStream) {
                if (isCancelled()) {
                   return;
                }
 
-               final DirectoryListItem dirListItem = getDirListItem(path.toFile());
-               Platform.runLater(() -> itemList.add(dirListItem));
+               if (!dirOnly || path.toFile().isDirectory()) {
+                  final DirectoryListItem dirListItem = getDirListItem(path.toFile());
+                  itemsToAdd.add(dirListItem);
+
+                  if (shouldSchedule(itemsToAdd)) {
+                     scheduleJavaFx(itemsToAdd);
+                     itemsToAdd.clear();
+                  }
+               }
             }
+
+            scheduleJavaFx(itemsToAdd);
          } finally {
             closeStream(dirStream);
          }
       }
 
-      private void updateUnfiltered() {
-         try {
-            for (Path path: unfilteredDirStream) {
-               if (isCancelled()) {
-                  return;
-               }
+      private boolean shouldSchedule(final List<DirectoryListItem> itemsToUpdate) {
+         return itemsToUpdate.size() % 100 == 0;
+      }
 
-               final File file = path.toFile();
-               if (file.isDirectory()) {
-                  // Hard code icon to directory.
-                  final DirectoryListItem dirListItem = getDirListItem(path.toFile());
-                  Platform.runLater(() -> itemList.add(dirListItem));
-               }
-            }
+      private void scheduleJavaFx(final List<DirectoryListItem> itemsToUpdate) {
+         final List<DirectoryListItem> temp = new LinkedList<>();
+         temp.addAll(itemsToUpdate);
 
-            Platform.runLater(latch::countDown);
-         } finally {
-            closeStream(unfilteredDirStream);
-         }
+         Platform.runLater(() -> itemList.addAll(temp));
       }
 
       private DirectoryListItem getDirListItem(final File file) {

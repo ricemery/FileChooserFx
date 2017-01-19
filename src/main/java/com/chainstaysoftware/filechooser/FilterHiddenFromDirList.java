@@ -43,20 +43,36 @@ class FilterHiddenFromDirList extends Service<Void> {
 
       // Move filter and icon update to another thread.
       private void filterHidden() {
-         final List<DirectoryListItem> temp = new LinkedList<>();
-         temp.addAll(itemList);
+         final List<DirectoryListItem> filterItems = new LinkedList<>();
 
-         for (DirectoryListItem item : temp) {
+         for (DirectoryListItem item : itemList) {
             if (isCancelled()) {
                return;
             }
 
             if (!shouldHideFile.test(item.getFile())) {
-               Platform.runLater(() -> itemList.remove(item));
+               filterItems.add(item);
+
+               if (shouldSchedule(filterItems)) {
+                  scheduleJavaFx(filterItems);
+                  filterItems.clear();
+               }
             }
          }
 
+         scheduleJavaFx(filterItems);
          Platform.runLater(latch::countDown);
+      }
+
+      private boolean shouldSchedule(final List<DirectoryListItem> items) {
+         return items.size() % 100 == 0;
+      }
+
+      private void scheduleJavaFx(final List<DirectoryListItem> items) {
+         final List<DirectoryListItem> temp = new LinkedList<>();
+         temp.addAll(items);
+
+         Platform.runLater(() -> temp.forEach(itemList::remove));
       }
    }
 }
