@@ -139,6 +139,10 @@ class IconsFilesView extends AbstractFilesView {
          @Override
          protected Void call() throws Exception {
             Platform.runLater(() -> {
+               // HACK!! Force repaint of GridView. The GridView was
+               // not repainting when file filter was changed on a huge directory.
+               ((GridViewSkin)gridView.getSkin()).updateGridViewItems();
+
                selectCurrent();
 
                latch.countDown();
