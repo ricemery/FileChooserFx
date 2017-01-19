@@ -103,6 +103,10 @@ class UpdateDirectoryList extends Service<Void> {
          }
       }
 
+      private DirectoryListItem getDirListItem(final File file) {
+         return new DirectoryListItem(file, icons.getIconForFile(file));
+      }
+
       private void closeStream(final DirectoryStream<Path> directoryStream) {
          try {
             directoryStream.close();
@@ -110,9 +114,5 @@ class UpdateDirectoryList extends Service<Void> {
             logger.log(Level.WARNING, "Error closing directory stream", e);
          }
       }
-   }
-
-   private DirectoryListItem getDirListItem(final File file) {
-      return new DirectoryListItem(file, icons.getIconForFile(file));
    }
 }

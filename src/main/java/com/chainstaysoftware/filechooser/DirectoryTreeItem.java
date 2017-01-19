@@ -2,9 +2,9 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.icons.IconsImpl;
-import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
@@ -14,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -64,7 +63,7 @@ class DirectoryTreeItem extends TreeItem<File> {
    @Override
    public ObservableList<TreeItem<File>> getChildren() {
       if (isLeaf) {
-         return new ObservableListWrapper<>(Collections.emptyList());
+         return FXCollections.observableArrayList();
       }
 
       if (!directoryListLoaded) {

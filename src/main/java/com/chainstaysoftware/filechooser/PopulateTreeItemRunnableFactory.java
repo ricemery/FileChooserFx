@@ -6,6 +6,7 @@ import java.io.File;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 
+@FunctionalInterface
 public interface PopulateTreeItemRunnableFactory {
    Runnable create(DirectoryStream<Path> directoryStream,
                    DirectoryStream<Path> unfilteredDirectoryStream,

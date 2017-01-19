@@ -2,7 +2,6 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
-import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -107,8 +106,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
                         final DirectoryStream<Path> remainingDirectoryStream) {
       saveSortOrder();
 
-      final ObservableList<DirectoryListItem> directoryListItems
-         = FXCollections.synchronizedObservableList(new ObservableListWrapper<>(new LinkedList<>()));
+      final ObservableList<DirectoryListItem> directoryListItems = FXCollections.observableArrayList();
       final SortedList<DirectoryListItem> items = directoryListItems.sorted();
       items.comparatorProperty().bind(tableView.comparatorProperty());
       tableView.setItems(items);
@@ -138,17 +136,6 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
          // Only name sort is supported.
          callback.orderByProperty().setValue(OrderBy.Name);
-      }
-   }
-
-   /**
-    * Reapply the sort order of the filesTreeView
-    */
-   private void restoreSortOrder() {
-      if (sortOrder != null) {
-         tableView.getSortOrder().clear();
-         tableView.getSortOrder().addAll(sortOrder);
-         sortOrder.get(0).setSortable(true); // This performs a sort
       }
    }
 
@@ -183,6 +170,17 @@ class ListFilesWithPreviewView extends AbstractFilesView {
             latch.await();
 
             return null;
+         }
+
+         /**
+          * Reapply the sort order of the filesTreeView
+          */
+         private void restoreSortOrder() {
+            if (sortOrder != null) {
+               tableView.getSortOrder().clear();
+               tableView.getSortOrder().addAll(sortOrder);
+               sortOrder.get(0).setSortable(true); // This performs a sort
+            }
          }
       }
    }

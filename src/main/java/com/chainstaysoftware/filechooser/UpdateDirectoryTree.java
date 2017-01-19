@@ -107,6 +107,17 @@ class UpdateDirectoryTree extends Service<Void> {
          }
       }
 
+      private TreeItem<File> getTreeItem(final File file) {
+         final ImageView graphic = new ImageView(icons.getIconForFile(file));
+         graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
+         graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
+         graphic.setPreserveRatio(true);
+
+         // Assume for now, that this is a leaf node. If the file is a directory, the TreeItem will
+         // be replaced later in the UpdateIconsTree service.
+         return new DirectoryTreeItem(file, graphic, icons, true);
+      }
+
       private void closeStream(final DirectoryStream<Path> directoryStream) {
          try {
             directoryStream.close();
@@ -114,16 +125,5 @@ class UpdateDirectoryTree extends Service<Void> {
             logger.log(Level.WARNING, "Error closing directory stream", e);
          }
       }
-   }
-
-   private TreeItem<File> getTreeItem(final File file) {
-      final ImageView graphic = new ImageView(icons.getIconForFile(file));
-      graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
-      graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
-      graphic.setPreserveRatio(true);
-
-      // Assume for now, that this is a leaf node. If the file is a directory, the TreeItem will
-      // be replaced later in the UpdateIconsTree service.
-      return new DirectoryTreeItem(file, graphic, icons, true);
    }
 }

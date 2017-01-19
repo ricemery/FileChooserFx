@@ -3,7 +3,6 @@ package com.chainstaysoftware.filechooser;
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
-import com.sun.javafx.collections.ObservableListWrapper;
 import impl.org.controlsfx.skin.GridViewSkin;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
@@ -32,18 +31,14 @@ import org.controlsfx.control.GridView;
 import java.io.File;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 class IconsFilesView extends AbstractFilesView {
-   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.IconsFilesView");
-
    private static final int NOT_SELECTED = -1;
 
    // Width and Height of Icon and Filename Cell.
@@ -82,78 +77,9 @@ class IconsFilesView extends AbstractFilesView {
       gridView.setCellWidth(CELL_WIDTH);
       gridView.setOnMouseClicked(new MouseClickHandler());
       gridView.setOnKeyPressed(new KeyClickHandler());
-      //gridView.setContextMenu(createContextMenu());
    }
 
-   private ContextMenu createContextMenu() {
-      final OrderBy initialOrderBy = callback.orderByProperty().get();
-      final OrderDirection initialDirection = callback.orderDirectionProperty().get();
 
-      final ToggleGroup toggleGroup = new ToggleGroup();
-
-      final RadioMenuItem nameItem = new RadioMenuItem();
-      nameItem.setId("nameMenuItem");
-      nameItem.setText(resourceBundle.getString("iconsview.context.name"));
-      nameItem.setToggleGroup(toggleGroup);
-      nameItem.onActionProperty().setValue(event -> sort(OrderBy.Name));
-      if (OrderBy.Name.equals(initialOrderBy)) {
-         nameItem.setSelected(true);
-      }
-
-      final RadioMenuItem sizeItem = new RadioMenuItem();
-      sizeItem.setId("sizeMenuItem");
-      sizeItem.setText(resourceBundle.getString("iconsview.context.size"));
-      sizeItem.setToggleGroup(toggleGroup);
-      sizeItem.onActionProperty().setValue(event -> sort(OrderBy.Size));
-      if (OrderBy.Size.equals(initialOrderBy)) {
-         sizeItem.setSelected(true);
-      }
-
-      final RadioMenuItem typeItem = new RadioMenuItem();
-      typeItem.setId("typeMenuItem");
-      typeItem.setText(resourceBundle.getString("iconsview.context.type"));
-      typeItem.setToggleGroup(toggleGroup);
-      typeItem.onActionProperty().setValue(event -> sort(OrderBy.Type));
-      if (OrderBy.Type.equals(initialOrderBy)) {
-         typeItem.setSelected(true);
-      }
-
-      final RadioMenuItem dateItem = new RadioMenuItem();
-      dateItem.setId("dateMenuItem");
-      dateItem.setText(resourceBundle.getString("iconsview.context.modificationdate"));
-      dateItem.setToggleGroup(toggleGroup);
-      dateItem.onActionProperty().setValue(event -> sort(OrderBy.ModificationDate));
-      if (OrderBy.ModificationDate.equals(initialOrderBy)) {
-         dateItem.setSelected(true);
-      }
-
-      final CheckMenuItem reverseOrder = new CheckMenuItem();
-      reverseOrder.setId("reverserOrderItem");
-      reverseOrder.setText(resourceBundle.getString("iconsview.context.reverseorder"));
-      reverseOrder.selectedProperty().addListener((observable, oldValue, newValue) -> {
-         if (disableListeners) {
-            return;
-         }
-
-         callback.orderDirectionProperty().setValue(newValue ? OrderDirection.Descending : OrderDirection.Ascending);
-         sort(callback.orderByProperty().get());
-      });
-
-      disableListeners = true;
-      reverseOrder.setSelected(OrderDirection.Descending.equals(initialDirection));
-      disableListeners = false;
-
-      final Menu sortOrderMenu = new Menu();
-      sortOrderMenu.setId("sortOrderMenu");
-      sortOrderMenu.setText(resourceBundle.getString("iconsview.context.arrangeby"));
-      sortOrderMenu.getItems().addAll(nameItem, sizeItem, typeItem, dateItem,
-            new SeparatorMenuItem(), reverseOrder);
-
-      final ContextMenu contextMenu = new ContextMenu();
-      contextMenu.getItems().addAll(sortOrderMenu);
-
-      return contextMenu;
-   }
 
    @Override
    public Node getNode() {
@@ -175,8 +101,7 @@ class IconsFilesView extends AbstractFilesView {
 
       // Disable event listeners in gridView while being updated programmatically
       disableListeners = true;
-      final ObservableList<DirectoryListItem> directoryListItems
-         = FXCollections.synchronizedObservableList(new ObservableListWrapper<>(new LinkedList<>()));
+      final ObservableList<DirectoryListItem> directoryListItems = FXCollections.observableArrayList();
       final SortedList<DirectoryListItem> items
          = directoryListItems.sorted(new DirListItemComparator(callback.orderByProperty().get(),
             callback.orderDirectionProperty().get()));
@@ -277,6 +202,76 @@ class IconsFilesView extends AbstractFilesView {
          imagePreviewItem.setOnAction(v -> showPreview(previewPaneClass, file));
 
          contextMenu.getItems().addAll(new SeparatorMenuItem(), imagePreviewItem);
+         return contextMenu;
+      }
+
+      private ContextMenu createContextMenu() {
+         final OrderBy initialOrderBy = callback.orderByProperty().get();
+         final OrderDirection initialDirection = callback.orderDirectionProperty().get();
+
+         final ToggleGroup toggleGroup = new ToggleGroup();
+
+         final RadioMenuItem nameItem = new RadioMenuItem();
+         nameItem.setId("nameMenuItem");
+         nameItem.setText(resourceBundle.getString("iconsview.context.name"));
+         nameItem.setToggleGroup(toggleGroup);
+         nameItem.onActionProperty().setValue(event -> sort(OrderBy.Name));
+         if (OrderBy.Name.equals(initialOrderBy)) {
+            nameItem.setSelected(true);
+         }
+
+         final RadioMenuItem sizeItem = new RadioMenuItem();
+         sizeItem.setId("sizeMenuItem");
+         sizeItem.setText(resourceBundle.getString("iconsview.context.size"));
+         sizeItem.setToggleGroup(toggleGroup);
+         sizeItem.onActionProperty().setValue(event -> sort(OrderBy.Size));
+         if (OrderBy.Size.equals(initialOrderBy)) {
+            sizeItem.setSelected(true);
+         }
+
+         final RadioMenuItem typeItem = new RadioMenuItem();
+         typeItem.setId("typeMenuItem");
+         typeItem.setText(resourceBundle.getString("iconsview.context.type"));
+         typeItem.setToggleGroup(toggleGroup);
+         typeItem.onActionProperty().setValue(event -> sort(OrderBy.Type));
+         if (OrderBy.Type.equals(initialOrderBy)) {
+            typeItem.setSelected(true);
+         }
+
+         final RadioMenuItem dateItem = new RadioMenuItem();
+         dateItem.setId("dateMenuItem");
+         dateItem.setText(resourceBundle.getString("iconsview.context.modificationdate"));
+         dateItem.setToggleGroup(toggleGroup);
+         dateItem.onActionProperty().setValue(event -> sort(OrderBy.ModificationDate));
+         if (OrderBy.ModificationDate.equals(initialOrderBy)) {
+            dateItem.setSelected(true);
+         }
+
+         final CheckMenuItem reverseOrder = new CheckMenuItem();
+         reverseOrder.setId("reverserOrderItem");
+         reverseOrder.setText(resourceBundle.getString("iconsview.context.reverseorder"));
+         reverseOrder.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (disableListeners) {
+               return;
+            }
+
+            callback.orderDirectionProperty().setValue(newValue ? OrderDirection.Descending : OrderDirection.Ascending);
+            sort(callback.orderByProperty().get());
+         });
+
+         disableListeners = true;
+         reverseOrder.setSelected(OrderDirection.Descending.equals(initialDirection));
+         disableListeners = false;
+
+         final Menu sortOrderMenu = new Menu();
+         sortOrderMenu.setId("sortOrderMenu");
+         sortOrderMenu.setText(resourceBundle.getString("iconsview.context.arrangeby"));
+         sortOrderMenu.getItems().addAll(nameItem, sizeItem, typeItem, dateItem,
+            new SeparatorMenuItem(), reverseOrder);
+
+         final ContextMenu contextMenu = new ContextMenu();
+         contextMenu.getItems().addAll(sortOrderMenu);
+
          return contextMenu;
       }
    }
