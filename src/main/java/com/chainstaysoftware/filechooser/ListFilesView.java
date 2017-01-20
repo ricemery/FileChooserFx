@@ -12,6 +12,7 @@ import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -41,8 +42,11 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 class ListFilesView extends AbstractFilesView {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.ListFilesView");
+
    private static final int DATE_MODIFIED_COL_PREF_WIDTH = 175;
    private static final int SIZE_COLUMN_PREF_WIDTH = 100;
 
@@ -281,17 +285,47 @@ class ListFilesView extends AbstractFilesView {
          final List<TreeItem<File>> directoryTreeItems = parentItem.getChildren();
 
          // Update the TreeView from Services so that the UI is not blocked on OS calls.
-         final UpdateIconsTree updateIconsTreeService = new UpdateIconsTree(directoryTreeItems, callback, new PopulateFactory(), icons);
-         final UpdateDirectoryTree updateDirectoryTreeService = new UpdateDirectoryTree(directoryStream, unfilteredDirectoryStream, directoryTreeItems, icons);
+         // Note that wait cursor is only shown during the UpdateIconsTree Service. The DEFAULT cursor
+         // is shown for other Services since the user can utilize the UI once the UpdateIconsTree has completed.
+         final UpdateIconsTree updateIconsTreeService = new UpdateIconsTree(directoryTreeItems, callback,
+            new PopulateFactory(), icons);
+
+         final UpdateDirectoryTree updateDirectoryTreeService = new UpdateDirectoryTree(directoryStream,
+            unfilteredDirectoryStream, directoryTreeItems, icons);
+
          final Predicate<File> shouldHideFile
             = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
          final FilterHiddenFromDirTree filterTreeService = new FilterHiddenFromDirTree(directoryTreeItems, shouldHideFile);
+
          final SelectCurrentService selectCurrentService = new SelectCurrentService();
+
          filterTreeService.setOnSucceeded(event -> updateIconsTreeService.start());
+
          updateIconsTreeService.setOnSucceeded(event ->  selectCurrentService.start());
-         updateDirectoryTreeService.setOnSucceeded(event -> filterTreeService.start());
+
+         updateDirectoryTreeService.setOnSucceeded(event -> {
+            filesTreeView.setCursor(Cursor.DEFAULT);
+            filterTreeService.start();
+         });
+         updateDirectoryTreeService.setOnRunning(event -> filesTreeView.setCursor(Cursor.WAIT));
+         setServiceFailureHandlers(updateDirectoryTreeService);
          updateDirectoryTreeService.start();
       }
+   }
+
+   /**
+    * Sets up event handlers to reset wait icon when service fails or is cancelled.
+    */
+   private void setServiceFailureHandlers(final Service<Void> service) {
+      service.setOnCancelled(event -> {
+         logger.warning("Service cancelled - " + service.getClass().getCanonicalName());
+         filesTreeView.setCursor(Cursor.DEFAULT);
+
+      });
+      service.setOnFailed(event -> {
+         logger.warning("Service failed - " + service.getClass().getCanonicalName());
+         filesTreeView.setCursor(Cursor.DEFAULT);
+      });
    }
 
    private class PopulateFactory implements PopulateTreeItemRunnableFactory {

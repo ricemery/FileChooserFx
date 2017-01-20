@@ -13,6 +13,7 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
@@ -33,11 +34,14 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 /**
  * View files as list along with preview of file.
  */
 class ListFilesWithPreviewView extends AbstractFilesView {
+   private static Logger logger = Logger.getLogger("com.chainstaysoftware.filechooser.ListFilesWithPreviewView");
+
    private final TableView<DirectoryListItem> tableView = new TableView<>();
    private final SplitPane splitPane;
    private final HBox previewHbox;
@@ -112,18 +116,45 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.setItems(items);
 
       // Update the TableView from Services so that the UI is not blocked on OS calls.
+      // Note that wait cursor is only shown during the UpdateDirectoryList Service. The DEFAULT cursor
+      // is shown for other Services since the user can utilize the UI once the UpdateDirectoryList has completed.
       final UpdateIconsList updateIconsListListService = new UpdateIconsList(directoryListItems, icons);
+
       final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream, directoryListItems, icons);
+
       final Predicate<File> shouldHideFile
          = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
       final FilterHiddenFromDirList filterListService = new FilterHiddenFromDirList(directoryListItems, shouldHideFile);
+
       final SelectCurrentService selectCurrentService = new SelectCurrentService();
+
       filterListService.setOnSucceeded(event -> {
          updateIconsListListService.start();
          selectCurrentService.start();
       });
-      updateDirectoryListService.setOnSucceeded(event -> filterListService.start());
+
+      updateDirectoryListService.setOnSucceeded(event -> {
+         filterListService.start();
+         tableView.setCursor(Cursor.DEFAULT);
+      });
+      updateDirectoryListService.setOnRunning(event -> tableView.setCursor(Cursor.WAIT));
+      setServiceFailureHandlers(updateDirectoryListService);
       updateDirectoryListService.start();
+   }
+
+   /**
+    * Sets up event handlers to reset wait icon when service fails or is cancelled.
+    */
+   private void setServiceFailureHandlers(final Service<Void> service) {
+      service.setOnCancelled(event -> {
+         logger.warning("Service cancelled - " + service.getClass().getCanonicalName());
+         tableView.setCursor(Cursor.DEFAULT);
+
+      });
+      service.setOnFailed(event -> {
+         logger.warning("Service failed - " + service.getClass().getCanonicalName());
+         tableView.setCursor(Cursor.DEFAULT);
+      });
    }
 
    /**
