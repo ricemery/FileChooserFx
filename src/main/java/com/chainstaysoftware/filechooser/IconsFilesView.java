@@ -48,6 +48,7 @@ class IconsFilesView extends AbstractFilesView {
    // Width and Height of Icon and Filename Cell.
    private static final int CELL_HEIGHT = 90;
    private static final int CELL_WIDTH = 90;
+   private static final int CELL_SPACING = 6;
 
    private final GridView<DirectoryListItem> gridView = new GridView<>();
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
@@ -79,11 +80,11 @@ class IconsFilesView extends AbstractFilesView {
       });
       gridView.setCellHeight(CELL_HEIGHT);
       gridView.setCellWidth(CELL_WIDTH);
+      gridView.setHorizontalCellSpacing(CELL_SPACING);
+      gridView.setVerticalCellSpacing(CELL_SPACING);
       gridView.setOnMouseClicked(new MouseClickHandler());
       gridView.setOnKeyPressed(new KeyClickHandler());
    }
-
-
 
    @Override
    public Node getNode() {
