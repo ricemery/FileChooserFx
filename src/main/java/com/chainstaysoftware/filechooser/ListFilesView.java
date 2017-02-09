@@ -25,6 +25,7 @@ import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
@@ -84,20 +85,6 @@ class ListFilesView extends AbstractFilesView {
       filesTreeView.getSelectionModel().selectedItemProperty().addListener(new TreeViewSelectItemListener());
       filesTreeView.getColumns().setAll(nameColumn, dateModifiedColumn, sizeColumn);
       filesTreeView.setRowFactory(new RowFactory());
-      filesTreeView.setOnMouseClicked(event -> {
-         if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
-            if (filesTreeView.getSelectionModel().getSelectedItem() == null) {
-               return;
-            }
-
-            final File file = filesTreeView.getSelectionModel().getSelectedItem().getValue();
-            if (file.isDirectory()) {
-               callback.requestChangeDirectory(file);
-            } else {
-               callback.fireDoneButton();
-            }
-         }
-      });
       filesTreeView.setOnKeyPressed(event -> {if (keyEventHandler != null) {keyEventHandler.handle(event);}});
 
       initializeSort();
@@ -139,10 +126,11 @@ class ListFilesView extends AbstractFilesView {
 
             setText("");
             setGraphic(null);
+            setOnMouseClicked(null);
 
             if (!empty) {
                // This is a hack to work around JDK bug - https://bugs.openjdk.java.net/browse/JDK-8156049 .
-               final TreeTableRow row = getTreeTableRow();
+               final TreeTableRow<File> row = getTreeTableRow();
                if (row != null && row.getTreeItem() != null) {
                   final TreeItem treeItem = row.getTreeItem();
                   if (getTreeTableRow().getTreeItem() instanceof DirectoryTreeItem) {
@@ -153,11 +141,36 @@ class ListFilesView extends AbstractFilesView {
                }
 
                setText(item);
+               setOnMouseClicked(new MouseClickedHandler(row));
             }
          }
       });
 
       return column;
+   }
+
+   private class MouseClickedHandler implements EventHandler<MouseEvent> {
+      private final TreeTableRow<File> row;
+
+      public MouseClickedHandler(final TreeTableRow<File> row) {
+         this.row = row;
+      }
+
+      @Override
+      public void handle(MouseEvent event) {
+         if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
+            if (filesTreeView.getSelectionModel().getSelectedItem() == null) {
+               return;
+            }
+
+            final File file = row.getItem();
+            if (file.isDirectory()) {
+               callback.requestChangeDirectory(file);
+            } else {
+               callback.fireDoneButton();
+            }
+         }
+      }
    }
 
    private TreeTableColumn<File, ZonedDateTime> createDateModifiedColumn() {
@@ -177,9 +190,11 @@ class ListFilesView extends AbstractFilesView {
 
                   if (empty) {
                      setText("");
+                     setOnMouseClicked(null);
                   } else {
                      setText(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
                            .format(item));
+                     setOnMouseClicked(new MouseClickedHandler(getTreeTableRow()));
                   }
                }
             });
@@ -204,8 +219,10 @@ class ListFilesView extends AbstractFilesView {
 
             if (empty || item == null) {
                setText("");
+               setOnMouseClicked(null);
             } else {
                setText(FileUtils.byteCountToDisplaySize(item));
+               setOnMouseClicked(new MouseClickedHandler(getTreeTableRow()));
             }
          }
       });
