@@ -17,6 +17,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SortEvent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
@@ -52,7 +53,7 @@ class ListFilesView extends AbstractFilesView {
 
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
-   private final TreeTableView<File> filesTreeView;
+   private final WrappedTreeTableView<File> filesTreeView;
    private final Icons icons;
    private final List<TreeTableColumn<File, ?>> sortOrder = new LinkedList<>();
    private final TreeTableColumn<File, String> nameColumn;
@@ -72,7 +73,7 @@ class ListFilesView extends AbstractFilesView {
       this.icons = icons;
       this.callback = callback;
 
-      filesTreeView = new TreeTableView<>();
+      filesTreeView = new WrappedTreeTableView<>();
 
       nameColumn = createNameColumn(filesTreeView);
       dateModifiedColumn = createDateModifiedColumn();
@@ -460,5 +461,19 @@ class ListFilesView extends AbstractFilesView {
       return TreeTableColumn.SortType.DESCENDING.equals(sortType)
             ? OrderDirection.Descending
             : OrderDirection.Ascending;
+   }
+
+   /**
+    * {@link TreeTableView} impl that shows wait cusror during sort operation.
+    */
+   private class WrappedTreeTableView<S> extends TreeTableView<S> {
+      @Override
+      public void sort() {
+         getScene().setCursor(Cursor.WAIT);
+         setCursor(Cursor.WAIT);
+         super.sort();
+         setCursor(Cursor.DEFAULT);
+         getScene().setCursor(Cursor.DEFAULT);
+      }
    }
 }
