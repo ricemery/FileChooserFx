@@ -28,6 +28,9 @@ class DirectoryTreeItem extends TreeItem<File> {
    // Hold onto graphic at this level instead of passing to super class.
    // This is to work around JDK issue - https://bugs.openjdk.java.net/browse/JDK-8156049.
    private Node graphic;
+   // Cache lastModified and length so that sorting by either field is performant on slow filesystems.
+   private Long lastModified;
+   private Long length;
 
    private boolean directoryListLoaded = false;
 
@@ -93,6 +96,22 @@ class DirectoryTreeItem extends TreeItem<File> {
 
    void setGraphic2(final Node graphic) {
       this.graphic = graphic;
+   }
+
+   long length() {
+      if (length == null) {
+         length = getValue().length();
+      }
+
+      return length;
+   }
+
+   long lastModified() {
+      if (lastModified == null) {
+         lastModified = getValue().lastModified();
+      }
+
+      return lastModified;
    }
 
    private class ExpandedListener implements ChangeListener<Boolean> {

@@ -17,7 +17,6 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.SortEvent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
@@ -178,7 +177,7 @@ class ListFilesView extends AbstractFilesView {
             = new TreeTableColumn<>(resourceBundle.getString("listfilesview.datemodified"));
 
       column.setCellValueFactory(param -> {
-         final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(param.getValue().getValue().lastModified()),
+         final ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(((DirectoryTreeItem)param.getValue()).lastModified()),
                ZoneId.systemDefault());
          return new ReadOnlyObjectWrapper<>(zonedDateTime);
       });
@@ -210,7 +209,7 @@ class ListFilesView extends AbstractFilesView {
       column.setCellValueFactory(param ->
             param.getValue().getValue().isDirectory()
                ? null
-               : new ReadOnlyObjectWrapper<>(param.getValue().getValue().length()));
+               : new ReadOnlyObjectWrapper<>(((DirectoryTreeItem)param.getValue()).length()));
 
       column.setCellFactory(param -> new TreeTableCell<File, Long>() {
          @Override
