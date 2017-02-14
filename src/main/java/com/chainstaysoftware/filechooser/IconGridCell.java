@@ -1,5 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.OverrunStyle;
@@ -11,20 +13,16 @@ class IconGridCell extends GridCell<DirectoryListItem> {
    private final ImageView imageView;
    private final boolean preserveImageProperties;
    private final IconGridCellContextMenuFactory contextMenuFactory;
+   private final Icons icons;
 
-   public IconGridCell() {
-      this(true);
-   }
-
-   public IconGridCell(final boolean preserveImageProperties) {
-      this(preserveImageProperties, null);
-   }
-
-   public IconGridCell(final boolean preserveImageProperties,
-                       final IconGridCellContextMenuFactory contextMenuFactory) {
+   IconGridCell(final boolean preserveImageProperties,
+                final IconGridCellContextMenuFactory contextMenuFactory,
+                final Icons icons) {
       getStyleClass().add("image-grid-cell");
 
       this.preserveImageProperties = preserveImageProperties;
+      this.icons = icons;
+
       imageView = new ImageView();
       imageView.fitHeightProperty().bind(heightProperty().subtract(40));
       imageView.fitWidthProperty().bind(widthProperty());
@@ -48,8 +46,11 @@ class IconGridCell extends GridCell<DirectoryListItem> {
          setText(null);
          setUserData(null);
       } else {
-         final Image image = item.getIcon();
          final String text = item.getFile().getName();
+
+         final Image image = item.isDirectory()
+            ? icons.getIcon(IconsImpl.FOLDER_64)
+            : icons.getIconForFile(item.getFile());
 
          if (preserveImageProperties) {
             imageView.setPreserveRatio(true);

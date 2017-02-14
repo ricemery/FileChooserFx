@@ -71,7 +71,7 @@ class IconsFilesView extends AbstractFilesView {
       this.callback = callback;
 
       gridView.setCellFactory(gridView1 -> {
-         final IconGridCell cell = new IconGridCell(true, new IconGridCellContextMenuFactImpl());
+         final IconGridCell cell = new IconGridCell(true, new IconGridCellContextMenuFactImpl(), icons);
          cell.indexProperty().addListener((observable, oldValue, newValue) ->
                cell.updateSelected(selectedCellIndex.intValue() == newValue.intValue()));
          selectedCellIndex.addListener((observable, oldValue, newValue) ->
@@ -114,10 +114,6 @@ class IconsFilesView extends AbstractFilesView {
       disableListeners = false;
 
       // Update the GridView from Services so that the UI is not blocked on OS calls.
-      // Note that wait cursor is only shown during the UpdateIconsList Service. The DEFAULT cursor
-      // is shown for other Services since the user can utilize the UI once the UpdateIconsList has completed.
-      final UpdateIconsList updateIconsListListService = new UpdateIconsList(directoryListItems, icons);
-
       final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream,
          directoryListItems, icons);
 
@@ -128,7 +124,6 @@ class IconsFilesView extends AbstractFilesView {
       final SelectCurrentService selectCurrentService = new SelectCurrentService();
 
       filterListService.setOnSucceeded(event -> {
-         updateIconsListListService.start();
          selectCurrentService.start();
       });
 

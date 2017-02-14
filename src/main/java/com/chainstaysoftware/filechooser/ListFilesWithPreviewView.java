@@ -72,7 +72,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
       nameColumn = new TableColumn<>(resourceBundle.getString("listfilesview.name"));
       nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
-      nameColumn.setCellFactory(new DirListNameColumnCellFactory(true, callback));
+      nameColumn.setCellFactory(new DirListNameColumnCellFactory(true, callback, icons));
       nameColumn.prefWidthProperty().bind(tableView.widthProperty());
       nameColumn.setComparator((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getFile().getName(), o2.getFile().getName()));
       nameColumn.setSortType(orderDirectionToSortType(callback.orderDirectionProperty().get()));
@@ -116,10 +116,6 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.setItems(items);
 
       // Update the TableView from Services so that the UI is not blocked on OS calls.
-      // Note that wait cursor is only shown during the UpdateDirectoryList Service. The DEFAULT cursor
-      // is shown for other Services since the user can utilize the UI once the UpdateDirectoryList has completed.
-      final UpdateIconsList updateIconsListListService = new UpdateIconsList(directoryListItems, icons);
-
       final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream, directoryListItems, icons);
 
       final Predicate<File> shouldHideFile
@@ -129,7 +125,6 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       final SelectCurrentService selectCurrentService = new SelectCurrentService();
 
       filterListService.setOnSucceeded(event -> {
-         updateIconsListListService.start();
          selectCurrentService.start();
       });
 

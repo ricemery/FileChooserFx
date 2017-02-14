@@ -109,7 +109,7 @@ class UpdateDirectoryList extends Service<Void> {
       }
 
       private DirectoryListItem getDirListItem(final File file) {
-         return new DirectoryListItem(file, icons.getIconForFile(file));
+         return new DirectoryListItem(file);
       }
 
       private void closeStream(final DirectoryStream<Path> directoryStream) {

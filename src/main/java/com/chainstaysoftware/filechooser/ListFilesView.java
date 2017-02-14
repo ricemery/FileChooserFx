@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
 import javafx.application.Platform;
@@ -22,6 +23,7 @@ import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -128,14 +130,19 @@ class ListFilesView extends AbstractFilesView {
             setOnMouseClicked(null);
 
             if (!empty) {
-               // This is a hack to work around JDK bug - https://bugs.openjdk.java.net/browse/JDK-8156049 .
                final TreeTableRow<File> row = getTreeTableRow();
                if (row != null && row.getTreeItem() != null) {
                   final TreeItem treeItem = row.getTreeItem();
                   if (getTreeTableRow().getTreeItem() instanceof DirectoryTreeItem) {
-                     setGraphic(((DirectoryTreeItem)treeItem).getGraphic2());
-                  } else {
-                     setGraphic(treeItem.getGraphic());
+                     final File file = ((File)treeItem.getValue()).getAbsoluteFile();
+                     final ImageView graphic = file.isDirectory()
+                        ? new ImageView(treeItem.isExpanded() ? icons.getIcon(IconsImpl.OPEN_FOLDER_64) : icons.getIcon(IconsImpl.FOLDER_64))
+                        : new ImageView(icons.getIconForFile(file));
+                     graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
+                     graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
+                     graphic.setPreserveRatio(true);
+
+                     setGraphic(graphic);
                   }
                }
 
@@ -301,14 +308,8 @@ class ListFilesView extends AbstractFilesView {
       public void run() {
          final List<TreeItem<File>> directoryTreeItems = parentItem.getChildren();
 
-         // Update the TreeView from Services so that the UI is not blocked on OS calls.
-         // Note that wait cursor is only shown during the UpdateIconsTree Service. The DEFAULT cursor
-         // is shown for other Services since the user can utilize the UI once the UpdateIconsTree has completed.
-         final UpdateIconsTree updateIconsTreeService = new UpdateIconsTree(directoryTreeItems, callback,
-            new PopulateFactory(), icons);
-
          final UpdateDirectoryTree updateDirectoryTreeService = new UpdateDirectoryTree(directoryStream,
-            unfilteredDirectoryStream, directoryTreeItems, icons);
+            unfilteredDirectoryStream, directoryTreeItems, callback, new PopulateFactory());
 
          final Predicate<File> shouldHideFile
             = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
@@ -316,9 +317,7 @@ class ListFilesView extends AbstractFilesView {
 
          final SelectCurrentService selectCurrentService = new SelectCurrentService();
 
-         filterTreeService.setOnSucceeded(event -> updateIconsTreeService.start());
-
-         updateIconsTreeService.setOnSucceeded(event ->  selectCurrentService.start());
+         filterTreeService.setOnSucceeded(event -> selectCurrentService.start());
 
          updateDirectoryTreeService.setOnSucceeded(event -> {
             filesTreeView.setCursor(Cursor.DEFAULT);

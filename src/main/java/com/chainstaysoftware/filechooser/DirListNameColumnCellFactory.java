@@ -1,8 +1,10 @@
 package com.chainstaysoftware.filechooser;
 
+import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.util.Callback;
 
@@ -17,17 +19,21 @@ class DirListNameColumnCellFactory
 
    private final boolean nameOnly;
    private final FilesViewCallback callback;
+   private final Icons icons;
 
    /**
     * Constructor
     * @param nameOnly Indicates if the cell text should include the file.getPath() value
     *                 or file.getName()
     * @param callback {@link FilesViewCallback}
+    * @param icons Icon retriever for File objects.
     */
    DirListNameColumnCellFactory(final boolean nameOnly,
-                                final FilesViewCallback callback) {
+                                final FilesViewCallback callback,
+                                final Icons icons) {
       this.nameOnly = nameOnly;
       this.callback = callback;
+      this.icons = icons;
    }
 
    @Override
@@ -49,7 +55,10 @@ class DirListNameColumnCellFactory
                   setText(item.getFile().toString());
                }
 
-               final ImageView graphic = new ImageView(item.getIcon());
+               final Image image = item.isDirectory()
+                  ? icons.getIcon(IconsImpl.FOLDER_64)
+                  : icons.getIconForFile(item.getFile());
+               final ImageView graphic = new ImageView(image);
                graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
                graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
                graphic.setPreserveRatio(true);

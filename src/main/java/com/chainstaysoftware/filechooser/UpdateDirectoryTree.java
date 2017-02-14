@@ -1,12 +1,9 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.icons.Icons;
-import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
-import javafx.scene.image.ImageView;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +27,8 @@ class UpdateDirectoryTree extends Service<Void> {
    private final DirectoryStream<Path> dirStream;
    private final DirectoryStream<Path> unfilteredDirStream;
    private final List<TreeItem<File>> itemList;
-   private final Icons icons;
+   private final FilesViewCallback callback;
+   private final PopulateTreeItemRunnableFactory populateFactory;
 
    private final CountDownLatch latch = new CountDownLatch(1);
 
@@ -41,16 +39,20 @@ class UpdateDirectoryTree extends Service<Void> {
     *                            filter. This is used to find directories that were excluded
     *                            by the filter.
     * @param itemList List to update with results.
-    * @param icons Icon retriever.
+    * @param callback {@link FilesViewCallback} impl.
+    * @param populateFactory factory for creating {@link com.chainstaysoftware.filechooser.ListFilesView.PopulateTreeItemRunnable}
+    *                        instances.
     */
    UpdateDirectoryTree(final DirectoryStream<Path> dirStream,
                        final DirectoryStream<Path> unfilteredDirStream,
                        final List<TreeItem<File>> itemList,
-                       final Icons icons) {
+                       final FilesViewCallback callback,
+                       final PopulateTreeItemRunnableFactory populateFactory) {
       this.dirStream = dirStream;
       this.unfilteredDirStream = unfilteredDirStream;
       this.itemList = itemList;
-      this.icons = icons;
+      this.callback = callback;
+      this.populateFactory = populateFactory;
    }
 
    protected Task<Void> createTask() {
@@ -113,14 +115,7 @@ class UpdateDirectoryTree extends Service<Void> {
       }
 
       private TreeItem<File> getTreeItem(final File file) {
-         final ImageView graphic = new ImageView(icons.getIconForFile(file));
-         graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
-         graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
-         graphic.setPreserveRatio(true);
-
-         // Assume for now, that this is a leaf node. If the file is a directory, the TreeItem will
-         // be replaced later in the UpdateIconsTree service.
-         return new DirectoryTreeItem(file, graphic, icons, true);
+         return new DirectoryTreeItem(file, callback, populateFactory);
       }
 
       private void closeStream(final DirectoryStream<Path> directoryStream) {
