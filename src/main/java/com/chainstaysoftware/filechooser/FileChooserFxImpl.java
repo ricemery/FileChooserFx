@@ -439,6 +439,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       this.removeFavorite = removeFavorite;
    }
 
+   @Override
    public void setViewType(final ViewType viewType) {
       viewTypeProperty().setValue(viewType);
    }

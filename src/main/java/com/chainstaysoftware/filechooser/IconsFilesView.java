@@ -52,7 +52,6 @@ class IconsFilesView extends AbstractFilesView {
 
    private final GridView<DirectoryListItem> gridView = new GridView<>();
    private final Map<String, Class<? extends PreviewPane>> previewHandlers;
-   private final Icons icons;
    private final IntegerProperty selectedCellIndex = new SimpleIntegerProperty(NOT_SELECTED);
    private final ResourceBundle resourceBundle = ResourceBundle.getBundle("filechooser");
    private final FilesViewCallback callback;
@@ -67,7 +66,6 @@ class IconsFilesView extends AbstractFilesView {
       super(parent);
 
       this.previewHandlers = previewHandlers;
-      this.icons = icons;
       this.callback = callback;
 
       gridView.setCellFactory(gridView1 -> {

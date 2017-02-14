@@ -45,7 +45,6 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    private final TableView<DirectoryListItem> tableView = new TableView<>();
    private final SplitPane splitPane;
    private final HBox previewHbox;
-   private final Icons icons;
    private final PropertiesPreviewPane propertiesPreviewPane;
    private final List<TableColumn<DirectoryListItem, ?>> sortOrder;
    private final FilesViewCallback callback;
@@ -61,7 +60,6 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       super(parent);
 
       propertiesPreviewPane = new PropertiesPreviewPane(previewHandlers, icons);
-      this.icons = icons;
       this.callback = callback;
 
       previewHbox = new HBox();
