@@ -116,7 +116,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       tableView.setItems(items);
 
       // Update the TableView from Services so that the UI is not blocked on OS calls.
-      final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream, directoryListItems, icons);
+      final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream, directoryListItems);
 
       final Predicate<File> shouldHideFile
          = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
@@ -124,9 +124,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
       final SelectCurrentService selectCurrentService = new SelectCurrentService();
 
-      filterListService.setOnSucceeded(event -> {
-         selectCurrentService.start();
-      });
+      filterListService.setOnSucceeded(event -> selectCurrentService.start());
 
       updateDirectoryListService.setOnSucceeded(event -> {
          filterListService.start();

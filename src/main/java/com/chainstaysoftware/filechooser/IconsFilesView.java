@@ -115,7 +115,7 @@ class IconsFilesView extends AbstractFilesView {
 
       // Update the GridView from Services so that the UI is not blocked on OS calls.
       final UpdateDirectoryList updateDirectoryListService = new UpdateDirectoryList(directoryStream, remainingDirectoryStream,
-         directoryListItems, icons);
+         directoryListItems);
 
       final Predicate<File> shouldHideFile
          = new ShowHiddenFilesPredicate(callback.showHiddenFilesProperty(), callback.shouldHideFilesProperty());
@@ -123,9 +123,7 @@ class IconsFilesView extends AbstractFilesView {
 
       final SelectCurrentService selectCurrentService = new SelectCurrentService();
 
-      filterListService.setOnSucceeded(event -> {
-         selectCurrentService.start();
-      });
+      filterListService.setOnSucceeded(event -> selectCurrentService.start());
 
       updateDirectoryListService.setOnSucceeded(event -> {
          gridView.setCursor(Cursor.DEFAULT);

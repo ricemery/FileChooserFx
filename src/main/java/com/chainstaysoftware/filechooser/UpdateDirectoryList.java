@@ -1,6 +1,5 @@
 package com.chainstaysoftware.filechooser;
 
-import com.chainstaysoftware.filechooser.icons.Icons;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -27,7 +26,6 @@ class UpdateDirectoryList extends Service<Void> {
    private final DirectoryStream<Path> dirStream;
    private final DirectoryStream<Path> unfilteredDirStream;
    private final List<DirectoryListItem> itemList;
-   private final Icons icons;
    private final CountDownLatch latch = new CountDownLatch(1);
 
    /**
@@ -37,16 +35,13 @@ class UpdateDirectoryList extends Service<Void> {
     *                            filter. This is used to find directories that were excluded
     *                            by the filter.
     * @param itemList List to update with results.
-    * @param icons Icon retriever.
     */
    UpdateDirectoryList(final DirectoryStream<Path> dirStream,
                        final DirectoryStream<Path> unfilteredDirStream,
-                       final List<DirectoryListItem> itemList,
-                       final Icons icons) {
+                       final List<DirectoryListItem> itemList) {
       this.dirStream = dirStream;
       this.unfilteredDirStream = unfilteredDirStream;
       this.itemList = itemList;
-      this.icons = icons;
    }
 
    protected Task<Void> createTask() {
