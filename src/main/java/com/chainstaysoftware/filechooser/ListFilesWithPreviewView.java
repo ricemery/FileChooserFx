@@ -268,8 +268,8 @@ class ListFilesWithPreviewView extends AbstractFilesView {
       }
 
       private void preview(final File file) {
-         propertiesPreviewPane.setFile(file);
          previewHbox.getChildren().setAll(propertiesPreviewPane.getPane());
+         propertiesPreviewPane.setFile(file);
          HBox.setHgrow(propertiesPreviewPane.getPane(), Priority.ALWAYS);
       }
    }
