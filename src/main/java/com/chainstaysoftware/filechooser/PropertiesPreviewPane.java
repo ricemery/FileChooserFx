@@ -180,8 +180,8 @@ public class PropertiesPreviewPane {
          }
 
          final PreviewPane previewPane = previewPaneOpt.get();
-         previewPane.setFile(file);
          previewPaneContainerPane.getChildren().setAll(previewPane.getPane());
+         previewPane.setFile(file);
          HBox.setHgrow(previewPane.getPane(), Priority.ALWAYS);
       }
    }
