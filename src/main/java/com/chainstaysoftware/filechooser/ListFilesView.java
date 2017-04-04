@@ -486,9 +486,12 @@ class ListFilesView extends AbstractFilesView {
       public void sort() {
          getScene().setCursor(Cursor.WAIT);
          setCursor(Cursor.WAIT);
-         super.sort();
-         setCursor(Cursor.DEFAULT);
-         getScene().setCursor(Cursor.DEFAULT);
+
+         Platform.runLater(() -> {
+            super.sort();
+            setCursor(Cursor.DEFAULT);
+            getScene().setCursor(Cursor.DEFAULT);
+         });
       }
    }
 }
