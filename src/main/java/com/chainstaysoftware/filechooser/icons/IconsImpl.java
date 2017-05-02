@@ -7,6 +7,7 @@ import javafx.scene.image.Image;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Locale;
@@ -105,12 +106,15 @@ public class IconsImpl implements Icons {
          throw new IllegalArgumentException("resourceName must not be null");
       }
 
-      final InputStream inputStream = IconsImpl.class.getResourceAsStream(resourceName);
-      if (inputStream == null) {
-         throw new IllegalArgumentException(resourceName + " is not a valid resource");
-      }
+      try (final InputStream inputStream = IconsImpl.class.getResourceAsStream(resourceName)) {
+         if (inputStream == null) {
+            throw new IllegalArgumentException(resourceName + " is not a valid resource");
+         }
 
-      return new Image(inputStream);
+         return new Image(inputStream);
+      } catch (IOException e) {
+         throw new IllegalArgumentException(resourceName + " is not a valid resource", e);
+      }
    }
 
    /**
