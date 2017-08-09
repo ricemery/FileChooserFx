@@ -44,6 +44,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -479,7 +484,7 @@ class ListFilesView extends AbstractFilesView {
    }
 
    /**
-    * {@link TreeTableView} impl that shows wait cusror during sort operation.
+    * {@link TreeTableView} impl that shows wait cursor during sort operation.
     */
    private class WrappedTreeTableView<S> extends TreeTableView<S> {
       @Override
@@ -487,11 +492,15 @@ class ListFilesView extends AbstractFilesView {
          getScene().setCursor(Cursor.WAIT);
          setCursor(Cursor.WAIT);
 
-         Platform.runLater(() -> {
+         // This is a hack to schedule the sort for 'later' so that the wait cursor
+         // can paint. Without this hack, the wait cursor is not painting on linux
+         // for long running sort operations.
+         final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+         executor.schedule(() -> Platform.runLater(() -> {
             super.sort();
             setCursor(Cursor.DEFAULT);
             getScene().setCursor(Cursor.DEFAULT);
-         });
+         }), 1, TimeUnit.MILLISECONDS);
       }
    }
 }
