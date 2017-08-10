@@ -44,10 +44,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -500,6 +498,7 @@ class ListFilesView extends AbstractFilesView {
             super.sort();
             setCursor(Cursor.DEFAULT);
             getScene().setCursor(Cursor.DEFAULT);
+            executor.shutdown();
          }), 1, TimeUnit.MILLISECONDS);
       }
    }
