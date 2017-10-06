@@ -49,10 +49,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.BreadCrumbBar;
-import org.controlsfx.control.spreadsheet.StringConverterWithFormat;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
@@ -919,22 +919,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
             updateFiles(currentDirectory, false);
          });
          extensionsComboBox.setEditable(true);
-         extensionsComboBox.setConverter(new StringConverterWithFormat<FileChooser.ExtensionFilter>() {
-            @Override
-            public String toString(final FileChooser.ExtensionFilter extensionFilter) {
-               return extensionFilter.getDescription();
-            }
-
-            @Override
-            public FileChooser.ExtensionFilter fromString(final String string) {
-               // Since only the description is serialized into the string, lookup
-               // the ExtensionFilter by description from the current list of ExtensionFilter.
-               return extensionFilters.stream()
-                     .filter(filter -> string.equals(filter.getDescription()))
-                     .findFirst()
-                     .orElse(new FileChooser.ExtensionFilter(string, string));
-            }
-         });
+         extensionsComboBox.setConverter(new ExtensionFilterStringConverter());
 
          updateSelectedExtensionFilter(extensionsComboBox);
 
@@ -1427,6 +1412,23 @@ public final class FileChooserFxImpl implements FileChooserFx {
             fileChooserCallback.fileChosen(Optional.empty());
             event.consume();
          }
+      }
+   }
+
+   private class ExtensionFilterStringConverter extends StringConverter<FileChooser.ExtensionFilter> {
+      @Override
+      public String toString(final FileChooser.ExtensionFilter extensionFilter) {
+         return extensionFilter.getDescription();
+      }
+
+      @Override
+      public FileChooser.ExtensionFilter fromString(final String string) {
+         // Since only the description is serialized into the string, lookup
+         // the ExtensionFilter by description from the current list of ExtensionFilter.
+         return extensionFilters.stream()
+            .filter(filter -> string.equals(filter.getDescription()))
+            .findFirst()
+            .orElse(new FileChooser.ExtensionFilter(string, string));
       }
    }
 }
