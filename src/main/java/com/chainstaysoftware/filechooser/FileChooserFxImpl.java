@@ -617,7 +617,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       fileNameField = new TextField();
       fileNameField.setId("nameField");
       fileNameField.setText(getInitialFileName());
-      fileNameField.setPrefWidth(300);
+      fileNameField.setPrefWidth(400);
 
       currentSelection.addListener((observable, oldValue, newValue) -> {
          if (newValue != null && newValue.isFile()) {
