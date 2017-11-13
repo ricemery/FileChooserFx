@@ -52,6 +52,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.BreadCrumbBar;
 
 import javax.swing.filechooser.FileSystemView;
@@ -829,8 +830,12 @@ public final class FileChooserFxImpl implements FileChooserFx {
             -> button.setDisable(newValue == null || "".equals(newValue.trim())));
       }
 
-      currentSelection.addListener((observable, oldValue, newValue) ->
-            button.setDisable(newValue == null || (!hideFiles.get() && newValue.isDirectory()))
+      currentSelection.addListener((observable, oldValue, newValue) -> {
+            if (saveMode)
+               button.setDisable(StringUtils.isEmpty(fileNameField.getText()));
+            else
+               button.setDisable(newValue == null || (!hideFiles.get() && newValue.isDirectory()));
+         }
       );
       return button;
    }
