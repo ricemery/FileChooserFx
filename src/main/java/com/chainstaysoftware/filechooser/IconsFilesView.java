@@ -124,7 +124,7 @@ class IconsFilesView extends AbstractFilesView {
       filterListService.setOnSucceeded(event -> selectCurrentService.start());
 
       updateDirectoryListService.setOnSucceeded(event -> {
-         gridView.setCursor(Cursor.DEFAULT);
+         gridView.setCursor(null);
          filterListService.start();
       });
       updateDirectoryListService.setOnRunning(event -> gridView.setCursor(Cursor.WAIT));
@@ -138,12 +138,12 @@ class IconsFilesView extends AbstractFilesView {
    private void setServiceFailureHandlers(final Service<Void> service) {
       service.setOnCancelled(event -> {
          logger.warning("Service cancelled - " + service.getClass().getCanonicalName());
-         gridView.setCursor(Cursor.DEFAULT);
+         gridView.setCursor(null);
 
       });
       service.setOnFailed(event -> {
          logger.warning("Service failed - " + service.getClass().getCanonicalName());
-         gridView.setCursor(Cursor.DEFAULT);
+         gridView.setCursor(null);
       });
    }
 

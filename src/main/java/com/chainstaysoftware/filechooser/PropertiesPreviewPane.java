@@ -3,7 +3,9 @@ package com.chainstaysoftware.filechooser;
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.image.ImageView;
@@ -141,27 +143,33 @@ public class PropertiesPreviewPane {
     * @param file
     */
    public void setFile(final File file) {
-      try {
-         setContainerNode(file);
+      vBox.getScene().setCursor(Cursor.WAIT);
 
-         nameLabel.setText(file.getName());
+      Platform.runLater(() ->  {
+         try {
+            setContainerNode(file);
 
-         final BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+            nameLabel.setText(file.getName());
 
-         createdValLabel.setText(formatTime(attr.creationTime()));
-         modifiedValLabel.setText(formatTime(attr.lastModifiedTime()));
-         lastOpenedLabel.setText(formatTime(attr.lastAccessTime()));
-         sizeLabel.setText(FileUtils.byteCountToDisplaySize(attr.size()));
-      } catch (IOException e) {
-         logger.log(Level.WARNING, "Could not retrieve file attributes for - " + file, e);
+            final BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
 
-         imageView.setImage(null);
-         nameLabel.setText(null);
-         createdValLabel.setText(null);
-         modifiedValLabel.setText(null);
-         lastOpenedLabel.setText(null);
-         sizeLabel.setText(null);
-      }
+            createdValLabel.setText(formatTime(attr.creationTime()));
+            modifiedValLabel.setText(formatTime(attr.lastModifiedTime()));
+            lastOpenedLabel.setText(formatTime(attr.lastAccessTime()));
+            sizeLabel.setText(FileUtils.byteCountToDisplaySize(attr.size()));
+         } catch (IOException e) {
+            logger.log(Level.WARNING, "Could not retrieve file attributes for - " + file, e);
+
+            imageView.setImage(null);
+            nameLabel.setText(null);
+            createdValLabel.setText(null);
+            modifiedValLabel.setText(null);
+            lastOpenedLabel.setText(null);
+            sizeLabel.setText(null);
+         }
+
+         vBox.getScene().setCursor(null);
+      });
    }
 
    /**
