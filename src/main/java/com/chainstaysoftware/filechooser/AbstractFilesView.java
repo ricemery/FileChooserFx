@@ -1,6 +1,11 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.EventHandler;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -8,6 +13,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -38,36 +44,41 @@ abstract class AbstractFilesView implements FilesView {
          return;
       }
 
-      final Stage stage = new Stage();
+      parent.getScene().setCursor(Cursor.WAIT);
 
-      final PreviewPane previewPane = previewPaneOpt.get();
-      final Pane pane = previewPane.getPane();
-      pane.prefWidthProperty().bind(stage.widthProperty());
-      pane.prefHeightProperty().bind(stage.heightProperty());
-      pane.maxWidthProperty().bind(stage.widthProperty());
-      pane.maxHeightProperty().bind(stage.heightProperty());
-      pane.minWidthProperty().bind(stage.widthProperty());
-      pane.minHeightProperty().bind(stage.heightProperty());
+      Platform.runLater(() -> {
+         final Stage stage = new Stage();
 
-      final Scene scene = new Scene(new Pane(pane));
-      scene.getStylesheets().add(new FileBrowserCss().getUrl());
-      scene.setOnKeyPressed(event -> {
-         if (event.getCode() == KeyCode.ESCAPE) {
-            stage.close();
-         }
+         final PreviewPane previewPane = previewPaneOpt.get();
+         final Pane pane = previewPane.getPane();
+         pane.prefWidthProperty().bind(stage.widthProperty());
+         pane.prefHeightProperty().bind(stage.heightProperty());
+         pane.maxWidthProperty().bind(stage.widthProperty());
+         pane.maxHeightProperty().bind(stage.heightProperty());
+         pane.minWidthProperty().bind(stage.widthProperty());
+         pane.minHeightProperty().bind(stage.heightProperty());
+
+         final Scene scene = new Scene(new Pane(pane));
+         scene.getStylesheets().add(new FileBrowserCss().getUrl());
+         scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+               stage.close();
+            }
+         });
+
+         previewPane.setFile(file);
+
+         stage.setScene(scene);
+         stage.initOwner(parent);
+         stage.setAlwaysOnTop(true);
+         stage.initStyle(StageStyle.UTILITY);
+         stage.initModality(Modality.APPLICATION_MODAL);
+         stage.setTitle(getTitle(file));
+         stage.setWidth(1024);
+         stage.setHeight(768);
+         stage.setOnShown(windowEvent -> parent.getScene().setCursor(null));
+         stage.show();
       });
-
-      previewPane.setFile(file);
-
-      stage.setScene(scene);
-      stage.initOwner(parent);
-      stage.setAlwaysOnTop(true);
-      stage.initStyle(StageStyle.UTILITY);
-      stage.initModality(Modality.APPLICATION_MODAL);
-      stage.setTitle(getTitle(file));
-      stage.setWidth(1024);
-      stage.setHeight(768);
-      stage.show();
    }
 
    /**

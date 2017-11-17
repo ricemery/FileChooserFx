@@ -261,7 +261,7 @@ class ListFilesView extends AbstractFilesView {
                   }
 
                   final MenuItem imagePreviewItem = new MenuItem("Preview");
-                  imagePreviewItem.setOnAction(v ->showPreview(previewPaneClass, file));
+                  imagePreviewItem.setOnAction(v -> showPreview(previewPaneClass, file));
 
                   setContextMenu(new ContextMenu(imagePreviewItem));
                }
@@ -323,7 +323,7 @@ class ListFilesView extends AbstractFilesView {
          filterTreeService.setOnSucceeded(event -> selectCurrentService.start());
 
          updateDirectoryTreeService.setOnSucceeded(event -> {
-            filesTreeView.setCursor(Cursor.DEFAULT);
+            filesTreeView.setCursor(null);
             filterTreeService.start();
          });
          updateDirectoryTreeService.setOnRunning(event -> filesTreeView.setCursor(Cursor.WAIT));
@@ -338,12 +338,12 @@ class ListFilesView extends AbstractFilesView {
    private void setServiceFailureHandlers(final Service<Void> service) {
       service.setOnCancelled(event -> {
          logger.warning("Service cancelled - " + service.getClass().getCanonicalName());
-         filesTreeView.setCursor(Cursor.DEFAULT);
+         filesTreeView.setCursor(null);
 
       });
       service.setOnFailed(event -> {
          logger.warning("Service failed - " + service.getClass().getCanonicalName());
-         filesTreeView.setCursor(Cursor.DEFAULT);
+         filesTreeView.setCursor(null);
       });
    }
 
@@ -496,8 +496,8 @@ class ListFilesView extends AbstractFilesView {
          final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
          executor.schedule(() -> Platform.runLater(() -> {
             super.sort();
-            setCursor(Cursor.DEFAULT);
-            getScene().setCursor(Cursor.DEFAULT);
+            setCursor(null);
+            getScene().setCursor(null);
             executor.shutdown();
          }), 1, TimeUnit.MILLISECONDS);
       }

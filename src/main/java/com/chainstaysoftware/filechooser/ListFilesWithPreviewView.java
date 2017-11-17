@@ -126,7 +126,7 @@ class ListFilesWithPreviewView extends AbstractFilesView {
 
       updateDirectoryListService.setOnSucceeded(event -> {
          filterListService.start();
-         tableView.setCursor(Cursor.DEFAULT);
+         tableView.setCursor(null);
       });
       updateDirectoryListService.setOnRunning(event -> tableView.setCursor(Cursor.WAIT));
       setServiceFailureHandlers(updateDirectoryListService);
@@ -139,12 +139,12 @@ class ListFilesWithPreviewView extends AbstractFilesView {
    private void setServiceFailureHandlers(final Service<Void> service) {
       service.setOnCancelled(event -> {
          logger.warning("Service cancelled - " + service.getClass().getCanonicalName());
-         tableView.setCursor(Cursor.DEFAULT);
+         tableView.setCursor(null);
 
       });
       service.setOnFailed(event -> {
          logger.warning("Service failed - " + service.getClass().getCanonicalName());
-         tableView.setCursor(Cursor.DEFAULT);
+         tableView.setCursor(null);
       });
    }
 
