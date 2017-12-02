@@ -982,7 +982,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
       button.setId("addFavoriteButton");
       button.setOnAction(event -> {
          try {
-            favoriteDirs.add(currentSelection.get().getCanonicalFile());
+            File canonicalFile = currentSelection.get().getCanonicalFile();
+            favoriteDirs.add(canonicalFile);
+            if (addFavorite != null) {
+               addFavorite.invoke(canonicalFile);
+            }
          } catch (IOException e) {
             logger.log(Level.SEVERE, "Error canonicalizing file", e);
          }
@@ -996,11 +1000,13 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private Button createRemoveFavoriteButton() {
       final Button button = new Button(resourceBundle.getString("removefavoritebutton.txt"));
       button.setId("removeFavoriteButton");
-      button.setOnAction(new NewFolderAction());
       button.setOnAction(event -> {
          final Optional<File> selectedFile = placesView.getSelectedItem();
          selectedFile.ifPresent(file -> {
             favoriteDirs.remove(file);
+            if (removeFavorite != null) {
+               removeFavorite.invoke(file);
+            }
             placesView.updatePlaces();
          });
       });
