@@ -990,7 +990,6 @@ public final class FileChooserFxImpl implements FileChooserFx {
          } catch (IOException e) {
             logger.log(Level.SEVERE, "Error canonicalizing file", e);
          }
-         placesView.updatePlaces();
       });
       button.setDisable(true);
       button.setTooltip(new Tooltip(resourceBundle.getString("addfavoritebutton.tooltip.txt")));
@@ -1007,7 +1006,6 @@ public final class FileChooserFxImpl implements FileChooserFx {
             if (removeFavorite != null) {
                removeFavorite.invoke(file);
             }
-            placesView.updatePlaces();
          });
       });
       button.setDisable(true);
