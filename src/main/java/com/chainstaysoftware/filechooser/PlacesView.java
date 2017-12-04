@@ -12,7 +12,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +23,7 @@ import java.util.ResourceBundle;
  * Places - JavaFx node creation and logic.
  */
 class PlacesView {
-   private static final Map<PlaceType, String> placeToIcon = new HashMap<>();
+   private static final Map<PlaceType, String> placeToIcon = new EnumMap<>(PlaceType.class);
    static {
       placeToIcon.put(PlaceType.Cd, IconsImpl.CD_64);
       placeToIcon.put(PlaceType.Dvd, IconsImpl.DVD_64);

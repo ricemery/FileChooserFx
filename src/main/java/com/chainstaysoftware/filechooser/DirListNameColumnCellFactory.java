@@ -38,46 +38,48 @@ class DirListNameColumnCellFactory
 
    @Override
    public TableCell<DirectoryListItem, DirectoryListItem> call(TableColumn<DirectoryListItem, DirectoryListItem> param) {
-      return new TableCell<DirectoryListItem, DirectoryListItem>() {
-         @Override
-         protected void updateItem(DirectoryListItem item, boolean empty) {
-            super.updateItem(item, empty);
+      return new DirListTableCell();
+   }
 
-            if (empty || item == null) {
-               setText(null);
-               setGraphic(null);
-               setOnMouseClicked(null);
+   private class DirListTableCell extends  TableCell<DirectoryListItem, DirectoryListItem> {
+      @Override
+      protected void updateItem(DirectoryListItem item, boolean empty) {
+         super.updateItem(item, empty);
+
+         if (empty || item == null) {
+            setText(null);
+            setGraphic(null);
+            setOnMouseClicked(null);
+         } else {
+            if (nameOnly) {
+               final String systemDisplayName = FileSystemView.getFileSystemView().getSystemDisplayName(item.getFile());
+               setText("".equals(systemDisplayName) ? item.getFile().toString() : systemDisplayName);
             } else {
-               if (nameOnly) {
-                  final String systemDisplayName = FileSystemView.getFileSystemView().getSystemDisplayName(item.getFile());
-                  setText("".equals(systemDisplayName) ? item.getFile().toString() : systemDisplayName);
-               } else {
-                  setText(item.getFile().toString());
+               setText(item.getFile().toString());
+            }
+
+            final Image image = item.isDirectory()
+               ? icons.getIcon(IconsImpl.FOLDER_64)
+               : icons.getIconForFile(item.getFile());
+            final ImageView graphic = new ImageView(image);
+            graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
+            graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
+            graphic.setPreserveRatio(true);
+            setGraphic(graphic);
+
+            setOnMouseClicked(event -> {
+               final File file = item.getFile();
+               if (event.getClickCount() < 2) {
+                  return;
                }
 
-               final Image image = item.isDirectory()
-                  ? icons.getIcon(IconsImpl.FOLDER_64)
-                  : icons.getIconForFile(item.getFile());
-               final ImageView graphic = new ImageView(image);
-               graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
-               graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
-               graphic.setPreserveRatio(true);
-               setGraphic(graphic);
-
-               setOnMouseClicked(event -> {
-                  final File file = item.getFile();
-                  if (event.getClickCount() < 2) {
-                     return;
-                  }
-
-                  if (file.isDirectory()) {
-                     callback.requestChangeDirectory(file);
-                  } else {
-                     callback.fireDoneButton();
-                  }
-               });
-            }
+               if (file.isDirectory()) {
+                  callback.requestChangeDirectory(file);
+               } else {
+                  callback.fireDoneButton();
+               }
+            });
          }
-      };
+      }
    }
 }

@@ -122,40 +122,42 @@ class ListFilesView extends AbstractFilesView {
       column.prefWidthProperty().bind(parent.widthProperty()
             .subtract(DATE_MODIFIED_COL_PREF_WIDTH)
             .subtract(SIZE_COLUMN_PREF_WIDTH));
+      column.setCellFactory(param -> new NameColumnCellFactory());
+      return column;
+   }
 
-      column.setCellFactory(param -> new TreeTableCell<File, String>() {
-         @Override
-         protected void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
+   private class NameColumnCellFactory extends TreeTableCell<File, String> {
+      @Override
+      protected void updateItem(String item, boolean empty) {
+         super.updateItem(item, empty);
 
-            setText("");
-            setGraphic(null);
-            setOnMouseClicked(null);
+         setText("");
+         setGraphic(null);
+         setOnMouseClicked(null);
 
-            if (!empty) {
-               final TreeTableRow<File> row = getTreeTableRow();
-               if (row != null && row.getTreeItem() != null) {
-                  final TreeItem treeItem = row.getTreeItem();
-                  if (getTreeTableRow().getTreeItem() instanceof DirectoryTreeItem) {
-                     final File file = ((File)treeItem.getValue()).getAbsoluteFile();
-                     final ImageView graphic = file.isDirectory()
-                        ? new ImageView(treeItem.isExpanded() ? icons.getIcon(IconsImpl.OPEN_FOLDER_64) : icons.getIcon(IconsImpl.FOLDER_64))
-                        : new ImageView(icons.getIconForFile(file));
-                     graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
-                     graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
-                     graphic.setPreserveRatio(true);
+         if (empty) {
+            return;
+         }
 
-                     setGraphic(graphic);
-                  }
-               }
+         final TreeTableRow<File> row = getTreeTableRow();
+         if (row != null && row.getTreeItem() != null) {
+            final TreeItem treeItem = row.getTreeItem();
+            if (getTreeTableRow().getTreeItem() instanceof DirectoryTreeItem) {
+               final File file = ((File)treeItem.getValue()).getAbsoluteFile();
+               final ImageView graphic = file.isDirectory()
+                  ? new ImageView(treeItem.isExpanded() ? icons.getIcon(IconsImpl.OPEN_FOLDER_64) : icons.getIcon(IconsImpl.FOLDER_64))
+                  : new ImageView(icons.getIconForFile(file));
+               graphic.setFitWidth(IconsImpl.SMALL_ICON_WIDTH);
+               graphic.setFitHeight(IconsImpl.SMALL_ICON_HEIGHT);
+               graphic.setPreserveRatio(true);
 
-               setText(item);
-               setOnMouseClicked(new MouseClickedHandler(row));
+               setGraphic(graphic);
             }
          }
-      });
 
-      return column;
+         setText(item);
+         setOnMouseClicked(new MouseClickedHandler(row));
+      }
    }
 
    private class MouseClickedHandler implements EventHandler<MouseEvent> {

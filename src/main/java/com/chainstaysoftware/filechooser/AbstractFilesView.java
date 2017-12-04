@@ -2,9 +2,6 @@ package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -13,7 +10,6 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -46,10 +42,23 @@ abstract class AbstractFilesView implements FilesView {
 
       parent.getScene().setCursor(Cursor.WAIT);
 
-      Platform.runLater(() -> {
-         final Stage stage = new Stage();
+      Platform.runLater(() -> new FilesViewRunnable(previewPaneOpt.orElseThrow(IllegalStateException::new),
+         file));
+   }
 
-         final PreviewPane previewPane = previewPaneOpt.get();
+   private class FilesViewRunnable implements Runnable {
+      private final PreviewPane previewPane;
+      private final File file;
+
+      FilesViewRunnable(final PreviewPane previewPane,
+                        final File file) {
+         this.previewPane = previewPane;
+         this.file = file;
+      }
+
+      @Override
+      public void run() {
+         final Stage stage = new Stage();
          final Pane pane = previewPane.getPane();
          pane.prefWidthProperty().bind(stage.widthProperty());
          pane.prefHeightProperty().bind(stage.heightProperty());
@@ -78,16 +87,16 @@ abstract class AbstractFilesView implements FilesView {
          stage.setHeight(768);
          stage.setOnShown(windowEvent -> parent.getScene().setCursor(null));
          stage.show();
-      });
-   }
+      }
 
-   /**
-    * Build a window title for the passed in file.
-    * @param file
-    */
-   private String getTitle(final File file) {
-      final int maxLength = 75;
-      return StringUtils.abbreviateMiddle(file.getPath(), "...", maxLength);
+      /**
+       * Build a window title for the passed in file.
+       * @param file
+       */
+      private String getTitle(final File file) {
+         final int maxLength = 75;
+         return StringUtils.abbreviateMiddle(file.getPath(), "...", maxLength);
+      }
    }
 
    boolean compareFilePaths(final File f1, final File f2) {

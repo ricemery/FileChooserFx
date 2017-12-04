@@ -60,12 +60,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -206,9 +202,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
    @Override
    public double[] getDividerPositions() {
       if (splitPane != null) {
-         final double placesDivider = splitPane.getDividerPositions()[0];
-         final double previewDivider = listFilesWithPreviewView.getDividerPosition();
-         return new double[] {placesDivider, previewDivider};
+         final double placesDiv = splitPane.getDividerPositions()[0];
+         final double previewDiv = listFilesWithPreviewView.getDividerPosition();
+         return new double[] {placesDiv, previewDiv};
       }
 
       return new double[] {placesDivider, previewDivider};
