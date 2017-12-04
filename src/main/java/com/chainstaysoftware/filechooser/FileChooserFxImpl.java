@@ -202,9 +202,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
    @Override
    public double[] getDividerPositions() {
       if (splitPane != null) {
-         final double placesDivider = splitPane.getDividerPositions()[0];
-         final double previewDivider = listFilesWithPreviewView.getDividerPosition();
-         return new double[] {placesDivider, previewDivider};
+         final double placesDiv = splitPane.getDividerPositions()[0];
+         final double previewDiv = listFilesWithPreviewView.getDividerPosition();
+         return new double[] {placesDiv, previewDiv};
       }
 
       return new double[] {placesDivider, previewDivider};

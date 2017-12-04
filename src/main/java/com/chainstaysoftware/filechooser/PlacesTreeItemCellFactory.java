@@ -61,8 +61,9 @@ public class PlacesTreeItemCellFactory implements Callback<TreeView<PlacesTreeIt
             setText(item.getText().orElse(""));
             setGraphic(toGraphic(item.getIcon()));
          } else {
-            final String systemDisplayName = FileSystemView.getFileSystemView().getSystemDisplayName(item.getFile().get());
-            setText("".equals(systemDisplayName) ? item.getFile().get().toString() : systemDisplayName);
+            final File file = item.getFile().orElseThrow(IllegalStateException::new);
+            final String systemDisplayName = FileSystemView.getFileSystemView().getSystemDisplayName(file);
+            setText("".equals(systemDisplayName) ? file.toString() : systemDisplayName);
             setGraphic(toGraphic(item.getIcon()));
          }
       }
