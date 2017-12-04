@@ -73,6 +73,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -93,7 +95,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private final ObservableList<File> favoriteDirs = FXCollections.observableArrayList();
    private final Deque<File> directoryStack = new LinkedList<>();
    private final ObjectProperty<File> currentSelection = new SimpleObjectProperty<>();
-   private final UpdateWatchKeyService updateWatchKeyService = new UpdateWatchKeyService();
+   private final DirectoryWatchingService dirWatchingService = new DirectoryWatchingService(new FilesViewCallbackImpl());
    private final BooleanProperty hideFiles = new SimpleBooleanProperty(this, "shouldHideFiles", false);
 
    private double placesDivider = PLACES_DIVIDER_POSITION;
@@ -131,8 +133,6 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private Button removeFavoriteButton;
    private Button doneButton;
    private Icons icons = new IconsImpl();
-   private WatchService watcher;
-   private WatchKey watchKey;
 
    /**
     * Property representing the height of the FileChooser.
@@ -527,11 +527,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       stage.setScene(scene);
       stage.initOwner(ownerWindow);
       stage.initModality(Modality.APPLICATION_MODAL);
-      stage.setUserData(Boolean.FALSE);
-      stage.setOnCloseRequest(event -> {
-         stage.setUserData(Boolean.TRUE);
-         fileChooserCallback.fileChosen(Optional.empty());
-      });
+      stage.setOnShown(event -> updateWatchDirectory());
+      stage.setOnHidden(event -> dirWatchingService.cancel());
+      stage.setOnCloseRequest(event -> fileChooserCallback.fileChosen(Optional.empty()));
       stage.show();
 
       placesView.updatePlaces();
@@ -1387,41 +1385,51 @@ public final class FileChooserFxImpl implements FileChooserFx {
     * Setup WatchService to watch for file system changes.
     */
    private void updateWatchDirectory() {
-      try {
-         if (watcher == null) {
-            watcher = FileSystems.getDefault().newWatchService();
+      dirWatchingService.setDirectory(currentDirectory);
 
-            final Thread watcherThread = new Thread(new DirectoryWatcherTask(stage,
-                  watcher, new FilesViewCallbackImpl()));
-            watcherThread.setDaemon(true);
-            watcherThread.start();
-         }
-
-         updateWatchKeyService.restart();
-
-      } catch (IOException e) {
-         logger.log(Level.WARNING, "Error setting up WatchService", e);
+      if (currentDirectory == null) {
+         dirWatchingService.cancel();
+      }
+      else {
+         dirWatchingService.restart();
       }
    }
 
-   private class UpdateWatchKeyService extends Service<Void> {
+   private static final class DirectoryWatchingService extends Service<Void> {
+      private final ObjectProperty<File> directory;
+      private final FilesViewCallback callback;
+
+      private DirectoryWatchingService(FilesViewCallback callback) {
+         this.callback = callback;
+
+         directory = new SimpleObjectProperty<>();
+
+         setExecutor(Executors.newSingleThreadExecutor(new DaemonThreadFactory()));
+      }
+
+      public File getDirectory() {
+         return directory.get();
+      }
+
+      public void setDirectory(File directory) {
+         this.directory.set(directory);
+      }
+
       @Override
       protected Task<Void> createTask() {
-         return new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-               synchronized (this) {
-                  if (watchKey != null) {
-                     watchKey.cancel();
-                  }
+         File currentDirectory = getDirectory();
+         logger.log(Level.FINE, "Creating watch task for " + currentDirectory);
 
-                  watchKey = currentDirectory.toPath().register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
-                     StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-               }
+         return new DirectoryWatcherTask(currentDirectory, callback);
+      }
+   }
 
-               return null;
-            }
-         };
+   private static final class DaemonThreadFactory implements ThreadFactory {
+      @Override
+      public Thread newThread(Runnable runnable) {
+         Thread thread = new Thread(runnable);
+         thread.setDaemon(true);
+         return thread;
       }
    }
 
