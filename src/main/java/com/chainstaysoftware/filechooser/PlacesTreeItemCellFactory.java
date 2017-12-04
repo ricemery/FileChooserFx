@@ -196,7 +196,7 @@ public class PlacesTreeItemCellFactory implements Callback<TreeView<PlacesTreeIt
             final TreeItem<PlacesTreeItem> draggedItem = currentItems.stream()
                   .filter(ti -> ti.getValue().getFile().equals(Optional.of(draggedFile)))
                   .findFirst()
-                  .get();
+                  .orElseThrow(IllegalStateException::new);
 
             for (TreeItem<PlacesTreeItem> item : currentItems) {
                if (item.equals(draggedItem)) {
