@@ -258,17 +258,16 @@ class ListFilesWithPreviewView extends AbstractFilesView {
                           DirectoryListItem newValue) {
          previewHbox.getChildren().clear();
 
-         if (newValue == null) {
-            return;
-         }
-
+         File newFile = newValue == null ? null : newValue.getFile();
 
          ListFilesWithPreviewView.this.getNode().getScene().setCursor(Cursor.WAIT);
          Platform.runLater(() -> {
-            callback.setCurrentSelection(newValue.getFile());
+            callback.setCurrentSelection(newFile);
             ListFilesWithPreviewView.this.getNode().getScene().setCursor(null);
 
-            preview(newValue.getFile());
+            if (newFile != null) {
+               preview(newFile);
+            }
          });
        }
 

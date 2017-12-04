@@ -425,11 +425,8 @@ class ListFilesView extends AbstractFilesView {
       public void changed(final ObservableValue<? extends TreeItem<File>> observable,
                           final TreeItem<File> oldValue,
                           final TreeItem<File> newValue) {
-         if (newValue == null) {
-            return;
-         }
-
-         callback.setCurrentSelection(newValue.getValue());
+         File newFile = newValue == null ? null : newValue.getValue();
+         callback.setCurrentSelection(newFile);
       }
    }
 
