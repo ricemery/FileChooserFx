@@ -5,6 +5,7 @@ import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.os.Place;
 import com.chainstaysoftware.filechooser.os.PlaceType;
 import com.chainstaysoftware.filechooser.os.Places;
+import javafx.beans.Observable;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -51,6 +52,8 @@ class PlacesView {
       favoritesPlacesNode = createFavoritePlacesItem();
       placesTreeView = createPlacesView();
       placesPane = createPlacesPane(placesTreeView);
+
+      this.callback.favoriteDirsProperty().addListener((Observable o) -> updatePlaces());
    }
 
    TitledPane toPane() {
