@@ -381,10 +381,10 @@ class IconsFilesView extends AbstractFilesView {
             event.consume();
          }
 
-         File file = null;
-         if (selectedCellIndex.get() != NOT_SELECTED) {
-            file = gridView.getItems().get(selectedCellIndex.get()).getFile();
-         }
+         final File file = selectedCellIndex.get() != NOT_SELECTED
+            ? gridView.getItems().get(selectedCellIndex.get()).getFile()
+            : null;
+
          callback.setCurrentSelection(file);
       }
    }
