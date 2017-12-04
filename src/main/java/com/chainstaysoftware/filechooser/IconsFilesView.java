@@ -308,6 +308,12 @@ class IconsFilesView extends AbstractFilesView {
       @Override
       public void handle(MouseEvent event) {
          if (!(event.getTarget() instanceof IconGridCell)) {
+            selectedCellIndex.setValue(NOT_SELECTED);
+
+            Platform.runLater(() -> {
+               callback.setCurrentSelection(null);
+               IconsFilesView.this.getNode().getParent().requestLayout();
+            });
             return;
          }
 
@@ -375,11 +381,10 @@ class IconsFilesView extends AbstractFilesView {
             event.consume();
          }
 
-         if (selectedCellIndex.get() == NOT_SELECTED) {
-            return;
-         }
+         final File file = selectedCellIndex.get() != NOT_SELECTED
+            ? gridView.getItems().get(selectedCellIndex.get()).getFile()
+            : null;
 
-         final File file = gridView.getItems().get(selectedCellIndex.get()).getFile();
          callback.setCurrentSelection(file);
       }
    }
