@@ -1,6 +1,7 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.icons.Icons;
+import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
 import com.chainstaysoftware.filechooser.preview.PreviewPaneQuery;
 import javafx.application.Platform;
@@ -8,6 +9,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -178,7 +180,10 @@ public class PropertiesPreviewPane {
    private void setContainerNode(final File file) {
       final Class<? extends PreviewPane> previewPaneClass = PreviewPaneQuery.query(previewHandlers, file);
       if (previewPaneClass == null) {
-         imageView.setImage(icons.getIconForFile(file));
+         final Image image = file.isDirectory()
+            ? icons.getIcon(IconsImpl.FOLDER_64)
+            : icons.getIconForFile(file);
+         imageView.setImage(image);
          previewPaneContainerPane.getChildren().setAll(imageView);
       } else {
          final Optional<PreviewPane> previewPaneOpt = PreviewPaneFactory.create(previewPaneClass);
