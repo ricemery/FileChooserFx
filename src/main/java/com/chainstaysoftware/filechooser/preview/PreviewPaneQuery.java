@@ -24,6 +24,10 @@ public final class PreviewPaneQuery {
    public static Class<? extends PreviewPane> query(final Map<String, Class<? extends PreviewPane>> previewHandlers,
                                                     final File file) {
       try {
+         if (file.isDirectory()) {
+            return null;
+         }
+
          final String mimeType = Files.probeContentType(file.toPath());
          return previewHandlers.get(mimeType);
       } catch (IOException e) {
