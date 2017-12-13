@@ -2,8 +2,8 @@ package com.chainstaysoftware.filechooser.preview;
 
 
 import javafx.scene.layout.Pane;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.AbstractMap;
@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
-public class PreviewPaneQueryTest {
+class PreviewPaneQueryTest {
    private final Map<String, Class<? extends PreviewPane>> handlersMap
       = Collections.unmodifiableMap(Stream.of(
          new AbstractMap.SimpleEntry<>("text/plain", TxtPreviewPane.class))
@@ -23,18 +23,18 @@ public class PreviewPaneQueryTest {
          AbstractMap.SimpleEntry::getValue)));
 
    @Test
-   public void testQuery() {
+   void testQuery() {
       final Class<? extends PreviewPane> txtPaneClass
          = PreviewPaneQuery.query(handlersMap, new File("./src/test/resources/com/chainstaysoftware/filechooser/empty.txt"));
-      Assert.assertThat("Txt pane should extend TxtPreviewPane", txtPaneClass, equalTo(TxtPreviewPane.class));
+      MatcherAssert.assertThat("Txt pane should extend TxtPreviewPane", txtPaneClass, equalTo(TxtPreviewPane.class));
 
       final Class<? extends PreviewPane> unknownPaneClass
          = PreviewPaneQuery.query(handlersMap, new File("./src/test/resources/com/chainstaysoftware/filechooser/foo.bar"));
-      Assert.assertThat("Unknown should return null pane", unknownPaneClass, nullValue());
+      MatcherAssert.assertThat("Unknown should return null pane", unknownPaneClass, nullValue());
 
       final Class<? extends PreviewPane> dirPaneClass
          = PreviewPaneQuery.query(handlersMap, new File("./src/test/resources/com/chainstaysoftware/filechooser/dir1"));
-      Assert.assertThat("Directory should return null pane", dirPaneClass, nullValue());
+      MatcherAssert.assertThat("Directory should return null pane", dirPaneClass, nullValue());
    }
 
    private class TxtPreviewPane implements PreviewPane {
