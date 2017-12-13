@@ -2,7 +2,7 @@ package com.chainstaysoftware.filechooser.preview;
 
 
 import javafx.scene.layout.Pane;
-import org.hamcrest.MatcherAssert;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -11,9 +11,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
 
 class PreviewPaneQueryTest {
    private final Map<String, Class<? extends PreviewPane>> handlersMap
@@ -26,15 +23,21 @@ class PreviewPaneQueryTest {
    void testQuery() {
       final Class<? extends PreviewPane> txtPaneClass
          = PreviewPaneQuery.query(handlersMap, new File("./src/test/resources/com/chainstaysoftware/filechooser/empty.txt"));
-      MatcherAssert.assertThat("Txt pane should extend TxtPreviewPane", txtPaneClass, equalTo(TxtPreviewPane.class));
+      Assertions.assertThat(txtPaneClass)
+         .describedAs("Txt pane should extend TxtPreviewPane")
+         .isEqualTo(TxtPreviewPane.class);
 
       final Class<? extends PreviewPane> unknownPaneClass
          = PreviewPaneQuery.query(handlersMap, new File("./src/test/resources/com/chainstaysoftware/filechooser/foo.bar"));
-      MatcherAssert.assertThat("Unknown should return null pane", unknownPaneClass, nullValue());
+      Assertions.assertThat(unknownPaneClass)
+         .describedAs("Unknown should return null pane")
+         .isNull();
 
       final Class<? extends PreviewPane> dirPaneClass
          = PreviewPaneQuery.query(handlersMap, new File("./src/test/resources/com/chainstaysoftware/filechooser/dir1"));
-      MatcherAssert.assertThat("Directory should return null pane", dirPaneClass, nullValue());
+      Assertions.assertThat(dirPaneClass)
+         .describedAs("Unknown should return null pane")
+         .isNull();
    }
 
    private class TxtPreviewPane implements PreviewPane {
