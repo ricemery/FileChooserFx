@@ -1,7 +1,6 @@
 package com.chainstaysoftware.filechooser;
 
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
-import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -42,8 +41,8 @@ abstract class AbstractFilesView implements FilesView {
 
       parent.getScene().setCursor(Cursor.WAIT);
 
-      Platform.runLater(() -> new FilesViewRunnable(previewPaneOpt.orElseThrow(IllegalStateException::new),
-         file));
+      new FilesViewRunnable(previewPaneOpt.orElseThrow(IllegalStateException::new),
+         file).run();
    }
 
    private class FilesViewRunnable implements Runnable {
