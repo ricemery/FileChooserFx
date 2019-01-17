@@ -42,7 +42,7 @@ abstract class AbstractFilesView implements FilesView {
 
       parent.getScene().setCursor(Cursor.WAIT);
 
-      Platform.runLater(() -> new FilesViewRunnable(previewPaneOpt.orElseThrow(IllegalStateException::new),
+      Platform.runLater(new FilesViewRunnable(previewPaneOpt.orElseThrow(IllegalStateException::new),
          file));
    }
 
