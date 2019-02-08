@@ -645,7 +645,8 @@ public final class FileChooserFxImpl implements FileChooserFx {
       if(!hideFiles.get()) {
          items.add(viewListWithPreviewButton);
       }
-      items.add(viewIconsButton);
+      // Fixme: Add back in when ControlsFx fixes GridView
+      //      items.add(viewIconsButton);
       items.add(new Separator());
       items.add(backButton);
       items.add(breadCrumbHBox);
@@ -1086,7 +1087,11 @@ public final class FileChooserFxImpl implements FileChooserFx {
          return;
       }
 
-      setIconsView();
+      // TODO: Fixme
+      // For now IconsView is disabled. ControlsFx GridView is not working
+      // with Java 9 and newer. Force the view back to the listView
+      //setIconsView();
+      setListView();
    }
 
    private void setListView() {
