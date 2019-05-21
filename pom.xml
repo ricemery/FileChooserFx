@@ -6,7 +6,7 @@
 
     <groupId>com.chainstaysoftware.controls</groupId>
     <artifactId>filechooserfx</artifactId>
-    <version>9.0.3-SNAPSHOT</version>
+    <version>11.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <prerequisites>
@@ -36,12 +36,12 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.8.1</version>
+            <version>3.9</version>
         </dependency>
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
-            <version>9.0.0</version>
+            <version>11.0.0</version>
         </dependency>
 
         <dependency>
@@ -65,7 +65,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.11.1</version>
+            <version>3.12.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -73,13 +73,13 @@
     <build>
         <plugins>
             <plugin>
-                <!-- Java 1.9 compilation -->
+                <!-- Java 1.11 compilation -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.6.1</version>
                 <configuration>
-                    <source>1.9</source>
-                    <target>1.9</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
             <plugin>
