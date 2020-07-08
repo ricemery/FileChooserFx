@@ -546,7 +546,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       var dir = initialDirectory.getValue();
       do {
-        if (dir.exists()) {
+        if (dir.exists() && dir.isDirectory()) {
            return dir;
         }
         dir = dir.getParentFile();
