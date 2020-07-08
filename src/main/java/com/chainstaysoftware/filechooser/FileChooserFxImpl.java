@@ -3,7 +3,6 @@ package com.chainstaysoftware.filechooser;
 import com.chainstaysoftware.filechooser.icons.Icons;
 import com.chainstaysoftware.filechooser.icons.IconsImpl;
 import com.chainstaysoftware.filechooser.preview.PreviewPane;
-import impl.org.controlsfx.skin.BreadCrumbBarSkin;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -688,7 +687,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       // from getting focus. For now, I do not want any items in the toolbar
       // to get focus. This may need to change for accessibility/usability.
       breadCrumbBar.setCrumbFactory(param -> {
-         final Button button = new BreadCrumbBarSkin.BreadCrumbButton(getBreadCrumbButtonText(param));
+         final Button button = new BreadCrumbBar.BreadCrumbButton(getBreadCrumbButtonText(param));
          button.setFocusTraversable(false);
          button.focusedProperty().addListener((observable, oldValue, newValue) -> currentView.getNode().requestFocus());
          return button;
