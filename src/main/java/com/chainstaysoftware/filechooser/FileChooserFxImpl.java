@@ -528,12 +528,31 @@ public final class FileChooserFxImpl implements FileChooserFx {
       stage.show();
 
       placesView.updatePlaces();
-      currentDirectory = getInitialDirectory() == null
-            ? new File(".")
-            : initialDirectory.getValue();
+      currentDirectory = resolveInitialDirectory();
 
       setCurrentView(viewTypeProperty().getValue());
       updateWatchDirectory();
+   }
+
+   /**
+    * Get the initial directory to use. If the initial dir is invalid
+    * then the code tries to find a valid parent dir. If all else fails,
+    * default to the user home dir.
+    */
+   private File resolveInitialDirectory() {
+      if (getInitialDirectory() == null) {
+         return new File(".");
+      }
+
+      var dir = initialDirectory.getValue();
+      do {
+        if (dir.exists()) {
+           return dir;
+        }
+        dir = dir.getParentFile();
+      } while (dir != null);
+
+      return new File(System.getProperty("user.home", "."));
    }
 
    /**
