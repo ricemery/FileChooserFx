@@ -17,7 +17,8 @@ and DirectoryChooser completely in JavaFx code so that the implementations can b
 * Icons from Icons8 - https://icons8.com
 
 ## Usage
-See src/test/java/com/chainstaysoftware/filebrowser/FileChooserDemo.java for sample usage.
+* See src/test/java/com/chainstaysoftware/filebrowser/FileChooserDemo.java for sample usage.
+* "--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED" should be passed on the Java command line to avoid an exception when Icon View is displayed.
 
 ## File Preview
 The preview code to execute for a file is determined from the file's mimetype.
