@@ -162,6 +162,13 @@ public interface FileChooserFx {
    ObservableList<File> favoriteDirsProperty();
 
    /**
+    * Overrides the default button order for Open, Cancel, Help Buttons on
+    * the bottom of dialog. See {@link javafx.scene.control.ButtonBar} button order property. Must
+    * be called before 'show' function is called.
+    */
+   void setOpenCancelHelpBtnOrder(String buttonOrder);
+
+   /**
     * Sets callbacks for when user wants to add and/or remove director favorites.
     * This method MUST be called with non-null {@link FavoritesCallback} instances
     * for the add/remove favorites buttons to be included in the displayed FileChooserFx

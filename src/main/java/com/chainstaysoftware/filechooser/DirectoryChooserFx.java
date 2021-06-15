@@ -115,6 +115,14 @@ public interface DirectoryChooserFx {
     * Disable/enable the display of mount points on Linux/OSX.
     */
    BooleanProperty showMountPointsProperty();
+
+   /**
+    * Overrides the default button order for Open, Cancel, Help Buttons on
+    * the bottom of dialog. See {@link javafx.scene.control.ButtonBar} button order property. Must
+    * be called before 'show' function is called.
+    */
+   void setOpenCancelHelpBtnOrder(String buttonOrder);
+
    /**
     * List of directories to show in the Favorites list. As favorites are add and removed
     * by the user the list is updated.

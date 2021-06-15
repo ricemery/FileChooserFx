@@ -224,6 +224,16 @@ public class DirectoryChooserFxImpl implements DirectoryChooserFx {
       return fileChooser.showMountPointsProperty();
    }
 
+   /**
+    * Overrides the default button order for Open, Cancel, Help Buttons on
+    * the bottom of dialog. See {@link javafx.scene.control.ButtonBar} button order property. Must
+    * be called before 'show' function is called.
+    */
+   @Override
+   public void setOpenCancelHelpBtnOrder(final String buttonOrder) {
+      fileChooser.setOpenCancelHelpBtnOrder(buttonOrder);
+   }
+
    @Override
    public void setHelpCallback(final HelpCallback helpCallback) {
       fileChooser.setHelpCallback(helpCallback);

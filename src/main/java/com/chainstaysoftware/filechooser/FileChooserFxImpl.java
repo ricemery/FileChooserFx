@@ -107,6 +107,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private File currentDirectory;
    private Button backButton;
    private BreadCrumbBar<File> breadCrumbBar;
+   private String buttonBarOrder;
    private FilesView currentView;
    private IconsFilesView iconsFilesView;
    private ListFilesView listFilesView;
@@ -420,6 +421,16 @@ public final class FileChooserFxImpl implements FileChooserFx {
    @Override
    public ObservableList<File> favoriteDirsProperty() {
       return favoriteDirs;
+   }
+
+   /**
+    * Overrides the default button order for Open, Cancel, Help Buttons on
+    * the bottom of dialog. See {@link ButtonBar} button order property. Must
+    * be called before 'show' function is called.
+    */
+   @Override
+   public void setOpenCancelHelpBtnOrder(final String buttonOrder) {
+      buttonBarOrder = buttonOrder;
    }
 
    /**
@@ -825,6 +836,9 @@ public final class FileChooserFxImpl implements FileChooserFx {
       buttonBar.setId("buttonBar");
       buttonBar.getStyleClass().add("buttonbar");
       buttonBar.getButtons().addAll(buttons);
+      if (buttonBarOrder != null) {
+         buttonBar.setButtonOrder(buttonBarOrder);
+      }
 
       return buttonBar;
    }
