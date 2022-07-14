@@ -5,6 +5,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.stage.Window;
 
 import java.io.File;
@@ -242,6 +243,13 @@ public class DirectoryChooserFxImpl implements DirectoryChooserFx {
    @Override
    public void showDialog(final Window ownerWindow,
                           final FileChooserCallback fileChooserCallback) {
-      fileChooser.showOpenDialog(ownerWindow, fileChooserCallback, true);
+      showDialog(ownerWindow, null, fileChooserCallback);
+   }
+
+   @Override
+   public void showDialog(final Window ownerWindow,
+                          final Node userContent,
+                          final FileChooserCallback fileChooserCallback) {
+      fileChooser.showOpenDialog(ownerWindow, userContent, fileChooserCallback, true);
    }
 }

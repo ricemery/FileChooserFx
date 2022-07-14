@@ -97,7 +97,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
    private double previewDivider = PREVIEW_DIVIDER_POSITION;
    private StringProperty title;
    private ObjectProperty<File> initialDirectory;
-   private ObjectProperty<String> initialFileName;
+   private ObjectProperty<String> fileName;
    private ObjectProperty<FileChooser.ExtensionFilter> selectedExtensionFilter;
    private ObjectProperty<ViewType> viewTypeProperty;
    private BooleanProperty showHiddenFiles;
@@ -262,23 +262,23 @@ public final class FileChooserFxImpl implements FileChooserFx {
    }
 
    @Override
-   public void setInitialFileName(final String value) {
-      initialFileNameProperty().set(value);
+   public void setFileName(final String value) {
+      fileNameProperty().set(value);
    }
 
    @Override
-   public String getInitialFileName() {
-      return (initialFileName != null) ? initialFileName.get() : null;
+   public String getFileName() {
+      return (fileName != null) ? fileName.get() : null;
    }
 
    @Override
-   public ObjectProperty<String> initialFileNameProperty() {
-      if (initialFileName == null) {
-         initialFileName =
+   public ObjectProperty<String> fileNameProperty() {
+      if (fileName == null) {
+         fileName =
                new SimpleObjectProperty<>(this, "initialFileName");
       }
 
-      return initialFileName;
+      return fileName;
    }
 
    @Override
@@ -488,27 +488,43 @@ public final class FileChooserFxImpl implements FileChooserFx {
    @Override
    public void showOpenDialog(final Window ownerWindow,
                               final FileChooserCallback fileChooserCallback) {
+      showOpenDialog(ownerWindow, null, fileChooserCallback);
+   }
+
+   @Override
+   public void showOpenDialog(final Window ownerWindow,
+                              final Node userContent,
+                              final FileChooserCallback fileChooserCallback) {
       saveMode = false;
-      showOpenDialog(ownerWindow, fileChooserCallback, false);
+      showOpenDialog(ownerWindow, userContent, fileChooserCallback, false);
    }
 
    void showOpenDialog(final Window ownerWindow,
+                       final Node userContent,
                        final FileChooserCallback fileChooserCallback,
                        final boolean hideFiles) {
       saveMode = false;
       this.hideFiles.setValue(hideFiles);
-      showDialog(ownerWindow, fileChooserCallback);
+      showDialog(ownerWindow, userContent, fileChooserCallback);
    }
 
    @Override
    public void showSaveDialog(final Window ownerWindow,
                               final FileChooserCallback fileChooserCallback) {
+      showSaveDialog(ownerWindow, null, fileChooserCallback);
+   }
+
+   @Override
+   public void showSaveDialog(final Window ownerWindow,
+                              final Node userContent,
+                              final FileChooserCallback fileChooserCallback) {
       saveMode = true;
       hideFiles.set(false);
-      showDialog(ownerWindow, fileChooserCallback);
+      showDialog(ownerWindow, userContent, fileChooserCallback);
    }
 
    private void showDialog(final Window ownerWindow,
+                           final Node userContent,
                            final FileChooserCallback fileChooserCallback) {
       this.fileChooserCallback = fileChooserCallback;
 
@@ -516,7 +532,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       final VBox topVbox = createTopVBox();
       splitPane = createSplitPane();
-      final VBox bottomVbox = createBottomVBox();
+      final VBox bottomVbox = createBottomVBox(userContent);
 
       final BorderPane borderPane = new BorderPane();
       borderPane.setTop(topVbox);
@@ -626,11 +642,15 @@ public final class FileChooserFxImpl implements FileChooserFx {
    /**
     * Create a VBox to hold the bottom buttons and file extensions dropdown.
     */
-   private VBox createBottomVBox() {
+   private VBox createBottomVBox(final Node userContent) {
       final ButtonBar buttonBar = createButtonBar();
       final Pane extensionsPane = createExtensionsPane();
       final VBox vBox = new VBox();
-      vBox.getChildren().addAll(extensionsPane, buttonBar);
+      if (userContent == null) {
+         vBox.getChildren().addAll(extensionsPane, buttonBar);
+      } else {
+         vBox.getChildren().addAll(extensionsPane, userContent, buttonBar);
+      }
       return vBox;
    }
 
@@ -640,8 +660,10 @@ public final class FileChooserFxImpl implements FileChooserFx {
 
       fileNameField = new TextField();
       fileNameField.setId("nameField");
-      fileNameField.setText(getInitialFileName());
+      fileNameField.setText(getFileName());
       fileNameField.setPrefWidth(400);
+
+      fileNameField.textProperty().bindBidirectional(fileNameProperty());
 
       currentSelection.addListener((observable, oldValue, newValue) -> {
          if (newValue != null && newValue.isFile()) {
@@ -848,7 +870,7 @@ public final class FileChooserFxImpl implements FileChooserFx {
       final Button button = new Button(text);
       ButtonBar.setButtonData(button, ButtonBar.ButtonData.OK_DONE);
       button.setId("doneButton");
-      button.setDisable(!saveMode || getInitialFileName() == null);
+      button.setDisable(!saveMode || getFileName() == null);
       button.setOnAction(saveMode ? new SaveDoneEventHandler() : new BrowseDoneEventHandler());
 
       if (saveMode) {

@@ -5,6 +5,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.stage.Window;
 
 import java.io.File;
@@ -144,5 +145,15 @@ public interface DirectoryChooserFx {
     */
    void setHelpCallback(HelpCallback helpCallback);
 
+   /**
+    * Show the directory chooser dialog.
+    */
    void showDialog(Window ownerWindow, FileChooserCallback fileChooserCallback);
+
+   /**
+    * Show the directory chooser dialog with user content {@link Node} placed just above
+    * the bottom row of dialog buttons.
+    */
+   void showDialog(Window ownerWindow, Node userContent, FileChooserCallback fileChooserCallback);
+
 }

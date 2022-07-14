@@ -8,6 +8,7 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.scene.Node;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
@@ -80,11 +81,11 @@ public interface FileChooserFx {
 
    ObjectProperty<File> initialDirectoryProperty();
 
-   void setInitialFileName(String value);
+   void setFileName(String value);
 
-   String getInitialFileName();
+   String getFileName();
 
-   ObjectProperty<String> initialFileNameProperty();
+   ObjectProperty<String> fileNameProperty();
 
    void setTitle(String value);
 
@@ -189,7 +190,27 @@ public interface FileChooserFx {
     */
    void setIcons(Icons icons);
 
+   /**
+    * Show the file open dialog.
+    */
    void showOpenDialog(Window ownerWindow, FileChooserCallback fileChooserCallback);
 
+   /**
+    * Show the file open dialog with user content {@link Node} placed just above
+    * the bottom row of dialog buttons.
+    */
+   void showOpenDialog(Window ownerWindow, Node userContent,
+                       FileChooserCallback fileChooserCallback);
+
+   /**
+    * Show the file save dialog.
+    */
    void showSaveDialog(Window ownerWindow, FileChooserCallback fileChooserCallback);
+
+   /**
+    * Show the file save dialog with user content {@link Node} placed just above
+    * the bottom row of dialog buttons.
+    */
+   void showSaveDialog(Window ownerWindow, Node userContent,
+                       FileChooserCallback fileChooserCallback);
 }
