@@ -10,7 +10,7 @@
 
     <groupId>com.chainstaysoftware.controls</groupId>
     <artifactId>filechooserfx</artifactId>
-    <version>11.0.2-SNAPSHOT</version>
+    <version>11.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
